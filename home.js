@@ -2,10 +2,20 @@ import { Multiplayer } from './modules/Multiplayer.js';
 import { Tile } from './modules/Tile.js';
 import { Board } from './modules/Board.js';
 import { Deck } from './modules/Deck.js';
-import { GameState } from './modules/GameState.js';
+import { GameState } from './modules/state/GameState.js';
 import { GameSync } from './modules/GameSync.js';
 import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
+import { GameEngine } from './modules/core/GameEngine.js';
+
+// ========== GAME ENGINE ==========
+const engine = new GameEngine();
+await engine.initialize();
+const eventBus = engine.getEventBus();
+const config = engine.getConfig();
+
+console.log('🎮 GameEngine initialisé');
+
 
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
@@ -437,6 +447,13 @@ async function startGame() {
     zoneMerger = new ZoneMerger(plateau);
     scoring = new Scoring(zoneMerger);
     console.log('🔗 ZoneMerger et Scoring initialisés');
+    
+    // 📡 EventBus: Charger config depuis le DOM
+    config.loadFromDOM();
+    
+    // 📡 EventBus: Démarrer le jeu via GameEngine
+    await engine.startGame(gameState, deck, plateau);
+
     
     // Callbacks pour les actions synchronisées
     gameSync.onGameStarted = (deckData, gameStateData) => {
@@ -1006,6 +1023,10 @@ function poserTuile(x, y, tile, isFirst = false) {
             zoneMerger.updateZonesForNewTile(x, y);
         }
         
+        // 📡 EventBus: Émettre événement tile-placed
+        eventBus.emit('tile-placed', { x, y, tile: copy });
+
+        
         if (isMyTurn && gameSync) {
             afficherCurseursMeeple(x, y);
         }
@@ -1027,6 +1048,10 @@ function poserTuile(x, y, tile, isFirst = false) {
         const savedTile = tuileEnMain;
         tuileEnMain = null;
         
+        
+        // 📡 EventBus: Émettre événement tile-placed
+        eventBus.emit('tile-placed', { x, y, tile: copy });
+
         // ✅ Merger les zones après placement
         if (zoneMerger) {
             zoneMerger.updateZonesForNewTile(x, y);
@@ -1410,6 +1435,10 @@ function placerMeeple(x, y, position, meepleType) {
     
     // ✅ Décrémenter le nombre de meeples disponibles
     decrementPlayerMeeples(multiplayer.playerId);
+    
+    // 📡 EventBus: Émettre événement meeple-placed
+    eventBus.emit('meeple-placed', { x, y, position, meepleType, playerId: multiplayer.playerId });
+
 
     // Afficher le meeple
     afficherMeeple(x, y, position, meepleType, playerColor);
