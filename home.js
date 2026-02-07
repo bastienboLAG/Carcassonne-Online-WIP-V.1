@@ -208,75 +208,84 @@ document.getElementById('join-game-btn').addEventListener('click', async () => {
 const joinConfirmBtn = document.getElementById('join-confirm-btn');
 if (joinConfirmBtn) {
     joinConfirmBtn.addEventListener('click', async () => {
-    playerName = document.getElementById('pseudo-input').value.trim();
-    gameCode = document.getElementById('join-code-input').value.trim().toUpperCase();
+    try {
+        playerName = document.getElementById('pseudo-input').value.trim();
+        gameCode = document.getElementById('join-code-input').value.trim().toUpperCase();
 
-    if (!playerName || !gameCode) {
-        const errorElem = document.getElementById('join-error');
-        if (errorElem) {
-            errorElem.textContent = 'Veuillez remplir tous les champs';
-            errorElem.style.display = 'block';
+        if (!playerName || !gameCode) {
+            const errorElem = document.getElementById('join-error');
+            if (errorElem) {
+                errorElem.textContent = 'Veuillez remplir tous les champs';
+                errorElem.style.display = 'block';
+            }
+            return;
         }
-        return;
-    }
 
-    // Configurer les callbacks AVANT de rejoindre
-    multiplayer.onDataReceived = (data, from) => {
-        if (data.type === 'join-accepted') {
-            players = data.players;
-            multiplayer.hostId = data.hostId;
-            updatePlayersList();
-            updateAvailableColors();
-            updateLobbyUI();
-            updateColorPickerVisibility();
+        // Configurer les callbacks AVANT de rejoindre
+        multiplayer.onDataReceived = (data, from) => {
+            if (data.type === 'join-accepted') {
+                players = data.players;
+                multiplayer.hostId = data.hostId;
+                updatePlayersList();
+                updateAvailableColors();
+                updateLobbyUI();
+                updateColorPickerVisibility();
+            }
+            
+            if (data.type === 'player-joined') {
+                players.push(data.player);
+                updatePlayersList();
+                updateAvailableColors();
+            }
+            
+            if (data.type === 'game-starting') {
+                console.log('🎮 [INVITÉ] La partie démarre !');
+                startGame();
+            }
+        };
+
+        const success = await multiplayer.joinGame(gameCode);
+        if (!success) {
+            const errorElem = document.getElementById('join-error');
+            if (errorElem) {
+                errorElem.textContent = 'Code de partie invalide';
+                errorElem.style.display = 'block';
+            }
+            return;
         }
-        
-        if (data.type === 'player-joined') {
-            players.push(data.player);
-            updatePlayersList();
-            updateAvailableColors();
+
+        // Fermer la modale
+        const modal = document.getElementById('join-modal');
+        if (modal) {
+            modal.style.display = 'none';
         }
-        
-        if (data.type === 'game-starting') {
-            console.log('🎮 [INVITÉ] La partie démarre !');
-            startGame();
-        }
-    };
 
-    const success = await multiplayer.joinGame(gameCode);
-    if (!success) {
-        const errorElem = document.getElementById('join-error');
-        if (errorElem) {
-            errorElem.textContent = 'Code de partie invalide';
-            errorElem.style.display = 'block';
-        }
-        return;
-    }
+        inLobby = true;
+        isHost = false;
 
-    // Fermer la modale
-    const modal = document.getElementById('join-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+        players.push({
+            id: multiplayer.playerId,
+            name: playerName,
+            color: playerColor,
+            isHost: false
+        });
 
-    inLobby = true;
-    isHost = false;
-
-    players.push({
-        id: multiplayer.playerId,
-        name: playerName,
-        color: playerColor,
-        isHost: false
-    });
-
-    multiplayer.sendTo(multiplayer.hostId, {
-        type: 'join-request',
-        playerName: playerName,
-        playerColor: playerColor
+        multiplayer.sendTo(multiplayer.hostId, {
+            type: 'join-request',
+            playerName: playerName,
+            playerColor: playerColor
     });
 
     updateLobbyUI();
     updateColorPickerVisibility();
+    } catch (error) {
+        console.error('❌ Erreur rejoindre:', error);
+        const errorElem = document.getElementById('join-error');
+        if (errorElem) {
+            errorElem.textContent = 'Erreur: ' + error.message;
+            errorElem.style.display = 'block';
+        }
+    }
     });
 }
 
