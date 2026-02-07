@@ -2,6 +2,8 @@
  * TurnManager - Gère les tours de jeu
  * Responsable de : pioche, fin de tour, passage au joueur suivant
  */
+import { Tile } from '../Tile.js';
+
 export class TurnManager {
     constructor(eventBus, gameState, deck) {
         this.eventBus = eventBus;
@@ -40,7 +42,8 @@ export class TurnManager {
             return null;
         }
 
-        this.currentTile = this.deck.draw();
+        const tileData = this.deck.draw();
+        this.currentTile = new Tile(tileData);
         this.tilePlaced = false;
         this.meeplePlaced = false;
 
