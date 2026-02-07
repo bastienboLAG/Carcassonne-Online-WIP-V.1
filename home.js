@@ -130,21 +130,9 @@ function updatePlayersList() {
 }
 
 function updateLobbyUI() {
-    const createSection = document.querySelector('.create-section');
-    const joinSection = document.querySelector('.join-section');
-    const waitingSection = document.querySelector('.waiting-section');
     const startGameBtn = document.getElementById('start-game-btn');
-
-    if (!inLobby) {
-        createSection.style.display = 'flex';
-        joinSection.style.display = 'flex';
-        waitingSection.style.display = 'none';
-        return;
-    }
-
-    createSection.style.display = 'none';
-    joinSection.style.display = 'none';
-    waitingSection.style.display = 'flex';
+    
+    if (!startGameBtn) return;
 
     if (isHost) {
         startGameBtn.style.display = 'block';
@@ -208,18 +196,41 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
 });
 
 document.getElementById('join-game-btn').addEventListener('click', async () => {
-    playerName = document.getElementById('pseudo-join-input').value.trim();
-    gameCode = document.getElementById('code-input').value.trim().toUpperCase();
+    // Ouvrir la modale
+    const modal = document.getElementById('join-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+});
+
+// Gérer la confirmation du join dans la modale
+document.getElementById('join-confirm-btn')?.addEventListener('click', async () => {
+    playerName = document.getElementById('pseudo-input').value.trim();
+    gameCode = document.getElementById('join-code-input').value.trim().toUpperCase();
 
     if (!playerName || !gameCode) {
-        alert('Veuillez remplir tous les champs');
+        const errorElem = document.getElementById('join-error');
+        if (errorElem) {
+            errorElem.textContent = 'Veuillez remplir tous les champs';
+            errorElem.style.display = 'block';
+        }
         return;
     }
 
     const success = await multiplayer.joinGame(gameCode);
     if (!success) {
-        alert('Code de partie invalide');
+        const errorElem = document.getElementById('join-error');
+        if (errorElem) {
+            errorElem.textContent = 'Code de partie invalide';
+            errorElem.style.display = 'block';
+        }
         return;
+    }
+
+    // Fermer la modale
+    const modal = document.getElementById('join-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 
     inLobby = true;
@@ -256,6 +267,18 @@ document.getElementById('join-game-btn').addEventListener('click', async () => {
 
     updateLobbyUI();
     updateColorPickerVisibility();
+});
+
+// Gérer l'annulation
+document.getElementById('join-cancel-btn')?.addEventListener('click', () => {
+    const modal = document.getElementById('join-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    const errorElem = document.getElementById('join-error');
+    if (errorElem) {
+        errorElem.style.display = 'none';
+    }
 });
 
 document.querySelectorAll('.color-option input').forEach(input => {
