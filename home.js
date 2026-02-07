@@ -205,7 +205,9 @@ document.getElementById('join-game-btn').addEventListener('click', async () => {
 });
 
 // Gérer la confirmation du join dans la modale
-document.getElementById('join-confirm-btn')?.addEventListener('click', async () => {
+const joinConfirmBtn = document.getElementById('join-confirm-btn');
+if (joinConfirmBtn) {
+    joinConfirmBtn.addEventListener('click', async () => {
     playerName = document.getElementById('pseudo-input').value.trim();
     gameCode = document.getElementById('join-code-input').value.trim().toUpperCase();
 
@@ -269,10 +271,13 @@ document.getElementById('join-confirm-btn')?.addEventListener('click', async () 
 
     updateLobbyUI();
     updateColorPickerVisibility();
-});
+    });
+}
 
 // Gérer l'annulation
-document.getElementById('join-cancel-btn')?.addEventListener('click', () => {
+const joinCancelBtn = document.getElementById('join-cancel-btn');
+if (joinCancelBtn) {
+    joinCancelBtn.addEventListener('click', () => {
     const modal = document.getElementById('join-modal');
     if (modal) {
         modal.style.display = 'none';
@@ -281,7 +286,8 @@ document.getElementById('join-cancel-btn')?.addEventListener('click', () => {
     if (errorElem) {
         errorElem.style.display = 'none';
     }
-});
+    });
+}
 
 document.querySelectorAll('.color-option input').forEach(input => {
     input.addEventListener('change', (e) => {
@@ -374,7 +380,17 @@ async function startGame() {
     // Si hôte, charger deck et démarrer
     if (isHost) {
         await deck.loadAllTiles(config.get('useTestDeck') || false);
-        gameSync.broadcastGameStart(deck, gameState);
+        
+        // Envoyer le deck et gameState aux invités
+        multiplayer.broadcast({
+            type: 'game-start',
+            deck: {
+                tiles: deck.tiles,
+                currentIndex: deck.currentIndex,
+                totalTiles: deck.totalTiles
+            },
+            gameState: gameState.serialize()
+        });
         
         // Placer première tuile
         const firstTile = deck.tiles[0];
