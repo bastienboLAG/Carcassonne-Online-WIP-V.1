@@ -167,7 +167,7 @@ export class TilePlacement {
      * Placer la première tuile (centre du plateau)
      */
     placeFirstTile(tile) {
-        return this.placeTile(500, 500, tile, true);
+        return this.placeTile(50, 50, tile, true);
     }
 
     /**
