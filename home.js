@@ -280,10 +280,9 @@ if (joinConfirmBtn) {
                 color: playerColor
             });
         }, 500);
-    });
 
-    updateLobbyUI();
-    updateColorPickerVisibility();
+        updateLobbyUI();
+        updateColorPickerVisibility();
     } catch (error) {
         console.error('❌ Erreur rejoindre:', error);
         const errorElem = document.getElementById('join-error');
