@@ -161,27 +161,36 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
     };
 
     multiplayer.onDataReceived = (data, from) => {
-        if (data.type === 'join-request') {
-            const newPlayer = {
-                id: from,
-                name: data.playerName,
-                color: data.playerColor,
-                isHost: false
-            };
-            players.push(newPlayer);
-            updatePlayersList();
-            updateAvailableColors();
-            
-            multiplayer.sendTo(from, {
-                type: 'join-accepted',
-                players: players,
-                hostId: multiplayer.playerId
-            });
-            
-            multiplayer.broadcast({
-                type: 'player-joined',
-                player: newPlayer
-            });
+        if (data.type === 'player-info') {
+            const existingPlayer = players.find(p => p.id === from);
+            if (!existingPlayer) {
+                let assignedColor = data.color;
+                if (takenColors.includes(data.color)) {
+                    assignedColor = getAvailableColor();
+                }
+                
+                players.push({
+                    id: from,
+                    name: data.name,
+                    color: assignedColor,
+                    isHost: false
+                });
+                updatePlayersList();
+                updateAvailableColors();
+                
+                multiplayer.broadcast({
+                    type: 'players-update',
+                    players: players
+                });
+            }
+        }
+        
+        if (data.type === 'color-change') {
+            const player = players.find(p => p.id === from);
+            if (player) {
+                player.color = data.color;
+                updatePlayersList();
+            }
         }
     };
 });
@@ -223,19 +232,12 @@ if (joinConfirmBtn) {
 
         // Configurer les callbacks AVANT de rejoindre
         multiplayer.onDataReceived = (data, from) => {
-            if (data.type === 'join-accepted') {
+            if (data.type === 'players-update') {
                 players = data.players;
-                multiplayer.hostId = data.hostId;
                 updatePlayersList();
                 updateAvailableColors();
                 updateLobbyUI();
                 updateColorPickerVisibility();
-            }
-            
-            if (data.type === 'player-joined') {
-                players.push(data.player);
-                updatePlayersList();
-                updateAvailableColors();
             }
             
             if (data.type === 'game-starting') {
@@ -270,10 +272,14 @@ if (joinConfirmBtn) {
             isHost: false
         });
 
-        multiplayer.sendTo(multiplayer.hostId, {
-            type: 'join-request',
-            playerName: playerName,
-            playerColor: playerColor
+        // Envoyer les infos au host avec un délai
+        setTimeout(() => {
+            multiplayer.broadcast({
+                type: 'player-info',
+                name: playerName,
+                color: playerColor
+            });
+        }, 500);
     });
 
     updateLobbyUI();
@@ -411,6 +417,7 @@ async function startGame() {
         const firstTileData = deck.tiles[0];
         const firstTile = new Tile(firstTileData);
         tilePlacement.placeFirstTile(firstTile);
+        deck.currentIndex = 1; // Incrémenter pour ne pas re-piocher la première tuile
         
         // Démarrer premier tour
         turnManager.startFirstTurn();
