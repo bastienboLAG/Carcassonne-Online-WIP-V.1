@@ -412,14 +412,21 @@ async function startGame() {
             gameState: gameState.serialize()
         });
         
-        // Placer première tuile
-        const firstTileData = deck.tiles[0];
-        const firstTile = new Tile(firstTileData);
-        tilePlacement.placeFirstTile(firstTile);
-        deck.currentIndex = 1; // Incrémenter pour ne pas re-piocher la première tuile
+        // Ne PAS placer la première tuile, juste créer le slot central
+        // La première tuile est déjà en main grâce à startFirstTurn()
         
-        // Démarrer premier tour
+        // Démarrer premier tour (pioche la première tuile)
         turnManager.startFirstTurn();
+        
+        // Créer manuellement le slot central pour la première tuile
+        const boardElement = document.getElementById('board');
+        const centralSlot = document.createElement('div');
+        centralSlot.className = 'slot';
+        centralSlot.style.gridColumn = 50;
+        centralSlot.style.gridRow = 50;
+        centralSlot.dataset.x = 50;
+        centralSlot.dataset.y = 50;
+        boardElement.appendChild(centralSlot);
     }
     
     scorePanelUI.updateWithGameState(gameState);
