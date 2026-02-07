@@ -88,45 +88,34 @@ function updateColorPickerVisibility() {
 function updatePlayersList() {
     const playersList = document.getElementById('players-list');
     if (!playersList) return;
-
+    
     playersList.innerHTML = '';
+    
+    takenColors = players.map(p => p.color);
+    updateAvailableColors();
     
     if (players.length === 0) {
         playersList.innerHTML = '<div class="player-slot empty"><span class="player-name">En attente de joueurs...</span></div>';
         return;
     }
-
-    players.forEach(player => {
+    
+    players.forEach((player) => {
         const slot = document.createElement('div');
-        slot.className = 'player-slot filled';
-        
-        const meepleImg = document.createElement('img');
-        meepleImg.src = colorImages[player.color];
-        meepleImg.className = 'meeple-img-list';
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'player-name';
-        nameSpan.textContent = player.name;
-        
-        slot.appendChild(meepleImg);
-        slot.appendChild(nameSpan);
-        
-        if (player.id === multiplayer.playerId) {
-            const badge = document.createElement('span');
-            badge.className = 'you-badge';
-            badge.textContent = 'Vous';
-            slot.appendChild(badge);
-        }
-        
-        if (isHost && player.id === multiplayer.hostId) {
-            const hostBadge = document.createElement('span');
-            hostBadge.className = 'host-badge';
-            hostBadge.textContent = '👑 Hôte';
-            slot.appendChild(hostBadge);
-        }
-        
+        slot.className = 'player-slot';
+        slot.innerHTML = `
+            <span class="player-name">${player.name}${player.isHost ? ' 👑' : ''}</span>
+            <img src="${colorImages[player.color]}" class="player-meeple-img" alt="${player.color}">
+        `;
         playersList.appendChild(slot);
     });
+    
+    // Remplir les slots vides jusqu'à 6
+    for (let i = players.length; i < 6; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'player-slot empty';
+        slot.innerHTML = '<span class="player-name">En attente...</span>';
+        playersList.appendChild(slot);
+    }
 }
 
 function updateLobbyUI() {
@@ -156,7 +145,8 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
     players.push({
         id: multiplayer.playerId,
         name: playerName,
-        color: playerColor
+        color: playerColor,
+        isHost: true
     });
 
     document.getElementById('game-code-text').textContent = gameCode;
@@ -175,7 +165,8 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
             const newPlayer = {
                 id: from,
                 name: data.playerName,
-                color: data.playerColor
+                color: data.playerColor,
+                isHost: false
             };
             players.push(newPlayer);
             updatePlayersList();
@@ -193,6 +184,16 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
             });
         }
     };
+});
+
+// Bouton copier le code
+document.getElementById('copy-code-btn')?.addEventListener('click', () => {
+    const codeText = document.getElementById('game-code-text')?.textContent;
+    if (codeText) {
+        navigator.clipboard.writeText(codeText).then(() => {
+            alert('Code copié !');
+        });
+    }
 });
 
 document.getElementById('join-game-btn').addEventListener('click', async () => {
@@ -239,7 +240,8 @@ document.getElementById('join-confirm-btn')?.addEventListener('click', async () 
     players.push({
         id: multiplayer.playerId,
         name: playerName,
-        color: playerColor
+        color: playerColor,
+        isHost: false
     });
 
     multiplayer.sendTo(multiplayer.hostId, {
