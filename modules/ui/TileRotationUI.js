@@ -29,6 +29,11 @@ export class TileRotationUI {
             return;
         }
 
+        // En solo ou si pas de playerId, toujours actif
+        if (!this.playerId) {
+            this.isMyTurn = true;
+        }
+
         // Écouter événements
         this.eventBus.on('turn-started', this.onTurnStarted.bind(this));
 
