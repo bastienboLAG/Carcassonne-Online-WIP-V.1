@@ -82,6 +82,19 @@ function updateColorPickerVisibility() {
     const colorPicker = document.querySelector('.color-picker');
     if (colorPicker) {
         colorPicker.style.display = inLobby ? 'block' : 'none';
+        
+        // Désactiver si on n'est pas hôte
+        const inputs = colorPicker.querySelectorAll('input[type="radio"]');
+        inputs.forEach(input => {
+            input.disabled = !isHost;
+        });
+        
+        // Ajouter une classe visuelle si désactivé
+        if (!isHost) {
+            colorPicker.classList.add('disabled');
+        } else {
+            colorPicker.classList.remove('disabled');
+        }
     }
 }
 
@@ -241,6 +254,22 @@ if (joinConfirmBtn) {
             if (data.type === 'players-update') {
                 console.log('👥 [INVITÉ] Mise à jour liste joueurs');
                 players = data.players;
+                
+                // Vérifier si notre couleur a changé
+                const me = players.find(p => p.id === multiplayer.playerId);
+                if (me && me.color !== playerColor) {
+                    console.log('🎨 [INVITÉ] Couleur changée:', playerColor, '→', me.color);
+                    playerColor = me.color;
+                    
+                    // Mettre à jour le sélecteur visuel
+                    document.querySelectorAll('.color-option').forEach(opt => {
+                        const radio = opt.querySelector('input[type="radio"]');
+                        if (radio.value === playerColor) {
+                            radio.checked = true;
+                        }
+                    });
+                }
+                
                 updatePlayersList();
                 updateAvailableColors();
                 updateLobbyUI();
@@ -477,7 +506,7 @@ function setupGameSyncCallbacks() {
         if (tileData) {
             const tile = new Tile(tileData);
             tile.rotation = rotation;
-            tilePlacement.placeTile(x, y, tile);
+            tilePlacement.placeRemoteTile(x, y, tile); // Utiliser placeRemoteTile
         }
     };
     
