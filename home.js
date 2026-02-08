@@ -704,7 +704,7 @@ async function startGameForInvite() {
 
             endTurnBtn.textContent = 'Terminer mon tour';
             endTurnBtn.classList.remove('final-score-btn');
-        }
+        
     }
 }
 
@@ -1485,3 +1485,4 @@ function setupNavigation(container, board) {
 
 updateColorPickerVisibility();
 console.log('Page chargée');
+
