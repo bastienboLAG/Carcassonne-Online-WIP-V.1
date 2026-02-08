@@ -161,7 +161,10 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
     };
 
     multiplayer.onDataReceived = (data, from) => {
+        console.log('📥 [HÔTE] Données reçues:', data, 'de:', from);
+        
         if (data.type === 'player-info') {
+            console.log('👤 [HÔTE] Traitement player-info');
             const existingPlayer = players.find(p => p.id === from);
             if (!existingPlayer) {
                 let assignedColor = data.color;
@@ -232,7 +235,10 @@ if (joinConfirmBtn) {
 
         // Configurer les callbacks AVANT de rejoindre
         multiplayer.onDataReceived = (data, from) => {
+            console.log('📥 [INVITÉ] Données reçues:', data, 'de:', from);
+            
             if (data.type === 'players-update') {
+                console.log('👥 [INVITÉ] Mise à jour liste joueurs');
                 players = data.players;
                 updatePlayersList();
                 updateAvailableColors();
@@ -246,15 +252,7 @@ if (joinConfirmBtn) {
             }
         };
 
-        const success = await multiplayer.joinGame(gameCode);
-        if (!success) {
-            const errorElem = document.getElementById('join-error');
-            if (errorElem) {
-                errorElem.textContent = 'Code de partie invalide';
-                errorElem.style.display = 'block';
-            }
-            return;
-        }
+        await multiplayer.joinGame(gameCode);
 
         // Fermer la modale
         const modal = document.getElementById('join-modal');
