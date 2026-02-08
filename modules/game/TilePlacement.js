@@ -150,7 +150,8 @@ export class TilePlacement {
         this.eventBus.emit('tile-placed', {
             x, y,
             tile: tileCopy,
-            isFirstTile
+            isFirstTile,
+            isLocal: true // Placement local (pas reçu par sync)
         });
 
         if (isFirstTile) {
@@ -159,6 +160,33 @@ export class TilePlacement {
 
         this.currentTile = null;
         this.validSlots = [];
+
+        return true;
+    }
+
+    /**
+     * Placer une tuile reçue d'un autre joueur (sync)
+     * Ne déclenche pas les événements de meeple
+     */
+    placeRemoteTile(x, y, tile) {
+        // Ajouter au plateau
+        const tileCopy = tile.clone();
+        this.board.addTile(x, y, tileCopy);
+
+        // Mettre à jour les zones
+        if (this.zoneMerger) {
+            this.zoneMerger.updateZonesForNewTile(x, y);
+        }
+
+        console.log(`✅ TilePlacement: Tuile distante posée en (${x}, ${y})`);
+
+        // Émettre événement SANS isLocal (ou isLocal: false)
+        this.eventBus.emit('tile-placed', {
+            x, y,
+            tile: tileCopy,
+            isFirstTile: false,
+            isLocal: false // Placement distant
+        });
 
         return true;
     }
