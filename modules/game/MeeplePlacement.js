@@ -26,12 +26,14 @@ export class MeeplePlacement {
     onTilePlaced(data) {
         this.lastPlacedTile = { x: data.x, y: data.y };
         
-        // Émettre les positions valides pour placer un meeple
-        this.eventBus.emit('meeple-positions-available', {
-            x: data.x,
-            y: data.y,
-            tile: data.tile
-        });
+        // Émettre les positions valides SEULEMENT si c'est un placement local
+        if (data.isLocal) {
+            this.eventBus.emit('meeple-positions-available', {
+                x: data.x,
+                y: data.y,
+                tile: data.tile
+            });
+        }
     }
 
     /**
