@@ -51,7 +51,12 @@ export class GameBoardUI {
      */
     setupClickHandlers() {
         this.boardElement.addEventListener('click', (e) => {
-            if (!this.isMyTurn) return;
+            console.log('🖱️ Clic sur board, isMyTurn:', this.isMyTurn, 'target:', e.target.className);
+            
+            if (!this.isMyTurn) {
+                console.warn('❌ Pas mon tour, clic ignoré');
+                return;
+            }
 
             const target = e.target;
 
@@ -59,6 +64,7 @@ export class GameBoardUI {
             if (target.classList.contains('slot')) {
                 const x = parseInt(target.dataset.x);
                 const y = parseInt(target.dataset.y);
+                console.log('✅ Clic sur slot', x, y);
                 this.eventBus.emit('slot-clicked', { x, y });
             }
 
