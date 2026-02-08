@@ -181,6 +181,7 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
                 updatePlayersList();
                 updateAvailableColors();
                 
+                console.log('📤 [HÔTE] Broadcast players-update:', players);
                 multiplayer.broadcast({
                     type: 'players-update',
                     players: players
@@ -272,6 +273,7 @@ if (joinConfirmBtn) {
 
         // Envoyer les infos au host avec un délai
         setTimeout(() => {
+            console.log('📤 [INVITÉ] Envoi player-info:', { name: playerName, color: playerColor });
             multiplayer.broadcast({
                 type: 'player-info',
                 name: playerName,
