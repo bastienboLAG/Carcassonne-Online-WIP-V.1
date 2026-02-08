@@ -7,7 +7,7 @@ export class TileRotationUI {
         this.tilePlacement = tilePlacement;
         this.gameSync = gameSync;
         this.previewElement = null;
-        this.isMyTurn = false;
+        this.isMyTurn = true; // TRUE par défaut
         this.playerId = null;
     }
 
@@ -27,11 +27,6 @@ export class TileRotationUI {
         if (!this.previewElement) {
             console.error('❌ TileRotationUI: Element #tile-preview introuvable');
             return;
-        }
-
-        // En solo ou si pas de playerId, toujours actif
-        if (!this.playerId) {
-            this.isMyTurn = true;
         }
 
         // Écouter événements
