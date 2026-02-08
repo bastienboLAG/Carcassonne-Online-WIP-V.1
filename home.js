@@ -376,6 +376,7 @@ async function startGame() {
     meepleCursorsUI = new MeepleCursorsUI(eventBus, gameState, multiplayer.playerId);
     tileRotationUI = new TileRotationUI(eventBus, tilePlacement, gameSync);
     tileRotationUI.setPlayerId(multiplayer.playerId);
+    tileRotationUI.init();
     
     buttonsUI = new ButtonsUI(eventBus, scoring, meeplePlacement, deck, gameState);
     buttonsUI.setPlayerId(multiplayer.playerId);
@@ -384,7 +385,6 @@ async function startGame() {
     gameBoardUI.init();
     tilePreviewUI.init();
     meepleCursorsUI.init();
-    tileRotationUI.init();
     buttonsUI.init();
     
     // Connecter événements
@@ -514,6 +514,10 @@ function setupNavigation(container, board) {
     let isDragging = false;
     let startX, startY, scrollLeft, scrollTop;
 
+    // Centrer le plateau au démarrage
+    container.scrollLeft = (board.offsetWidth - container.offsetWidth) / 2;
+    container.scrollTop = (board.offsetHeight - container.offsetHeight) / 2;
+
     container.addEventListener('mousedown', (e) => {
         if (e.target === board || e.target.classList.contains('tile') || e.target.classList.contains('slot')) {
             return;
@@ -545,6 +549,16 @@ function setupNavigation(container, board) {
         const walkY = (y - startY) * 2;
         container.scrollLeft = scrollLeft - walkX;
         container.scrollTop = scrollTop - walkY;
+    });
+
+    // Zoom avec la molette
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const rect = board.getBoundingClientRect();
+        const currentScale = parseFloat(board.style.transform.replace('scale(', '').replace(')', '')) || 1;
+        const newScale = Math.min(Math.max(currentScale * delta, 0.5), 3);
+        board.style.transform = `scale(${newScale})`;
     });
 
     document.getElementById('recenter-btn').addEventListener('click', () => {
