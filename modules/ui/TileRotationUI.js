@@ -39,13 +39,22 @@ export class TileRotationUI {
 
         // Gérer le clic pour rotation
         this.previewElement.addEventListener('click', () => {
-            if (!this.isMyTurn) return;
+            console.log('🖱️ Clic rotation, isMyTurn:', this.isMyTurn, 'currentTile:', this.tilePlacement.currentTile);
+            
+            if (!this.isMyTurn) {
+                console.warn('❌ Pas mon tour');
+                return;
+            }
             
             const currentTile = this.tilePlacement.currentTile;
-            if (!currentTile) return;
+            if (!currentTile) {
+                console.warn('❌ Pas de tuile en main');
+                return;
+            }
 
             // Faire tourner
             currentTile.rotate();
+            console.log('🔄 Rotation:', currentTile.rotation);
 
             // Émettre événement
             this.eventBus.emit('tile-rotated', {
