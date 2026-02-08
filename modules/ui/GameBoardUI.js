@@ -28,6 +28,11 @@ export class GameBoardUI {
             return;
         }
 
+        // En solo ou si pas de playerId, toujours actif
+        if (!this.playerId) {
+            this.isMyTurn = true;
+        }
+
         // Écouter les événements
         this.eventBus.on('tile-placed', this.onTilePlaced.bind(this));
         this.eventBus.on('valid-slots-updated', this.updateSlots.bind(this));
