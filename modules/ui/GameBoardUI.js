@@ -6,7 +6,7 @@ export class GameBoardUI {
         this.eventBus = eventBus;
         this.gameState = gameState;
         this.boardElement = null;
-        this.isMyTurn = false;
+        this.isMyTurn = true; // TRUE par défaut
         this.playerId = null;
     }
 
@@ -26,11 +26,6 @@ export class GameBoardUI {
         if (!this.boardElement) {
             console.error('❌ GameBoardUI: Element #board introuvable');
             return;
-        }
-
-        // En solo ou si pas de playerId, toujours actif
-        if (!this.playerId) {
-            this.isMyTurn = true;
         }
 
         // Écouter les événements
