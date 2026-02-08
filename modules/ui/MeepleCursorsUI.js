@@ -8,7 +8,7 @@ export class MeepleCursorsUI {
         this.playerId = playerId;
         this.boardElement = null;
         this.currentCursors = null;
-        this.isMyTurn = false;
+        this.isMyTurn = true; // TRUE par défaut
     }
 
     /**
