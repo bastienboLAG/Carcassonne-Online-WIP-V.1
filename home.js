@@ -219,7 +219,7 @@ if (joinConfirmBtn) {
     joinConfirmBtn.addEventListener('click', async () => {
     try {
         playerName = document.getElementById('pseudo-input').value.trim();
-        gameCode = document.getElementById('join-code-input').value.trim().toUpperCase();
+        gameCode = document.getElementById('join-code-input').value.trim(); // PAS de .toUpperCase() !
 
         if (!playerName || !gameCode) {
             const errorElem = document.getElementById('join-error');
@@ -437,9 +437,14 @@ async function startGame() {
 function setupGameEventListeners() {
     // Clic sur slot → placer tuile
     eventBus.on('slot-clicked', (data) => {
+        console.log('📨 Event slot-clicked reçu:', data);
         const currentTile = tilePlacement.currentTile;
+        console.log('🎴 CurrentTile:', currentTile);
         if (currentTile) {
+            console.log('✅ Placement de la tuile...');
             tilePlacement.placeTile(data.x, data.y, currentTile);
+        } else {
+            console.warn('❌ Pas de tuile en main');
         }
     });
     
