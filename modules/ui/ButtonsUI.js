@@ -8,7 +8,7 @@ export class ButtonsUI {
         this.meeplePlacement = meeplePlacement;
         this.deck = deck;
         this.gameState = gameState;
-        this.isMyTurn = false;
+        this.isMyTurn = true; // TRUE par défaut
         this.playerId = null;
     }
 
