@@ -78,6 +78,13 @@ export class Tile {
     }
 
     /**
+     * Fait tourner la tuile de 90° dans le sens horaire
+     */
+    rotate() {
+        this.rotation = (this.rotation + 90) % 360;
+    }
+
+    /**
      * Crée une copie profonde de la tuile
      * @returns {Tile} Une nouvelle instance de Tile avec les mêmes données
      */
