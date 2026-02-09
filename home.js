@@ -595,10 +595,10 @@ async function startGameForInvite() {
     gameState = new GameState();
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI();
-        gameState.addPlayer(player.id, player.name, player.color);
-    });
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
+        gameState.addPlayer(player.id, player.name, player.color);
+    });
     
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
@@ -901,11 +901,10 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
     };
     
     document.getElementById('back-to-lobby-btn').onclick = () => {
-        console.log('✅ Slot central cliquable (notre tour)');
-    }
-    
-    board.appendChild(slot);
-    console.log('✅ Slot central ajouté au board');
+        if (confirm('Voulez-vous vraiment quitter la partie ?')) {
+            location.reload();
+        }
+    };
 }
 
 function piocherNouvelleTuile() {
@@ -1054,30 +1053,26 @@ function poserTuileSync(x, y, tile) {
     }
 }
 
-function slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile) {
-    if (firstTilePlaced) {
-        document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
-    }
-    
-    if (!tuileEnMain) return;
-    // ✅ CHANGEMENT : Afficher les slots même si ce n'est pas notre tour (en lecture seule)
-    
-    for (let coord in plateau.placedTiles) {
-        const [x, y] = coord.split(',').map(Number);
-        genererSlotsAutour(x, y);
-    }
+    console.log(`📊 Compteur: ${remaining} / ${total}`);
+    document.getElementById('tile-counter').textContent = `Tuiles : ${remaining} / ${total}`;
 }
 
-function genererSlotsAutour(x, y) {
-    const directions = [{dx:0, dy:-1}, {dx:1, dy:0}, {dx:0, dy:1}, {dx:-1, dy:0}];
-    directions.forEach(dir => {
-        const nx = x + dir.dx, ny = y + dir.dy;
-        if (tuileEnMain && plateau.isFree(nx, ny) && plateau.canPlaceTile(nx, ny, tuileEnMain)) {
-            const slot = document.createElement('div');
-            slot.className = "slot";
-            slot.style.gridColumn = nx;
-            slot.style.gridRow = ny;
-            
+// ========== MEEPLES ==========
+
+/**
+ * Calculer la position après rotation (grille 5x5)
+ * @param {number} position - Position originale (1-25)
+ * @param {number} rotation - Rotation en degrés (0, 90, 180, 270)
+ * @returns {number} Position après rotation
+ */
+function rotatePosition(position, rotation) {
+    if (rotation === 0) return position;
+    
+    // Convertir position en coordonnées (row, col)
+    const row = Math.floor((position - 1) / 5);
+    const col = (position - 1) % 5;
+    
+    let newRow = row;
     let newCol = col;
     
     // Appliquer les rotations successives
