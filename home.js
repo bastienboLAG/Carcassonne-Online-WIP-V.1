@@ -9,6 +9,8 @@ import { Scoring } from './modules/Scoring.js';
 
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
+import { TilePreviewUI } from './modules/TilePreviewUI.js';
+import { MeepleCursorsUI } from './modules/MeepleCursorsUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -32,6 +34,8 @@ let zoomLevel = 1;
 let firstTilePlaced = false;
 let scorePanelUI = null;
 let slotsUI = null;
+let tilePreviewUI = null;
+let meepleCursorsUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -433,7 +437,11 @@ async function startGame() {
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
     });
+    tilePreviewUI = new TilePreviewUI();
+    tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples);
+    meepleCursorsUI.init();
     
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
@@ -459,7 +467,7 @@ async function startGame() {
         
         // Piocher la première tuile
         piocherNouvelleTuile();
-        mettreAJourCompteur();
+        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
         updateTurnDisplay();
     };
     
@@ -514,7 +522,7 @@ async function startGame() {
                 slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
-            mettreAJourCompteur();
+            tilePreviewUI.updateCounter(deck.remaining(), deck.total());
         }
     };
     
@@ -570,7 +578,7 @@ async function startGame() {
         
         // Piocher la première tuile
         piocherNouvelleTuile();
-        mettreAJourCompteur();
+        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
@@ -598,7 +606,11 @@ async function startGameForInvite() {
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
         gameState.addPlayer(player.id, player.name, player.color);
+    tilePreviewUI = new TilePreviewUI();
+    tilePreviewUI.init();
     });
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples);
+    meepleCursorsUI.init();
     
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
@@ -616,7 +628,7 @@ async function startGameForInvite() {
         deck.totalTiles = deckData.totalTiles;
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        mettreAJourCompteur();
+        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
@@ -664,7 +676,7 @@ async function startGameForInvite() {
                 slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
-            mettreAJourCompteur();
+            tilePreviewUI.updateCounter(deck.remaining(), deck.total());
         }
     };
     
@@ -933,7 +945,7 @@ function piocherNouvelleTuile() {
         gameSync.syncTileDraw(tileData.id, 0);
     }
 
-    mettreAJourCompteur();
+    tilePreviewUI.updateCounter(deck.remaining(), deck.total());
     
     if (gameState) {
         updateTurnDisplay();
@@ -986,7 +998,7 @@ function poserTuile(x, y, tile, isFirst = false) {
         }
         
         if (isMyTurn && gameSync) {
-            afficherCurseursMeeple(x, y);
+            meepleCursorsUI.showCursors(x, y, gameState, afficherSelecteurMeeple);
         }
         
         tuileEnMain = null;
@@ -1012,7 +1024,7 @@ function poserTuile(x, y, tile, isFirst = false) {
         }
         
         if (isMyTurn && gameSync) {
-            afficherCurseursMeeple(x, y);
+            meepleCursorsUI.showCursors(x, y, gameState, afficherSelecteurMeeple);
         }
     }
 }
@@ -1093,61 +1105,6 @@ function rotatePosition(position, rotation) {
 /**
  * Récupérer les positions de meeple valides pour une tuile avec rotation
  */
-function getValidMeeplePositions(x, y) {
-    const tile = plateau.placedTiles[`${x},${y}`];
-    if (!tile) {
-        console.log('❌ Tuile non trouvée à', x, y);
-        return [];
-    }
-    
-    console.log('🔍 Tuile trouvée:', tile.id, 'rotation:', tile.rotation);
-    console.log('📦 Zones de la tuile:', tile.zones);
-    
-    if (!tile.zones || tile.zones.length === 0) {
-        console.log('❌ Pas de zones sur cette tuile');
-        return [];
-    }
-    
-    const validPositions = [];
-    
-    // Pour chaque zone, récupérer ses positions et les faire tourner
-    tile.zones.forEach((zone, index) => {
-        console.log(`  Zone ${index}:`, zone.type, 'meeplePosition:', zone.meeplePosition);
-        
-        if (zone.meeplePosition !== undefined && zone.meeplePosition !== null) {
-            // ✅ Gérer à la fois nombre et array
-            const positions = Array.isArray(zone.meeplePosition) 
-                ? zone.meeplePosition 
-                : [zone.meeplePosition];
-            
-            positions.forEach(pos => {
-                const rotatedPos = rotatePosition(pos, tile.rotation);
-                console.log(`    Position ${pos} → ${rotatedPos} (rotation ${tile.rotation}°)`);
-                validPositions.push({
-                    position: rotatedPos,
-                    zoneType: zone.type
-                });
-            });
-        }
-    });
-    
-    console.log('✅ Total positions valides:', validPositions.length);
-    return validPositions;
-}
-
-/**
- * Afficher les curseurs de placement de meeple sur une tuile
- */
-function afficherCurseursMeeple(x, y) {
-    console.log('🎯 Affichage des curseurs de meeple sur', x, y);
-    // ✅ Vérifier si le joueur a des meeples disponibles
-    if (!hasAvailableMeeples(multiplayer.playerId)) {
-        console.log('❌ Pas de meeples disponibles, pas d\'affichage de curseurs');
-        return;
-    }
-
-    
-    // Nettoyer les anciens curseurs et conteneurs
     document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
     
     // ✅ Récupérer les positions valides depuis les zones de la tuile
@@ -1512,10 +1469,6 @@ function incrementPlayerMeeples(playerId) {
 /**
  * Vérifier si le joueur a des meeples disponibles
  */
-function hasAvailableMeeples(playerId) {
-    const player = gameState.players.find(p => p.id === playerId);
-    return player && player.meeples > 0;
-}
 
 // ========================================
 // ÉVÉNEMENTS DES NOUVEAUX BOUTONS
