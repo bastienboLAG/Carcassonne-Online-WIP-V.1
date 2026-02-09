@@ -456,7 +456,7 @@ async function startGame() {
         // Piocher la première tuile
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     };
     
     gameSync.onTileRotated = (rotation) => {
@@ -489,7 +489,7 @@ async function startGame() {
         
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     };
     
     gameSync.onTileDrawn = (tileId, rotation, playerId) => {
@@ -546,7 +546,7 @@ async function startGame() {
         });
         
         // Mettre à jour l'affichage
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     };
     
     // Setup de l'interface
@@ -567,7 +567,7 @@ async function startGame() {
         // Piocher la première tuile
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
         console.log('🎯 Appel de creerSlotCentral...');
@@ -611,7 +611,7 @@ async function startGameForInvite() {
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
         creerSlotCentral();
@@ -640,7 +640,7 @@ async function startGameForInvite() {
     gameSync.onTurnEnded = (nextPlayerIndex, gameStateData) => {
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     };
     
     gameSync.onTileDrawn = (tileId, rotation, playerId) => {
@@ -691,7 +691,7 @@ async function startGameForInvite() {
             delete placedMeeples[key];
         });
         
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     };
     
     setupEventListeners();
@@ -787,7 +787,7 @@ function setupEventListeners() {
                 }
                 
                 // Mettre à jour l'affichage
-                scorePanelUI.update(gameState);
+                isMyTurn = scorePanelUI.update(gameState);
             }
         }
         
@@ -824,7 +824,7 @@ function setupEventListeners() {
                 });
                 
                 // Mettre à jour l'affichage
-                scorePanelUI.update(gameState);
+                isMyTurn = scorePanelUI.update(gameState);
                 
                 // Afficher le gagnant
                 const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
@@ -845,7 +845,7 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         
         // Mettre à jour l'affichage du tour
         if (gameState) {
-            scorePanelUI.update(gameState);
+            isMyTurn = scorePanelUI.update(gameState);
         }
     };
     
@@ -922,7 +922,7 @@ function piocherNouvelleTuile() {
     mettreAJourCompteur();
     
     if (gameState) {
-        scorePanelUI.update(gameState);
+        isMyTurn = scorePanelUI.update(gameState);
     }
     
     // ✅ 5) Rafraîchir les slots APRÈS updateTurnDisplay pour que isMyTurn soit à jour
