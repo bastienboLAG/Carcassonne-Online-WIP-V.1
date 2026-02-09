@@ -1053,6 +1053,9 @@ function poserTuileSync(x, y, tile) {
     }
 }
 
+function mettreAJourCompteur() {
+    const remaining = deck.remaining();
+    const total = deck.total();
     console.log(`📊 Compteur: ${remaining} / ${total}`);
     document.getElementById('tile-counter').textContent = `Tuiles : ${remaining} / ${total}`;
 }
