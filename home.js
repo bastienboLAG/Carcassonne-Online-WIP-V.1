@@ -6,7 +6,7 @@ import { GameState } from './modules/GameState.js';
 import { GameSync } from './modules/GameSync.js';
 import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
-import { ScorePanelUI } from './modules_v2/ui/ScorePanelUI.js';
+import { ScorePanelUI } from './modules/ui/ScorePanelUI.js';
 
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
