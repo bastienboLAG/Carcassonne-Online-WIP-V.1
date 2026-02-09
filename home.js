@@ -6,8 +6,8 @@ import { GameState } from './modules/GameState.js';
 import { GameSync } from './modules/GameSync.js';
 import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
-import { ScorePanelUI } from './modules/ScorePanelUI.js';
 
+import { ScorePanelUI } from './modules/ScorePanelUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -28,8 +28,8 @@ let scoring = null;
 let tuileEnMain = null;
 let tuilePosee = false;
 let zoomLevel = 1;
-let scorePanelUI = null;
 let firstTilePlaced = false;
+let scorePanelUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -425,8 +425,8 @@ async function startGame() {
     
     // Initialiser le GameState
     gameState = new GameState();
-    scorePanelUI = new ScorePanelUI(multiplayer);
     players.forEach(player => {
+    scorePanelUI = new ScorePanelUI();
         gameState.addPlayer(player.id, player.name, player.color);
     });
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
@@ -456,7 +456,7 @@ async function startGame() {
         // Piocher la première tuile
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     };
     
     gameSync.onTileRotated = (rotation) => {
@@ -489,7 +489,7 @@ async function startGame() {
         
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     };
     
     gameSync.onTileDrawn = (tileId, rotation, playerId) => {
@@ -546,7 +546,7 @@ async function startGame() {
         });
         
         // Mettre à jour l'affichage
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     };
     
     // Setup de l'interface
@@ -567,7 +567,7 @@ async function startGame() {
         // Piocher la première tuile
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
         console.log('🎯 Appel de creerSlotCentral...');
@@ -589,8 +589,8 @@ async function startGameForInvite() {
     
     // Initialiser le GameState
     gameState = new GameState();
-    scorePanelUI = new ScorePanelUI(multiplayer);
     players.forEach(player => {
+    scorePanelUI = new ScorePanelUI();
         gameState.addPlayer(player.id, player.name, player.color);
     });
     
@@ -611,7 +611,7 @@ async function startGameForInvite() {
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
         mettreAJourCompteur();
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
         creerSlotCentral();
@@ -640,7 +640,7 @@ async function startGameForInvite() {
     gameSync.onTurnEnded = (nextPlayerIndex, gameStateData) => {
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     };
     
     gameSync.onTileDrawn = (tileId, rotation, playerId) => {
@@ -691,7 +691,7 @@ async function startGameForInvite() {
             delete placedMeeples[key];
         });
         
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     };
     
     setupEventListeners();
@@ -700,6 +700,42 @@ async function startGameForInvite() {
     afficherMessage('En attente de l\'hôte...');
     
     // ✅ Le slot central sera créé quand l'invité recevra la pioche et que isMyTurn sera défini
+}
+
+// ========== FONCTIONS JEU ==========
+function updateTurnDisplay() {
+    if (!gameState || gameState.players.length === 0) {
+        isMyTurn = true;
+        return;
+    }
+    
+    const currentPlayer = gameState.getCurrentPlayer();
+    isMyTurn = currentPlayer.id === multiplayer.playerId;
+    
+    // Mettre à jour l'état du bouton "Terminer mon tour"
+    const endTurnBtn = document.getElementById('end-turn-btn');
+    if (endTurnBtn) {
+        endTurnBtn.disabled = !isMyTurn;
+        if (!isMyTurn) {
+            endTurnBtn.style.opacity = '0.5';
+            endTurnBtn.style.cursor = 'not-allowed';
+        } else {
+            endTurnBtn.style.opacity = '1';
+            endTurnBtn.style.cursor = 'pointer';
+        }
+        
+        // ✅ Changer le texte si le deck est vide
+        if (deck.currentIndex >= deck.totalTiles) {
+            endTurnBtn.textContent = 'Calculer le score final';
+            endTurnBtn.classList.add('final-score-btn');
+        } else {
+            endTurnBtn.textContent = 'Terminer mon tour';
+            endTurnBtn.classList.remove('final-score-btn');
+        }
+    }
+    
+    // ✅ Mettre à jour le tableau de scores
+    scorePanelUI.update(gameState);
 }
 
 
@@ -766,6 +802,9 @@ function setupEventListeners() {
                     const meeple = placedMeeples[key];
                     if (meeple) {
                         console.log(`  Retour meeple de ${meeple.playerId} à ${key}`);
+                        // ✅ Incrémenter le nombre de meeples disponibles
+                        incrementPlayerMeeples(meeple.playerId);
+
                         
                         // ✅ Retirer visuellement - chercher tous les meeples et vérifier data-key
                         const [x, y, position] = key.split(',');
@@ -787,7 +826,7 @@ function setupEventListeners() {
                 }
                 
                 // Mettre à jour l'affichage
-                isMyTurn = scorePanelUI.update(gameState);
+                updateTurnDisplay();
             }
         }
         
@@ -824,7 +863,7 @@ function setupEventListeners() {
                 });
                 
                 // Mettre à jour l'affichage
-                isMyTurn = scorePanelUI.update(gameState);
+                updateTurnDisplay();
                 
                 // Afficher le gagnant
                 const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
@@ -845,7 +884,7 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         
         // Mettre à jour l'affichage du tour
         if (gameState) {
-            isMyTurn = scorePanelUI.update(gameState);
+            updateTurnDisplay();
         }
     };
     
@@ -922,7 +961,7 @@ function piocherNouvelleTuile() {
     mettreAJourCompteur();
     
     if (gameState) {
-        isMyTurn = scorePanelUI.update(gameState);
+        updateTurnDisplay();
     }
     
     // ✅ 5) Rafraîchir les slots APRÈS updateTurnDisplay pour que isMyTurn soit à jour
@@ -1167,6 +1206,12 @@ function getValidMeeplePositions(x, y) {
  */
 function afficherCurseursMeeple(x, y) {
     console.log('🎯 Affichage des curseurs de meeple sur', x, y);
+    // ✅ Vérifier si le joueur a des meeples disponibles
+    if (!hasAvailableMeeples(multiplayer.playerId)) {
+        console.log('❌ Pas de meeples disponibles, pas d\'affichage de curseurs');
+        return;
+    }
+
     
     // Nettoyer les anciens curseurs et conteneurs
     document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
@@ -1366,6 +1411,10 @@ function placerMeeple(x, y, position, meepleType) {
         playerId: multiplayer.playerId
     };
     
+    
+    // ✅ Décrémenter le nombre de meeples disponibles
+    decrementPlayerMeeples(multiplayer.playerId);
+
     // Afficher le meeple
     afficherMeeple(x, y, position, meepleType, playerColor);
     
@@ -1480,3 +1529,85 @@ function setupNavigation(container, board) {
 
 updateColorPickerVisibility();
 console.log('Page chargée');
+
+// ========================================
+// GESTION DU TABLEAU DE SCORES
+// ========================================
+
+/**
+ */
+function decrementPlayerMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (player && player.meeples > 0) {
+        player.meeples--;
+        console.log(`🎭 ${player.name} a maintenant ${player.meeples} meeples disponibles`);
+        scorePanelUI.update(gameState);
+        
+        // Synchroniser
+        if (gameSync) {
+            gameSync.multiplayer.broadcast({
+                type: 'meeple-count-update',
+                playerId: playerId,
+                meeples: player.meeples
+            });
+        }
+    }
+}
+
+/**
+ * Incrémenter le nombre de meeples d'un joueur
+ */
+function incrementPlayerMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (player && player.meeples < 7) {
+        player.meeples++;
+        console.log(`🎭 ${player.name} récupère un meeple (${player.meeples}/7)`);
+        scorePanelUI.update(gameState);
+        
+        // Synchroniser
+        if (gameSync) {
+            gameSync.multiplayer.broadcast({
+                type: 'meeple-count-update',
+                playerId: playerId,
+                meeples: player.meeples
+            });
+        }
+    }
+}
+
+/**
+ * Vérifier si le joueur a des meeples disponibles
+ */
+function hasAvailableMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    return player && player.meeples > 0;
+}
+
+// ========================================
+// ÉVÉNEMENTS DES NOUVEAUX BOUTONS
+// ========================================
+
+// Bouton "Annuler le coup !" (à implémenter plus tard)
+document.getElementById('undo-btn').addEventListener('click', () => {
+    console.log('⏮️ Annulation du coup (fonctionnalité à implémenter)');
+    alert('Fonctionnalité à venir : Annuler le dernier coup joué');
+});
+
+// Bouton "Tuiles restantes dans la pioche ?"
+document.getElementById('remaining-tiles-btn').addEventListener('click', () => {
+    if (!deck) {
+        alert('Aucune partie en cours');
+        return;
+    }
+    
+    const remaining = deck.remaining();
+    const total = deck.total();
+    alert(`🎴 Tuiles restantes : ${remaining} / ${total}`);
+});
+
+// Bouton "Règles de cette partie ?"
+document.getElementById('rules-btn').addEventListener('click', () => {
+    console.log('📜 Affichage des règles (fonctionnalité à implémenter)');
+    alert('Fonctionnalité à venir : Afficher les règles actives pour cette partie');
+});
+
