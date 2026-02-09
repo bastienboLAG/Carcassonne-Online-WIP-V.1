@@ -702,11 +702,6 @@ async function startGameForInvite() {
     // ✅ Le slot central sera créé quand l'invité recevra la pioche et que isMyTurn sera défini
 }
 
-            endTurnBtn.textContent = 'Terminer mon tour';
-            endTurnBtn.classList.remove('final-score-btn');
-        
-    }
-}
 
 function afficherMessage(msg) {
     document.getElementById('tile-preview').innerHTML = `<p style="text-align: center; color: white;">${msg}</p>`;
@@ -1485,4 +1480,3 @@ function setupNavigation(container, board) {
 
 updateColorPickerVisibility();
 console.log('Page chargée');
-
