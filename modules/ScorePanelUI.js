@@ -1,65 +1,76 @@
 /**
- * ScorePanelUI - Affichage des scores et du joueur actif
- * CODE COPIÉ de l'ancien home.js (updateTurnDisplay)
+ * ScorePanelUI - Affichage du tableau de scores avec les meeples
+ * CODE COPIÉ EXACTEMENT de updateScorePanel() du home.js v2
  */
 export class ScorePanelUI {
-    constructor(multiplayer) {
-        this.multiplayer = multiplayer;
-        this.colorImages = {
-            'black': './assets/Meeples/Black/Normal.png',
-            'red': './assets/Meeples/Red/Normal.png',
-            'pink': './assets/Meeples/Pink/Normal.png',
-            'green': './assets/Meeples/Green/Normal.png',
-            'blue': './assets/Meeples/Blue/Normal.png',
-            'yellow': './assets/Meeples/Yellow/Normal.png'
-        };
+    constructor() {
+        // Pas besoin de paramètres
     }
 
     /**
-     * Mettre à jour l'affichage - COPIE EXACTE de updateTurnDisplay()
-     * RETOURNE isMyTurn pour que home.js puisse l'utiliser
+     * Mettre à jour l'affichage du tableau de scores
+     * CODE COPIÉ de updateScorePanel()
      */
     update(gameState) {
-        // Calculer isMyTurn
-        let isMyTurn = true;
+        const playersScoresDiv = document.getElementById('players-scores');
+        if (!playersScoresDiv || !gameState) return;
         
-        if (!gameState || gameState.players.length === 0) {
-            return isMyTurn;
-        }
+        playersScoresDiv.innerHTML = '';
         
         const currentPlayer = gameState.getCurrentPlayer();
-        isMyTurn = currentPlayer.id === this.multiplayer.playerId;
         
-        // Créer ou récupérer le conteneur de la liste des joueurs
-        let playersDisplay = document.getElementById('players-display');
-        if (!playersDisplay) {
-            playersDisplay = document.createElement('div');
-            playersDisplay.id = 'players-display';
-            playersDisplay.style.cssText = 'padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; margin: 10px 0; width: 100%;';
-            document.getElementById('game-ui').insertBefore(playersDisplay, document.getElementById('current-tile-container'));
-        }
-        
-        // Construire la liste HTML
-        let html = '<div style="font-size: 14px;">';
-        
-        gameState.players.forEach((player, index) => {
-            const isActive = index === gameState.currentPlayerIndex;
-            const meepleImg = this.colorImages[player.color];
-            const indicator = isActive ? '▶' : '';
-            const bgColor = isActive ? 'rgba(46, 204, 113, 0.2)' : 'transparent';
+        gameState.players.forEach(player => {
+            const isCurrentPlayer = currentPlayer && player.id === currentPlayer.id;
             
-            html += `
-                <div style="display: flex; align-items: center; gap: 8px; padding: 5px; margin: 3px 0; background: ${bgColor}; border-radius: 3px;">
-                    <span style="color: #2ecc71; font-weight: bold; width: 15px;">${indicator}</span>
-                    <img src="${meepleImg}" style="width: 24px; height: 24px;">
-                    <span style="flex: 1; color: ${isActive ? '#2ecc71' : '#ecf0f1'}; font-weight: ${isActive ? 'bold' : 'normal'};">${player.name} (${player.score || 0} pts)</span>
-                </div>
-            `;
+            const card = document.createElement('div');
+            card.className = 'player-score-card';
+            if (isCurrentPlayer) {
+                card.classList.add('active');
+            }
+            
+            // Header avec nom et score
+            const header = document.createElement('div');
+            header.className = 'player-score-header';
+            
+            if (isCurrentPlayer) {
+                const indicator = document.createElement('span');
+                indicator.className = 'turn-indicator';
+                indicator.textContent = '▶';
+                header.appendChild(indicator);
+            }
+            
+            const name = document.createElement('span');
+            name.className = 'player-score-name';
+            name.textContent = player.name;
+            header.appendChild(name);
+            
+            const points = document.createElement('span');
+            points.className = 'player-score-points';
+            points.textContent = `${player.score} point${player.score > 1 ? 's' : ''}`;
+            header.appendChild(points);
+            
+            card.appendChild(header);
+            
+            // Affichage des meeples disponibles
+            const meeplesDisplay = document.createElement('div');
+            meeplesDisplay.className = 'player-meeples-display';
+            
+            const colorCapitalized = player.color.charAt(0).toUpperCase() + player.color.slice(1);
+            
+            for (let i = 0; i < 7; i++) {
+                const meeple = document.createElement('img');
+                meeple.src = `./assets/Meeples/${colorCapitalized}/Normal.png`;
+                meeple.alt = 'Meeple';
+                
+                if (i >= player.meeples) {
+                    meeple.classList.add('unavailable');
+                }
+                
+                meeplesDisplay.appendChild(meeple);
+            }
+            
+            card.appendChild(meeplesDisplay);
+            playersScoresDiv.appendChild(card);
         });
-        
-        html += '</div>';
-        playersDisplay.innerHTML = html;
-        
-        return isMyTurn;
     }
 }
