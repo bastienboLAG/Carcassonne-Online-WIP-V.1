@@ -17,11 +17,18 @@ export class ScorePanelUI {
 
     /**
      * Mettre à jour l'affichage - COPIE EXACTE de updateTurnDisplay()
+     * RETOURNE isMyTurn pour que home.js puisse l'utiliser
      */
     update(gameState) {
+        // Calculer isMyTurn
+        let isMyTurn = true;
+        
         if (!gameState || gameState.players.length === 0) {
-            return;
+            return isMyTurn;
         }
+        
+        const currentPlayer = gameState.getCurrentPlayer();
+        isMyTurn = currentPlayer.id === this.multiplayer.playerId;
         
         // Créer ou récupérer le conteneur de la liste des joueurs
         let playersDisplay = document.getElementById('players-display');
@@ -52,5 +59,7 @@ export class ScorePanelUI {
         
         html += '</div>';
         playersDisplay.innerHTML = html;
+        
+        return isMyTurn;
     }
 }
