@@ -8,6 +8,7 @@ import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
 
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
+import { SlotsUI } from './modules/SlotsUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -30,6 +31,7 @@ let tuilePosee = false;
 let zoomLevel = 1;
 let firstTilePlaced = false;
 let scorePanelUI = null;
+let slotsUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -428,6 +430,8 @@ async function startGame() {
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI();
         gameState.addPlayer(player.id, player.name, player.color);
+    slotsUI = new SlotsUI(plateau, gameSync);
+    slotsUI.init();
     });
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
     
@@ -468,7 +472,7 @@ async function startGame() {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
             if (firstTilePlaced) {
-                rafraichirTousLesSlots();
+                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
         }
     };
@@ -507,7 +511,7 @@ async function startGame() {
             
             // Rafraîchir les slots
             if (firstTilePlaced) {
-                rafraichirTousLesSlots();
+                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
             mettreAJourCompteur();
@@ -571,7 +575,7 @@ async function startGame() {
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
         console.log('🎯 Appel de creerSlotCentral...');
-        creerSlotCentral();
+        slotsUI.createCentralSlot(isMyTurn, firstTilePlaced, tuileEnMain, poserTuile);
     } else {
         console.log('👤 [INVITÉ] En attente de la pioche...');
         afficherMessage('En attente de l\'hôte...');
@@ -593,6 +597,8 @@ async function startGameForInvite() {
     scorePanelUI = new ScorePanelUI();
         gameState.addPlayer(player.id, player.name, player.color);
     });
+    slotsUI = new SlotsUI(plateau, gameSync);
+    slotsUI.init();
     
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
@@ -614,7 +620,7 @@ async function startGameForInvite() {
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
-        creerSlotCentral();
+        slotsUI.createCentralSlot(isMyTurn, firstTilePlaced, tuileEnMain, poserTuile);
     };
     
     gameSync.onTileRotated = (rotation) => {
@@ -624,7 +630,7 @@ async function startGameForInvite() {
             if (currentImg) {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
-            if (firstTilePlaced) rafraichirTousLesSlots();
+            if (firstTilePlaced) slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
         }
     };
     
@@ -655,7 +661,7 @@ async function startGameForInvite() {
             previewContainer.innerHTML = `<img id="current-tile-img" src="${tuileEnMain.imagePath}" style="transform: rotate(${rotation}deg);">`;
             
             if (firstTilePlaced) {
-                rafraichirTousLesSlots();
+                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
             mettreAJourCompteur();
@@ -763,7 +769,7 @@ function setupEventListeners() {
             }
             
             if (firstTilePlaced) {
-                rafraichirTousLesSlots();
+                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
         }
     });
@@ -895,36 +901,6 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
     };
     
     document.getElementById('back-to-lobby-btn').onclick = () => {
-        if (confirm('Voulez-vous vraiment quitter la partie ?')) {
-            location.reload();
-        }
-    };
-}
-
-function creerSlotCentral() {
-    console.log('🎯 Création du slot central...');
-    const board = document.getElementById('board');
-    console.log('📋 Board element:', board);
-    
-    const slot = document.createElement('div');
-    slot.className = "slot slot-central";
-    slot.style.gridColumn = 50;
-    slot.style.gridRow = 50;
-    // ✅ ENLEVÉ le style gold inline - le CSS s'en charge
-    
-    // ✅ Appliquer le style readonly si ce n'est pas notre tour
-    if (!isMyTurn && gameSync) {
-        slot.classList.add('slot-readonly');
-        slot.style.cursor = 'default';
-        // Pas de onclick
-        console.log('🔒 Slot central readonly (pas notre tour)');
-    } else {
-        slot.onclick = () => {
-            if (tuileEnMain && !firstTilePlaced) {
-                console.log('✅ Clic sur slot central - pose de la tuile');
-                poserTuile(50, 50, tuileEnMain, true);
-            }
-        };
         console.log('✅ Slot central cliquable (notre tour)');
     }
     
@@ -966,7 +942,7 @@ function piocherNouvelleTuile() {
     
     // ✅ 5) Rafraîchir les slots APRÈS updateTurnDisplay pour que isMyTurn soit à jour
     if (firstTilePlaced) {
-        rafraichirTousLesSlots();
+        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
     }
 }
 
@@ -1002,7 +978,7 @@ function poserTuile(x, y, tile, isFirst = false) {
         // ✅ Garder tuileEnMain temporairement pour rafraîchir les slots
         const tempTile = tuileEnMain;
         tuileEnMain = null;
-        rafraichirTousLesSlots();
+        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
         tuileEnMain = tempTile;
         
         // ✅ Merger les zones après placement
@@ -1066,7 +1042,7 @@ function poserTuileSync(x, y, tile) {
         document.querySelectorAll('.slot').forEach(s => s.remove());
         document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
         tuileEnMain = null;
-        rafraichirTousLesSlots();
+        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
     } else {
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
@@ -1078,7 +1054,7 @@ function poserTuileSync(x, y, tile) {
     }
 }
 
-function rafraichirTousLesSlots() {
+function slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile) {
     if (firstTilePlaced) {
         document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
     }
@@ -1102,46 +1078,6 @@ function genererSlotsAutour(x, y) {
             slot.style.gridColumn = nx;
             slot.style.gridRow = ny;
             
-            // ✅ Si ce n'est pas notre tour : même apparence mais sans onclick et sans hover gold
-            if (!isMyTurn && gameSync) {
-                slot.classList.add('slot-readonly');
-                slot.style.cursor = 'default';
-                // Pas de onclick pour les non-actifs
-            } else {
-                // ✅ Seulement le joueur actif a un onclick
-                slot.onclick = () => {
-                    poserTuile(nx, ny, tuileEnMain);
-                };
-            }
-            
-            document.getElementById('board').appendChild(slot);
-        }
-    });
-}
-
-function mettreAJourCompteur() {
-    const remaining = deck.remaining();
-    const total = deck.total();
-    console.log(`📊 Compteur: ${remaining} / ${total}`);
-    document.getElementById('tile-counter').textContent = `Tuiles : ${remaining} / ${total}`;
-}
-
-// ========== MEEPLES ==========
-
-/**
- * Calculer la position après rotation (grille 5x5)
- * @param {number} position - Position originale (1-25)
- * @param {number} rotation - Rotation en degrés (0, 90, 180, 270)
- * @returns {number} Position après rotation
- */
-function rotatePosition(position, rotation) {
-    if (rotation === 0) return position;
-    
-    // Convertir position en coordonnées (row, col)
-    const row = Math.floor((position - 1) / 5);
-    const col = (position - 1) % 5;
-    
-    let newRow = row;
     let newCol = col;
     
     // Appliquer les rotations successives
