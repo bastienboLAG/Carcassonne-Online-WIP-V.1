@@ -1105,94 +1105,10 @@ function rotatePosition(position, rotation) {
 /**
  * Récupérer les positions de meeple valides pour une tuile avec rotation
  */
-    document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
-    
-    // ✅ Récupérer les positions valides depuis les zones de la tuile
-    const validPositions = getValidMeeplePositions(x, y);
-    if (validPositions.length === 0) {
-        console.log('⚠️ Aucune position de meeple valide sur cette tuile');
-        return;
-    }
-    
-    console.log('✅ Positions valides:', validPositions);
-    
-    // Créer un conteneur pour les curseurs sur cette tuile
-    const container = document.createElement('div');
-    container.className = 'meeple-cursors-container';
-    container.style.gridColumn = x;
-    container.style.gridRow = y;
-    container.style.position = 'relative';
-    container.style.width = '208px';
-    container.style.height = '208px';
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '100';
-    
-    // Créer un curseur pour chaque position valide
-    validPositions.forEach(({position, zoneType}) => {
-        const key = `${x},${y},${position}`;
-        
-        // Vérifier si la position est déjà occupée
-        if (placedMeeples[key]) {
-            console.log('⏭️ Position', position, 'déjà occupée, pas de curseur');
-            return;
-        }
-        
-        // ✅ Vérifier si la zone mergée contient déjà un meeple
-        if (zoneMerger) {
-            const mergedZone = zoneMerger.findMergedZoneForPosition(x, y, position);
-            if (mergedZone) {
-                const meeplesInZone = zoneMerger.getZoneMeeples(mergedZone, placedMeeples);
-                if (meeplesInZone.length > 0) {
-                    console.log('⏭️ Position', position, 'dans une zone avec meeple(s), pas de curseur');
-                    return;
-                }
-            }
-        }
-        
-        const cursor = document.createElement('div');
-        cursor.className = 'meeple-cursor';
-        cursor.dataset.zoneType = zoneType; // ✅ Stocker le type de zone
-        
-        // Calculer la position dans la grille 5x5
-        const row = Math.floor((position - 1) / 5);
-        const col = (position - 1) % 5;
-        
-        const offsetX = 20.8 + (col * 41.6);
-        const offsetY = 20.8 + (row * 41.6);
-        
-        cursor.style.position = 'absolute';
-        cursor.style.left = `${offsetX}px`;
-        cursor.style.top = `${offsetY}px`;
-        cursor.style.width = '12px';
-        cursor.style.height = '12px';
-        cursor.style.borderRadius = '50%';
-        cursor.style.backgroundColor = 'rgba(255, 215, 0, 0.6)';
-        cursor.style.border = '2px solid gold';
-        cursor.style.cursor = 'pointer';
-        cursor.style.pointerEvents = 'auto';
-        cursor.style.transition = 'all 0.2s';
-        cursor.style.transform = 'translate(-50%, -50%)';
-        
-        cursor.onmouseenter = () => {
-            cursor.style.backgroundColor = 'rgba(255, 215, 0, 1)';
-            cursor.style.transform = 'translate(-50%, -50%) scale(1.3)';
-        };
-        
-        cursor.onmouseleave = () => {
-            cursor.style.backgroundColor = 'rgba(255, 215, 0, 0.6)';
-            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-        };
-        
-        cursor.onclick = (e) => {
-            e.stopPropagation();
-            afficherSelecteurMeeple(x, y, position, zoneType, e.clientX, e.clientY);
-        };
-        
-        container.appendChild(cursor);
-    });
-    
-    document.getElementById('board').appendChild(container);
-}
+
+/**
+ * Afficher les curseurs de placement de meeple sur une tuile
+ */
 
 /**
  * Afficher le sélecteur de type de meeple (menu compact)
