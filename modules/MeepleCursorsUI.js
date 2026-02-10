@@ -3,10 +3,9 @@
  * CODE COPIÉ EXACTEMENT de afficherCurseursMeeple, afficherSelecteurMeeple
  */
 export class MeepleCursorsUI {
-    constructor(multiplayer, zoneMerger, placedMeeples, plateau) {
+    constructor(multiplayer, zoneMerger, plateau) {
         this.multiplayer = multiplayer;
         this.zoneMerger = zoneMerger;
-        this.placedMeeples = placedMeeples;
         this.plateau = plateau;
         this.boardElement = null;
     }
@@ -97,7 +96,7 @@ export class MeepleCursorsUI {
     /**
      * Afficher les curseurs de meeple - COPIE EXACTE de afficherCurseursMeeple()
      */
-    showCursors(x, y, gameState, onCursorClick) {
+    showCursors(x, y, gameState, placedMeeples, onCursorClick) {
         console.log('🎯 Affichage des curseurs de meeple sur', x, y);
         
         // ✅ Vérifier si le joueur a des meeples disponibles
@@ -134,7 +133,7 @@ export class MeepleCursorsUI {
             const key = `${x},${y},${position}`;
             
             // Vérifier si la position est déjà occupée
-            if (this.placedMeeples[key]) {
+            if (placedMeeples[key]) {
                 console.log('⏭️ Position', position, 'déjà occupée, pas de curseur');
                 return;
             }
@@ -143,7 +142,7 @@ export class MeepleCursorsUI {
             if (this.zoneMerger) {
                 const mergedZone = this.zoneMerger.findMergedZoneForPosition(x, y, position);
                 if (mergedZone) {
-                    const meeplesInZone = this.zoneMerger.getZoneMeeples(mergedZone, this.placedMeeples);
+                    const meeplesInZone = this.zoneMerger.getZoneMeeples(mergedZone, placedMeeples);
                     if (meeplesInZone.length > 0) {
                         console.log('⏭️ Position', position, 'dans une zone avec meeple(s), pas de curseur');
                         return;
