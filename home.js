@@ -450,7 +450,7 @@ async function startGame() {
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
     
     meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
@@ -622,7 +622,7 @@ async function startGameForInvite() {
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
     });
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
     
     meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
@@ -1014,7 +1014,7 @@ function poserTuile(x, y, tile, isFirst = false) {
         }
         
         if (isMyTurn && gameSync) {
-            meepleCursorsUI.showCursors(x, y, gameState, afficherSelecteurMeeple);
+            meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
         }
         
         tuileEnMain = null;
@@ -1040,7 +1040,7 @@ function poserTuile(x, y, tile, isFirst = false) {
         }
         
         if (isMyTurn && gameSync) {
-            meepleCursorsUI.showCursors(x, y, gameState, afficherSelecteurMeeple);
+            meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
         }
     }
 }
