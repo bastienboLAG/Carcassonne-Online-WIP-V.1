@@ -1139,6 +1139,7 @@ function placerMeeple(x, y, position, meepleType) {
     if (!gameState || !multiplayer) return;
     const player = gameState.players.find(p => p.id === multiplayer.playerId);
     const playerColor = player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
+    const key = `${x},${y},${position}`;
     
     console.log('🎭 Placement meeple:', meepleType, 'à', x, y, 'position', position);
     
