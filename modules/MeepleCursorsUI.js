@@ -16,22 +16,72 @@ export class MeepleCursorsUI {
     }
 
     /**
-     * Obtenir les positions valides de meeple depuis les zones
+     * Faire tourner une position de meeple - COPIE EXACTE de rotatePosition()
+     */
+    rotatePosition(position, rotation) {
+        if (rotation === 0) return position;
+        
+        // Convertir position en coordonnées (row, col)
+        const row = Math.floor((position - 1) / 5);
+        const col = (position - 1) % 5;
+        
+        let newRow = row;
+        let newCol = col;
+        
+        // Appliquer les rotations successives
+        const rotations = rotation / 90;
+        for (let i = 0; i < rotations; i++) {
+            const tempRow = newRow;
+            newRow = newCol;
+            newCol = 4 - tempRow;
+        }
+        
+        // Reconvertir en position (1-25)
+        return (newRow * 5) + newCol + 1;
+    }
+
+    /**
+     * Obtenir les positions valides de meeple depuis les zones - COPIE EXACTE
      */
     getValidMeeplePositions(x, y) {
         const tile = this.plateau.placedTiles[`${x},${y}`];
-        if (!tile || !tile.zones) return [];
+        if (!tile) {
+            console.log('❌ Tuile non trouvée à', x, y);
+            return [];
+        }
+        
+        console.log('🔍 Tuile trouvée:', tile.id, 'rotation:', tile.rotation);
+        console.log('📦 Zones de la tuile:', tile.zones);
+        
+        if (!tile.zones || tile.zones.length === 0) {
+            console.log('❌ Pas de zones sur cette tuile');
+            return [];
+        }
         
         const validPositions = [];
-        tile.zones.forEach(zone => {
-            if (zone.meeplePosition) {
-                validPositions.push({
-                    position: zone.meeplePosition,
-                    zoneType: zone.type
+        
+        // Pour chaque zone, récupérer ses positions et les faire tourner
+        tile.zones.forEach((zone, index) => {
+            console.log(`  Zone ${index}:`, zone.type, 'meeplePosition:', zone.meeplePosition);
+            
+            if (zone.meeplePosition !== undefined && zone.meeplePosition !== null) {
+                // ✅ Gérer à la fois nombre et array
+                const positions = Array.isArray(zone.meeplePosition) 
+                    ? zone.meeplePosition 
+                    : [zone.meeplePosition];
+                
+                positions.forEach(pos => {
+                    const rotatedPos = this.rotatePosition(pos, tile.rotation);
+                    console.log(`    Position ${pos} → ${rotatedPos} (rotation ${tile.rotation}°)`);
+                    validPositions.push({
+                        position: rotatedPos,
+                        zoneType: zone.type
+                    });
                 });
             }
         });
         
+        console.log('✅ Total positions valides:', validPositions.length);
         return validPositions;
     }
 
