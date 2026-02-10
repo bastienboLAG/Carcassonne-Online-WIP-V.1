@@ -12,6 +12,7 @@ import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
 import { MeepleCursorsUI } from './modules/MeepleCursorsUI.js';
 import { MeepleSelectorUI } from './modules/MeepleSelectorUI.js';
+import { MeepleDisplayUI } from './modules/MeepleDisplayUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -38,6 +39,7 @@ let slotsUI = null;
 let tilePreviewUI = null;
 let meepleCursorsUI = null;
 let meepleSelectorUI = null;
+let meepleDisplayUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -447,6 +449,8 @@ async function startGame() {
     
     meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
+    meepleDisplayUI = new MeepleDisplayUI();
+    meepleDisplayUI.init();
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
     console.log('🔗 GameSync initialisé');
@@ -539,7 +543,7 @@ async function startGame() {
             playerId: playerId
         };
         
-        afficherMeeple(x, y, position, meepleType, color);
+        meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
     };
     
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
@@ -617,6 +621,8 @@ async function startGameForInvite() {
     
     meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
+    meepleDisplayUI = new MeepleDisplayUI();
+    meepleDisplayUI.init();
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
     
@@ -694,7 +700,7 @@ async function startGameForInvite() {
             playerId: playerId
         };
         
-        afficherMeeple(x, y, position, meepleType, color);
+        meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
     };
     
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
@@ -1146,7 +1152,7 @@ function placerMeeple(x, y, position, meepleType) {
     decrementPlayerMeeples(multiplayer.playerId);
 
     // Afficher le meeple
-    afficherMeeple(x, y, position, meepleType, playerColor);
+    meepleDisplayUI.showMeeple(x, y, position, meepleType, playerColor);
     
     // Synchroniser
     if (gameSync) {
@@ -1160,7 +1166,7 @@ function placerMeeple(x, y, position, meepleType) {
 /**
  * Afficher un meeple sur le plateau
  */
-function afficherMeeple(x, y, position, meepleType, color) {
+function meepleDisplayUI.showMeeple(x, y, position, meepleType, color) {
     // ✅ 1) Créer un conteneur sur la tuile, pas directement le meeple
     let container = document.querySelector(`.meeple-container[data-pos="${x},${y}"]`);
     if (!container) {
