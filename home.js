@@ -28,9 +28,11 @@ let isHost = false;
 const plateau = new Board();
 const deck = new Deck();
 let gameState = null;
-n// EventBus central
+
+// ========== EVENTBUS ==========
 const eventBus = new EventBus();
-eventBus.setDebug(true); // Pour voir les événements en console
+eventBus.setDebug(true); // Debug activé pour voir les événements
+
 let gameSync = null;
 let zoneMerger = null;
 let scoring = null;
