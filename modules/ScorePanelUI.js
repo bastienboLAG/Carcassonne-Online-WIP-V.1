@@ -1,15 +1,18 @@
 /**
  * ScorePanelUI - Affichage du tableau de scores avec les meeples
- * CODE COPIÉ EXACTEMENT de updateScorePanel() du home.js v2
+ * CONNECTÉ À EVENTBUS
  */
 export class ScorePanelUI {
-    constructor() {
-        // Pas besoin de paramètres
+    constructor(eventBus) {
+        this.eventBus = eventBus;
+        
+        // S'abonner aux événements
+        this.eventBus.on('score-updated', this.update.bind(this));
+        this.eventBus.on('turn-changed', this.update.bind(this));
     }
 
     /**
      * Mettre à jour l'affichage du tableau de scores
-     * CODE COPIÉ de updateScorePanel()
      */
     update(gameState) {
         const playersScoresDiv = document.getElementById('players-scores');
