@@ -440,7 +440,7 @@ async function startGame() {
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
     meepleCursorsUI.init();
     
     // Initialiser GameSync
@@ -609,7 +609,7 @@ async function startGameForInvite() {
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
     });
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
     meepleCursorsUI.init();
     
     // Initialiser GameSync
