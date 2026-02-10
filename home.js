@@ -11,6 +11,7 @@ import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
 import { MeepleCursorsUI } from './modules/MeepleCursorsUI.js';
+import { MeepleSelectorUI } from './modules/MeepleSelectorUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -36,6 +37,7 @@ let scorePanelUI = null;
 let slotsUI = null;
 let tilePreviewUI = null;
 let meepleCursorsUI = null;
+let meepleSelectorUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -443,6 +445,7 @@ async function startGame() {
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
     meepleCursorsUI.init();
     
+    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
@@ -612,6 +615,7 @@ async function startGameForInvite() {
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, placedMeeples, plateau);
     meepleCursorsUI.init();
     
+    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
@@ -1113,98 +1117,17 @@ function rotatePosition(position, rotation) {
 /**
  * Afficher le sélecteur de type de meeple (menu compact)
  */
-function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
-    console.log('📋 Sélecteur de meeple à la position', position, 'type:', zoneType);
-    
-    // Nettoyer l'ancien sélecteur
-    const oldSelector = document.getElementById('meeple-selector');
-    if (oldSelector) oldSelector.remove();
-    
-    // Créer le sélecteur
-    const selector = document.createElement('div');
-    selector.id = 'meeple-selector';
-    selector.style.position = 'fixed';
-    selector.style.left = `${mouseX}px`;
-    selector.style.top = `${mouseY - 80}px`;
-    selector.style.transform = 'translateX(-50%)';
-    selector.style.zIndex = '1000';
-    selector.style.display = 'flex';
-    selector.style.gap = '0px';
-    selector.style.padding = '2px';
-    selector.style.background = 'rgba(44, 62, 80, 0.5)';
-    selector.style.borderRadius = '8px';
-    selector.style.border = '2px solid gold';
-    selector.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
-    
-    // ✅ Proposer les meeples selon le type de zone
-    let meepleTypes = [];
-    
-    if (zoneType === 'field') {
-        // Field → Farmer uniquement
-        meepleTypes = [
-            { type: 'Farmer', image: `./assets/Meeples/${getPlayerColor()}/Farmer.png` }
-        ];
-    } else if (zoneType === 'road' || zoneType === 'city') {
-        // Road ou City → Normal uniquement
-        meepleTypes = [
-            { type: 'Normal', image: `./assets/Meeples/${getPlayerColor()}/Normal.png` }
-        ];
-    } else {
-        // Par défaut (abbey, etc.) → Normal
-        meepleTypes = [
-            { type: 'Normal', image: `./assets/Meeples/${getPlayerColor()}/Normal.png` }
-        ];
-    }
-    
-    meepleTypes.forEach(meeple => {
-        const option = document.createElement('div');
-        option.style.cursor = 'pointer';
-        option.style.padding = '2px';
-        option.style.borderRadius = '5px';
-        option.style.transition = 'background 0.2s';
-        
-        const img = document.createElement('img');
-        img.src = meeple.image;
-        img.style.width = '30px';
-        img.style.height = '30px';
-        img.style.display = 'block';
-        
-        option.appendChild(img);
-        
-        option.onmouseenter = () => {
-            option.style.background = 'rgba(255, 215, 0, 0.2)';
-        };
-        
-        option.onmouseleave = () => {
-            option.style.background = 'transparent';
-        };
-        
-        option.onclick = (e) => {
-            e.stopPropagation();
-            placerMeeple(x, y, position, meeple.type);
-            setTimeout(() => selector.remove(), 0);
-        };
-        
-        selector.appendChild(option);
-    });
-    
-    // Fermer quand on clique ailleurs
-    setTimeout(() => {
-        const closeOnClickOutside = (e) => {
-            if (!selector.contains(e.target)) {
-                selector.remove();
-                document.removeEventListener('click', closeOnClickOutside);
-            }
-        };
-        document.addEventListener('click', closeOnClickOutside);
-    }, 10);
-    
-    document.body.appendChild(selector);
-}
 
 /**
  * Placer un meeple
  */
+/**
+ * Wrapper pour afficherSelecteurMeeple - appelle meepleSelectorUI
+ */
+function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
+    meepleSelectorUI.show(x, y, position, zoneType, mouseX, mouseY, placerMeeple);
+}
+
 function placerMeeple(x, y, position, meepleType) {
     const key = `${x},${y},${position}`;
     const playerColor = getPlayerColor();
@@ -1281,11 +1204,6 @@ function afficherMeeple(x, y, position, meepleType, color) {
 /**
  * Récupérer la couleur du joueur actuel
  */
-function getPlayerColor() {
-    if (!gameState || !multiplayer) return 'Blue';
-    const player = gameState.players.find(p => p.id === multiplayer.playerId);
-    return player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
-}
 
 // ==========
 
