@@ -1135,7 +1135,10 @@ function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
 }
 
 function placerMeeple(x, y, position, meepleType) {
-    const key = `${x},${y},${position}`;
+    // Obtenir la couleur du joueur
+    if (!gameState || !multiplayer) return;
+    const player = gameState.players.find(p => p.id === multiplayer.playerId);
+    const playerColor = player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
     const playerColor = getPlayerColor();
     
     console.log('🎭 Placement meeple:', meepleType, 'à', x, y, 'position', position);
