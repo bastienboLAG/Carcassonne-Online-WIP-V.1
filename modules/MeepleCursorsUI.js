@@ -132,6 +132,10 @@ export class MeepleCursorsUI {
         validPositions.forEach(({position, zoneType}) => {
             const key = `${x},${y},${position}`;
             
+            console.log('🔍 Vérification position', position, 'key:', key);
+            console.log('📦 placedMeeples:', placedMeeples);
+            console.log('❓ placedMeeples[key]:', placedMeeples[key]);
+            
             // Vérifier si la position est déjà occupée
             if (placedMeeples[key]) {
                 console.log('⏭️ Position', position, 'déjà occupée, pas de curseur');
