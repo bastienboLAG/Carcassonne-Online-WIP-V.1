@@ -3,10 +3,11 @@
  * CODE COPIÉ EXACTEMENT de afficherCurseursMeeple, afficherSelecteurMeeple
  */
 export class MeepleCursorsUI {
-    constructor(multiplayer, zoneMerger, placedMeeples) {
+    constructor(multiplayer, zoneMerger, placedMeeples, plateau) {
         this.multiplayer = multiplayer;
         this.zoneMerger = zoneMerger;
         this.placedMeeples = placedMeeples;
+        this.plateau = plateau;
         this.boardElement = null;
     }
 
@@ -18,7 +19,7 @@ export class MeepleCursorsUI {
      * Obtenir les positions valides de meeple depuis les zones
      */
     getValidMeeplePositions(x, y) {
-        const tile = plateau.getTile(x, y);
+        const tile = this.plateau.getTile(x, y);
         if (!tile || !tile.zones) return [];
         
         const validPositions = [];
