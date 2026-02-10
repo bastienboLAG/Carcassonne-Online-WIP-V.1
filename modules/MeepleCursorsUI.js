@@ -19,7 +19,7 @@ export class MeepleCursorsUI {
      * Obtenir les positions valides de meeple depuis les zones
      */
     getValidMeeplePositions(x, y) {
-        const tile = this.plateau.getTile(x, y);
+        const tile = this.plateau.placedTiles[`${x},${y}`];
         if (!tile || !tile.zones) return [];
         
         const validPositions = [];
