@@ -7,6 +7,7 @@ import { GameSync } from './modules/GameSync.js';
 import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
 
+import { EventBus } from './modules/core/EventBus.js';
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
@@ -27,6 +28,9 @@ let isHost = false;
 const plateau = new Board();
 const deck = new Deck();
 let gameState = null;
+n// EventBus central
+const eventBus = new EventBus();
+eventBus.setDebug(true); // Pour voir les événements en console
 let gameSync = null;
 let zoneMerger = null;
 let scoring = null;
@@ -436,7 +440,7 @@ async function startGame() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI();
+    scorePanelUI = new ScorePanelUI(eventBus);
         gameState.addPlayer(player.id, player.name, player.color);
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
@@ -609,7 +613,7 @@ async function startGameForInvite() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI();
+    scorePanelUI = new ScorePanelUI(eventBus);
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
         gameState.addPlayer(player.id, player.name, player.color);
@@ -763,7 +767,7 @@ function updateTurnDisplay() {
     }
     
     // ✅ Mettre à jour le tableau de scores
-    scorePanelUI.update(gameState);
+    eventBus.emit('score-updated', gameState);
 }
 
 
@@ -1235,7 +1239,7 @@ function decrementPlayerMeeples(playerId) {
     if (player && player.meeples > 0) {
         player.meeples--;
         console.log(`🎭 ${player.name} a maintenant ${player.meeples} meeples disponibles`);
-        scorePanelUI.update(gameState);
+        eventBus.emit('score-updated', gameState);
         
         // Synchroniser
         if (gameSync) {
@@ -1256,7 +1260,7 @@ function incrementPlayerMeeples(playerId) {
     if (player && player.meeples < 7) {
         player.meeples++;
         console.log(`🎭 ${player.name} récupère un meeple (${player.meeples}/7)`);
-        scorePanelUI.update(gameState);
+        eventBus.emit('score-updated', gameState);
         
         // Synchroniser
         if (gameSync) {
