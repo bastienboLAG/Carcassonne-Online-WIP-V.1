@@ -450,6 +450,9 @@ async function startGame() {
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
+    // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
+    zoneMerger = new ZoneMerger(plateau);
+    scoring = new Scoring(zoneMerger);
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
     
@@ -462,8 +465,6 @@ async function startGame() {
     console.log('🔗 GameSync initialisé');
     
     // ✅ Initialiser ZoneMerger et Scoring
-    zoneMerger = new ZoneMerger(plateau);
-    scoring = new Scoring(zoneMerger);
     console.log('🔗 ZoneMerger et Scoring initialisés');
     
     // Callbacks pour les actions synchronisées
@@ -621,6 +622,9 @@ async function startGameForInvite() {
         gameState.addPlayer(player.id, player.name, player.color);
     tilePreviewUI = new TilePreviewUI();
     tilePreviewUI.init();
+    // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
+    zoneMerger = new ZoneMerger(plateau);
+    scoring = new Scoring(zoneMerger);
     });
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
@@ -633,8 +637,6 @@ async function startGameForInvite() {
     gameSync.init();
     
     // ✅ Initialiser ZoneMerger et Scoring
-    zoneMerger = new ZoneMerger(plateau);
-    scoring = new Scoring(zoneMerger);
     
     // Callbacks
     gameSync.onGameStarted = (deckData, gameStateData) => {
