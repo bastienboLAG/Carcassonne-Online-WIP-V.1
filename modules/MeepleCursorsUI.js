@@ -144,9 +144,12 @@ export class MeepleCursorsUI {
             
             // ✅ Vérifier si la zone mergée contient déjà un meeple
             if (this.zoneMerger) {
+                console.log('🔎 Recherche zone mergée pour position', position);
                 const mergedZone = this.zoneMerger.findMergedZoneForPosition(x, y, position);
+                console.log('📍 Zone mergée trouvée:', mergedZone);
                 if (mergedZone) {
                     const meeplesInZone = this.zoneMerger.getZoneMeeples(mergedZone, placedMeeples);
+                    console.log('🎭 Meeples dans cette zone:', meeplesInZone);
                     if (meeplesInZone.length > 0) {
                         console.log('⏭️ Position', position, 'dans une zone avec meeple(s), pas de curseur');
                         return;
