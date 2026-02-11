@@ -8,6 +8,8 @@ import { ZoneMerger } from './modules/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
 
 import { EventBus } from './modules/core/EventBus.js';
+import { RuleRegistry } from './modules/core/RuleRegistry.js';
+import { BaseRules } from './modules/rules/BaseRules.js';
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
@@ -31,6 +33,8 @@ let gameState = null;
 
 // ========== EVENTBUS ==========
 const eventBus = new EventBus();
+n// RuleRegistry
+const ruleRegistry = new RuleRegistry(eventBus);
 eventBus.setDebug(true); // Debug activé pour voir les événements
 
 let gameSync = null;
@@ -605,6 +609,11 @@ async function startGame() {
     }
     
     console.log('✅ Initialisation terminée');
+    
+    // Enregistrer et activer les règles de base
+    ruleRegistry.register('base', BaseRules);
+    ruleRegistry.enable('base');
+    console.log('📋 Règles actives:', ruleRegistry.getActiveRules());
 }
 
 async function startGameForInvite() {
