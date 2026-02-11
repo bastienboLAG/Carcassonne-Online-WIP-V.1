@@ -33,7 +33,6 @@ let gameState = null;
 
 // ========== EVENTBUS ==========
 const eventBus = new EventBus();
-n// RuleRegistry
 const ruleRegistry = new RuleRegistry(eventBus);
 eventBus.setDebug(true); // Debug activé pour voir les événements
 
