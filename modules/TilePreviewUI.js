@@ -1,16 +1,48 @@
 /**
  * TilePreviewUI - Gère l'affichage de la tuile en main et du compteur
- * CODE COPIÉ de piocherNouvelleTuile (partie UI) et mettreAJourCompteur
+ * CONNECTÉ À EVENTBUS
  */
 export class TilePreviewUI {
-    constructor() {
+    constructor(eventBus) {
+        this.eventBus = eventBus;
         this.previewElement = null;
         this.counterElement = null;
+        
+        // S'abonner aux événements
+        this.eventBus.on('tile-drawn', (data) => this.onTileDrawn(data));
+        this.eventBus.on('tile-rotated', (data) => this.onTileRotated(data));
+        this.eventBus.on('tile-placed', () => this.showBackside());
+        this.eventBus.on('deck-updated', (data) => this.updateCounter(data.remaining, data.total));
     }
 
     init() {
         this.previewElement = document.getElementById('tile-preview');
         this.counterElement = document.getElementById('tile-counter');
+    }
+
+    /**
+     * Quand une tuile est piochée
+     */
+    onTileDrawn(data) {
+        console.log('🎴 TilePreviewUI: onTileDrawn appelé', data);
+        if (!this.previewElement) {
+            console.error('❌ previewElement est null');
+            return;
+        }
+        if (!data.tile) {
+            console.error('❌ data.tile est null');
+            return;
+        }
+        this.showTile(data.tile);
+    }
+
+    /**
+     * Quand une tuile est tournée
+     */
+    onTileRotated(data) {
+        if (data.rotation !== undefined) {
+            this.updateRotation(data.rotation);
+        }
     }
 
     /**
@@ -41,7 +73,7 @@ export class TilePreviewUI {
     }
 
     /**
-     * Mettre à jour le compteur de tuiles - COPIE EXACTE de mettreAJourCompteur()
+     * Mettre à jour le compteur de tuiles
      */
     updateCounter(remaining, total) {
         if (!this.counterElement) return;
