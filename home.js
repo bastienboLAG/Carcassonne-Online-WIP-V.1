@@ -993,7 +993,7 @@ function poserTuile(x, y, tile, isFirst = false) {
     if (isFirst) {
         console.log('✅ Première tuile posée');
         firstTilePlaced = true;
-        eventBus.emit('tile-placed', { x, y, tile: tuile });
+        eventBus.emit('tile-placed', { x, y, tile });
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
         
@@ -1067,7 +1067,7 @@ function poserTuileSync(x, y, tile) {
 
     if (!firstTilePlaced) {
         firstTilePlaced = true;
-        eventBus.emit('tile-placed', { x, y, tile: tuile });
+        eventBus.emit('tile-placed', { x, y, tile });
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
         document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
