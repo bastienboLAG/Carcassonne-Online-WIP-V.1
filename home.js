@@ -447,7 +447,7 @@ async function startGame() {
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
     });
-    tilePreviewUI = new TilePreviewUI();
+    tilePreviewUI = new TilePreviewUI(eventBus);
     tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
     // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
@@ -481,7 +481,7 @@ async function startGame() {
         
         // Piocher la première tuile
         piocherNouvelleTuile();
-        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+        eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         updateTurnDisplay();
     };
     
@@ -528,15 +528,15 @@ async function startGame() {
             tuileEnMain.rotation = rotation;
             
             // ✅ AFFICHER la tuile pour tout le monde
-            const previewContainer = document.getElementById('tile-preview');
-            previewContainer.innerHTML = `<img id="current-tile-img" src="${tuileEnMain.imagePath}" style="transform: rotate(${rotation}deg);">`;
+            // Émettre événement tile-drawn
+            eventBus.emit('tile-drawn', { tile: tuileEnMain });
             
             // Rafraîchir les slots
             if (firstTilePlaced) {
                 slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
-            tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+            eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         }
     };
     
@@ -592,7 +592,7 @@ async function startGame() {
         
         // Piocher la première tuile
         piocherNouvelleTuile();
-        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+        eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
@@ -620,7 +620,7 @@ async function startGameForInvite() {
     slotsUI = new SlotsUI(plateau, gameSync);
     slotsUI.init();
         gameState.addPlayer(player.id, player.name, player.color);
-    tilePreviewUI = new TilePreviewUI();
+    tilePreviewUI = new TilePreviewUI(eventBus);
     tilePreviewUI.init();
     // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
     zoneMerger = new ZoneMerger(plateau);
@@ -646,7 +646,7 @@ async function startGameForInvite() {
         deck.totalTiles = deckData.totalTiles;
         gameState.deserialize(gameStateData);
         piocherNouvelleTuile();
-        tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+        eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
@@ -687,14 +687,14 @@ async function startGameForInvite() {
             tuileEnMain = new Tile(tileData);
             tuileEnMain.rotation = rotation;
             
-            const previewContainer = document.getElementById('tile-preview');
-            previewContainer.innerHTML = `<img id="current-tile-img" src="${tuileEnMain.imagePath}" style="transform: rotate(${rotation}deg);">`;
+            // Émettre événement tile-drawn
+            eventBus.emit('tile-drawn', { tile: tuileEnMain });
             
             if (firstTilePlaced) {
                 slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
-            tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+            eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         }
     };
     
@@ -956,14 +956,14 @@ function piocherNouvelleTuile() {
 
     // ✅ TOUT LE MONDE voit la tuile
     const previewContainer = document.getElementById('tile-preview');
-    previewContainer.innerHTML = `<img id="current-tile-img" src="${tuileEnMain.imagePath}" style="cursor: pointer; transform: rotate(0deg);" title="Cliquez pour tourner">`;
-
+    // Émettre événement tile-drawn
+    eventBus.emit('tile-drawn', { tile: tuileEnMain });
     // ✅ Synchroniser la pioche si c'est notre tour
     if (isMyTurn && gameSync) {
         gameSync.syncTileDraw(tileData.id, 0);
     }
 
-    tilePreviewUI.updateCounter(deck.remaining(), deck.total());
+    eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
     
     if (gameState) {
         updateTurnDisplay();
