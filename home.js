@@ -444,8 +444,11 @@ async function startGame() {
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI(eventBus);
         gameState.addPlayer(player.id, player.name, player.color);
-    slotsUI = new SlotsUI(plateau, gameSync);
+    slotsUI = new SlotsUI(plateau, gameSync, eventBus);
     slotsUI.init();
+    slotsUI.setSlotClickHandler(poserTuile);
+    slotsUI.isMyTurn = isMyTurn;
+    slotsUI.firstTilePlaced = firstTilePlaced;
     });
     tilePreviewUI = new TilePreviewUI(eventBus);
     tilePreviewUI.init();
@@ -494,7 +497,6 @@ async function startGame() {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
             if (firstTilePlaced) {
-                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
         }
     };
@@ -533,7 +535,6 @@ async function startGame() {
             
             // Rafraîchir les slots
             if (firstTilePlaced) {
-                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
             eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
@@ -597,7 +598,7 @@ async function startGame() {
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
         console.log('🎯 Appel de creerSlotCentral...');
-        slotsUI.createCentralSlot(isMyTurn, firstTilePlaced, tuileEnMain, poserTuile);
+        slotsUI.createCentralSlot();
     } else {
         console.log('👤 [INVITÉ] En attente de la pioche...');
         afficherMessage('En attente de l\'hôte...');
@@ -617,8 +618,11 @@ async function startGameForInvite() {
     gameState = new GameState();
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI(eventBus);
-    slotsUI = new SlotsUI(plateau, gameSync);
+    slotsUI = new SlotsUI(plateau, gameSync, eventBus);
     slotsUI.init();
+    slotsUI.setSlotClickHandler(poserTuile);
+    slotsUI.isMyTurn = isMyTurn;
+    slotsUI.firstTilePlaced = firstTilePlaced;
         gameState.addPlayer(player.id, player.name, player.color);
     tilePreviewUI = new TilePreviewUI(eventBus);
     tilePreviewUI.init();
@@ -650,7 +654,7 @@ async function startGameForInvite() {
         updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
-        slotsUI.createCentralSlot(isMyTurn, firstTilePlaced, tuileEnMain, poserTuile);
+        slotsUI.createCentralSlot();
     };
     
     gameSync.onTileRotated = (rotation) => {
@@ -660,7 +664,6 @@ async function startGameForInvite() {
             if (currentImg) {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
-            if (firstTilePlaced) slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
         }
     };
     
@@ -691,7 +694,6 @@ async function startGameForInvite() {
             eventBus.emit('tile-drawn', { tile: tuileEnMain });
             
             if (firstTilePlaced) {
-                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
             
             eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
@@ -799,7 +801,6 @@ function setupEventListeners() {
             }
             
             if (firstTilePlaced) {
-                slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
             }
         }
     });
@@ -971,7 +972,6 @@ function piocherNouvelleTuile() {
     
     // ✅ 5) Rafraîchir les slots APRÈS updateTurnDisplay pour que isMyTurn soit à jour
     if (firstTilePlaced) {
-        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
     }
 }
 
@@ -993,6 +993,7 @@ function poserTuile(x, y, tile, isFirst = false) {
     if (isFirst) {
         console.log('✅ Première tuile posée');
         firstTilePlaced = true;
+        eventBus.emit('tile-placed', { x, y, tile: tuile });
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
         
@@ -1007,7 +1008,6 @@ function poserTuile(x, y, tile, isFirst = false) {
         // ✅ Garder tuileEnMain temporairement pour rafraîchir les slots
         const tempTile = tuileEnMain;
         tuileEnMain = null;
-        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
         tuileEnMain = tempTile;
         
         // ✅ Merger les zones après placement
@@ -1067,11 +1067,11 @@ function poserTuileSync(x, y, tile) {
 
     if (!firstTilePlaced) {
         firstTilePlaced = true;
+        eventBus.emit('tile-placed', { x, y, tile: tuile });
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
         document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
         tuileEnMain = null;
-        slotsUI.refreshAllSlots(firstTilePlaced, tuileEnMain, isMyTurn, poserTuile);
     } else {
         tuilePosee = true;
         document.querySelectorAll('.slot').forEach(s => s.remove());
