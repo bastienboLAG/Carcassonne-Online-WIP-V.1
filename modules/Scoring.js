@@ -44,10 +44,12 @@ export class Scoring {
 
             if (mergedZone.type === 'city') {
                 points = this._scoreClosedCity(mergedZone);
-                reason = `Ville fermée (${mergedZone.tiles.length} tuiles, ${mergedZone.shields} blasons)`;
+                const uniqueTiles = this._countUniqueTiles(mergedZone);
+                reason = `Ville fermée (${uniqueTiles} tuiles, ${mergedZone.shields} blasons)`;
             } else if (mergedZone.type === 'road') {
                 points = this._scoreClosedRoad(mergedZone);
-                reason = `Route fermée (${mergedZone.tiles.length} tuiles)`;
+                const uniqueTiles = this._countUniqueTiles(mergedZone);
+                reason = `Route fermée (${uniqueTiles} tuiles)`;
             } else if (mergedZone.type === 'abbey') {
                 points = this._scoreClosedAbbey();
                 reason = 'Abbaye complète';
@@ -73,7 +75,8 @@ export class Scoring {
      * 2 points par tuile + 2 points par blason
      */
     _scoreClosedCity(mergedZone) {
-        return (mergedZone.tiles.length * 2) + (mergedZone.shields * 2);
+        const uniqueTiles = this._countUniqueTiles(mergedZone);
+        return (uniqueTiles * 2) + (mergedZone.shields * 2);
     }
 
     /**
@@ -81,7 +84,20 @@ export class Scoring {
      * 1 point par tuile
      */
     _scoreClosedRoad(mergedZone) {
-        return mergedZone.tiles.length;
+        const uniqueTiles = this._countUniqueTiles(mergedZone);
+        return uniqueTiles;
+    }
+
+    /**
+     * Compter les tuiles uniques dans une zone (éviter les doublons)
+     * Une tuile peut avoir plusieurs zones du même type
+     */
+    _countUniqueTiles(mergedZone) {
+        const uniqueCoords = new Set();
+        mergedZone.tiles.forEach(tile => {
+            uniqueCoords.add(`${tile.x},${tile.y}`);
+        });
+        return uniqueCoords.size;
     }
 
     /**
@@ -126,13 +142,13 @@ export class Scoring {
             if (meeples.length === 0) return;
 
             const owners = this._getZoneOwners(meeples);
-            const points = mergedZone.tiles.length + mergedZone.shields;
+            const points = this._countUniqueTiles(mergedZone) + mergedZone.shields;
 
             owners.forEach(playerId => {
                 finalScores.push({
                     playerId,
                     points,
-                    reason: `Ville incomplète (${mergedZone.tiles.length} tuiles, ${mergedZone.shields} blasons)`
+                    reason: `Ville incomplète (${this._countUniqueTiles(mergedZone)} tuiles, ${mergedZone.shields} blasons)`
                 });
             });
         });
@@ -145,13 +161,13 @@ export class Scoring {
             if (meeples.length === 0) return;
 
             const owners = this._getZoneOwners(meeples);
-            const points = mergedZone.tiles.length;
+            const points = this._countUniqueTiles(mergedZone);
 
             owners.forEach(playerId => {
                 finalScores.push({
                     playerId,
                     points,
-                    reason: `Route incomplète (${mergedZone.tiles.length} tuiles)`
+                    reason: `Route incomplète (${this._countUniqueTiles(mergedZone)} tuiles)`
                 });
             });
         });
