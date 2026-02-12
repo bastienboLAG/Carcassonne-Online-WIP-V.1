@@ -3,16 +3,16 @@
  * CONNECTÉ À EVENTBUS
  */
 export class SlotsUI {
-    constructor(plateau, gameSync, eventBus) {
+    constructor(plateau, gameSync, eventBus, getTileEnMain) {
         this.plateau = plateau;
         this.gameSync = gameSync;
         this.eventBus = eventBus;
         this.boardElement = null;
+        this.getTileEnMain = getTileEnMain; // Fonction pour obtenir tuileEnMain
         
         // État local
         this.isMyTurn = false;
         this.firstTilePlaced = false;
-        this.tuileEnMain = null;
         this.onSlotClick = null;
         
         // S'abonner aux événements
@@ -36,7 +36,7 @@ export class SlotsUI {
      * Quand une tuile est piochée
      */
     onTileDrawn(data) {
-        this.tuileEnMain = data.tile;
+        // Ne plus stocker tuileEnMain localement
         this.refresh();
     }
     
@@ -45,7 +45,6 @@ export class SlotsUI {
      */
     onTilePlaced(data) {
         this.firstTilePlaced = true;
-        this.tuileEnMain = null;
         this.refresh();
     }
     
@@ -86,9 +85,9 @@ export class SlotsUI {
             console.log('🔒 Slot central readonly (pas notre tour)');
         } else {
             slot.onclick = () => {
-                if (this.tuileEnMain && !this.firstTilePlaced && this.onSlotClick) {
+                if (this.getTileEnMain() && !this.firstTilePlaced && this.onSlotClick) {
                     console.log('✅ Clic sur slot central - pose de la tuile');
-                    this.onSlotClick(50, 50, this.tuileEnMain, true);
+                    this.onSlotClick(50, 50, this.getTileEnMain(), true);
                 }
             };
             console.log('✅ Slot central cliquable (notre tour)');
@@ -106,7 +105,7 @@ export class SlotsUI {
             document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
         }
         
-        if (!this.tuileEnMain) return;
+        if (!this.getTileEnMain()) return;
         
         for (let coord in this.plateau.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
@@ -121,7 +120,7 @@ export class SlotsUI {
         const directions = [{dx:0, dy:-1}, {dx:1, dy:0}, {dx:0, dy:1}, {dx:-1, dy:0}];
         directions.forEach(dir => {
             const nx = x + dir.dx, ny = y + dir.dy;
-            if (this.tuileEnMain && this.plateau.isFree(nx, ny) && this.plateau.canPlaceTile(nx, ny, this.tuileEnMain)) {
+            if (this.getTileEnMain() && this.plateau.isFree(nx, ny) && this.plateau.canPlaceTile(nx, ny, this.getTileEnMain())) {
                 const slot = document.createElement('div');
                 slot.className = "slot";
                 slot.style.gridColumn = nx;
@@ -134,7 +133,7 @@ export class SlotsUI {
                 } else {
                     slot.onclick = () => {
                         if (this.onSlotClick) {
-                            this.onSlotClick(nx, ny, this.tuileEnMain);
+                            this.onSlotClick(nx, ny, this.getTileEnMain());
                         }
                     };
                 }
