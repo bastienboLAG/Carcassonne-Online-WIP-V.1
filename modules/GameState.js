@@ -66,7 +66,14 @@ export class GameState {
      * Restaurer l'état depuis des données reçues
      */
     deserialize(data) {
-        this.players = data.players || [];
+        // Copier les joueurs (objets plain)
+        this.players = (data.players || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            color: p.color,
+            score: p.score || 0,
+            meeples: p.meeples || 7
+        }));
         this.currentPlayerIndex = data.currentPlayerIndex || 0;
         this.placedTiles = data.placedTiles || {};
     }
