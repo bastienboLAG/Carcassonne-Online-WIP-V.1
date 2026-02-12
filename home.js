@@ -37,7 +37,6 @@ const eventBus = new EventBus();
 const ruleRegistry = new RuleRegistry(eventBus);
 let turnManager = null;
 eventBus.setDebug(true); // Debug activé pour voir les événements
-n// Écouter tile-drawn pour créer instance Tile
 eventBus.on('tile-drawn', (data) => {
     if (data.tileData) {
         tuileEnMain = new Tile(data.tileData);
