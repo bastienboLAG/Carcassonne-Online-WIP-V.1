@@ -466,7 +466,7 @@ async function startGame() {
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI(eventBus);
         gameState.addPlayer(player.id, player.name, player.color);
-    slotsUI = new SlotsUI(plateau, gameSync, eventBus);
+    slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
     slotsUI.init();
     slotsUI.setSlotClickHandler(poserTuile);
     slotsUI.isMyTurn = isMyTurn;
@@ -627,7 +627,7 @@ async function startGameForInvite() {
     gameState = new GameState();
     players.forEach(player => {
     scorePanelUI = new ScorePanelUI(eventBus);
-    slotsUI = new SlotsUI(plateau, gameSync, eventBus);
+    slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
     slotsUI.init();
     slotsUI.setSlotClickHandler(poserTuile);
     slotsUI.isMyTurn = isMyTurn;
@@ -972,7 +972,17 @@ function piocherNouvelleTuile() {
 }
 
 function poserTuile(x, y, tile, isFirst = false) {
-    if (!isFirst && !plateau.canPlaceTile(x, y, tile)) return;
+    console.log('🎯 poserTuile appelé:', { x, y, tile, isFirst, tuileEnMain });
+    
+    if (!tile) {
+        console.error('❌ tile est null/undefined');
+        return;
+    }
+    
+    if (!isFirst && !plateau.canPlaceTile(x, y, tile)) {
+        console.warn('⚠️ Impossible de placer la tuile ici');
+        return;
+    }
 
     const boardElement = document.getElementById('board');
     const img = document.createElement('img');
