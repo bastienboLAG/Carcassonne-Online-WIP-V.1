@@ -801,6 +801,8 @@ function setupEventListeners() {
             if (gameSync) {
                 gameSync.syncTileRotation(tuileEnMain.rotation);
             }
+            // Émettre événement pour rafraîchir les slots
+            eventBus.emit('tile-rotated', { rotation: tuileEnMain.rotation });
             
             if (firstTilePlaced) {
             }
