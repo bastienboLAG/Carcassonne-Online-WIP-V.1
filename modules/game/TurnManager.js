@@ -77,13 +77,17 @@ export class TurnManager {
         }
 
         console.log('🃏 Tuile piochée:', tileData.id);
+        
+        // Créer une instance Tile (pas juste les data brutes)
+        // Note: On assume que Tile est importé dans le contexte appelant
+        // Pour que ce module soit indépendant, on stocke juste tileData
         this.currentTile = tileData;
+        this.currentTile.rotation = 0;
         this.tilePlaced = false;
         
         // Émettre événements
         this.eventBus.emit('tile-drawn', { 
-            tile: this.currentTile,
-            tileData 
+            tileData: tileData
         });
         
         this.eventBus.emit('deck-updated', { 
@@ -200,9 +204,13 @@ export class TurnManager {
             this.tilePlaced = false;
             
             this.eventBus.emit('tile-drawn', { 
-                tile: this.currentTile,
                 tileData: this.currentTile,
                 fromNetwork: true
+            });
+            
+            this.eventBus.emit('deck-updated', { 
+                remaining: this.deck.remaining(), 
+                total: this.deck.total() 
             });
         }
     }
