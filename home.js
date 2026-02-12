@@ -530,9 +530,6 @@ async function startGame() {
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
     };
-            eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
-        }
-    };
     
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
