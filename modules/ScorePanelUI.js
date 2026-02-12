@@ -3,26 +3,41 @@
  * CONNECTÉ À EVENTBUS
  */
 export class ScorePanelUI {
-    constructor(eventBus) {
+    constructor(eventBus, gameState) {
         this.eventBus = eventBus;
+        this.gameState = gameState;
         
         // S'abonner aux événements
-        this.eventBus.on('score-updated', this.update.bind(this));
-        this.eventBus.on('turn-changed', this.update.bind(this));
+        this.eventBus.on('score-updated', this.onScoreUpdated.bind(this));
+        this.eventBus.on('turn-changed', this.onTurnChanged.bind(this));
+    }
+
+    /**
+     * Quand le score est mis à jour
+     */
+    onScoreUpdated(data) {
+        this.update();
+    }
+
+    /**
+     * Quand le tour change
+     */
+    onTurnChanged(data) {
+        this.update();
     }
 
     /**
      * Mettre à jour l'affichage du tableau de scores
      */
-    update(gameState) {
+    update() {
         const playersScoresDiv = document.getElementById('players-scores');
-        if (!playersScoresDiv || !gameState) return;
+        if (!playersScoresDiv || !this.gameState) return;
         
         playersScoresDiv.innerHTML = '';
         
-        const currentPlayer = gameState.getCurrentPlayer();
+        const currentPlayer = this.gameState.getCurrentPlayer();
         
-        gameState.players.forEach(player => {
+        this.gameState.players.forEach(player => {
             const isCurrentPlayer = currentPlayer && player.id === currentPlayer.id;
             
             const card = document.createElement('div');
