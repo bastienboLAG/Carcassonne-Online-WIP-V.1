@@ -19,6 +19,7 @@ export class SlotsUI {
         this.eventBus.on('tile-drawn', (data) => this.onTileDrawn(data));
         this.eventBus.on('tile-placed', (data) => this.onTilePlaced(data));
         this.eventBus.on('turn-changed', (data) => this.onTurnChanged(data));
+        this.eventBus.on('tile-rotated', (data) => this.onTileRotated(data));
     }
 
     init() {
@@ -45,6 +46,14 @@ export class SlotsUI {
      */
     onTilePlaced(data) {
         this.firstTilePlaced = true;
+        this.refresh();
+    }
+    
+    /**
+     * Quand une tuile est tournée
+     */
+    onTileRotated(data) {
+        // Rafraîchir les slots car les possibilités changent
         this.refresh();
     }
     
