@@ -57,6 +57,8 @@ eventBus.on('tile-drawn', (data) => {
 eventBus.on('turn-changed', (data) => {
     isMyTurn = data.isMyTurn;
     console.log('🔄 Sync isMyTurn global:', isMyTurn);
+    // Mettre à jour l'affichage du bouton
+    updateTurnDisplay();
 });
 
 let gameSync = null;
