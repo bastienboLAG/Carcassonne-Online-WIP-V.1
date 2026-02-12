@@ -464,7 +464,7 @@ async function startGame() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI(eventBus);
+    scorePanelUI = new ScorePanelUI(eventBus, gameState);
         gameState.addPlayer(player.id, player.name, player.color);
     slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
     slotsUI.init();
@@ -626,7 +626,7 @@ async function startGameForInvite() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI(eventBus);
+    scorePanelUI = new ScorePanelUI(eventBus, gameState);
     slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
     slotsUI.init();
     slotsUI.setSlotClickHandler(poserTuile);
@@ -769,7 +769,7 @@ function updateTurnDisplay() {
     }
     
     // ✅ Mettre à jour le tableau de scores
-    eventBus.emit('score-updated', gameState);
+    eventBus.emit('score-updated');
 }
 
 
@@ -1249,7 +1249,7 @@ function decrementPlayerMeeples(playerId) {
     if (player && player.meeples > 0) {
         player.meeples--;
         console.log(`🎭 ${player.name} a maintenant ${player.meeples} meeples disponibles`);
-        eventBus.emit('score-updated', gameState);
+        eventBus.emit('score-updated');
         
         // Synchroniser
         if (gameSync) {
@@ -1270,7 +1270,7 @@ function incrementPlayerMeeples(playerId) {
     if (player && player.meeples < 7) {
         player.meeples++;
         console.log(`🎭 ${player.name} récupère un meeple (${player.meeples}/7)`);
-        eventBus.emit('score-updated', gameState);
+        eventBus.emit('score-updated');
         
         // Synchroniser
         if (gameSync) {
