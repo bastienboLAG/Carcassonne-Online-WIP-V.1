@@ -54,6 +54,11 @@ eventBus.on('tile-drawn', (data) => {
         }
     }
 });
+n// Synchroniser isMyTurn global quand le tour change
+eventBus.on('turn-changed', (data) => {
+    isMyTurn = data.isMyTurn;
+    console.log('🔄 Sync isMyTurn global:', isMyTurn);
+});
 
 let gameSync = null;
 let zoneMerger = null;
