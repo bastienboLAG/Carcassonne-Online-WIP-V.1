@@ -35,10 +35,9 @@ let gameState = null;
 // ========== EVENTBUS ==========
 const eventBus = new EventBus();
 const ruleRegistry = new RuleRegistry(eventBus);
+let turnManager = null;
 eventBus.setDebug(true); // Debug activé pour voir les événements
 
-n// TurnManager
-let turnManager = null;
 let gameSync = null;
 let zoneMerger = null;
 let scoring = null;
@@ -495,7 +494,7 @@ async function startGame() {
         // Piocher la première tuile
         turnManager.drawTile();
         eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
     };
     
     gameSync.onTileRotated = (rotation) => {
@@ -525,12 +524,10 @@ async function startGame() {
     gameSync.onTurnEnded = (nextPlayerIndex, gameStateData) => {
         turnManager.receiveTurnEnded(nextPlayerIndex, gameStateData);
     };
-    };
     
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
     };
-    
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
         
@@ -563,7 +560,7 @@ async function startGame() {
         });
         
         // Mettre à jour l'affichage
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
     };
     
     // Setup de l'interface
@@ -584,7 +581,7 @@ async function startGame() {
         // Piocher la première tuile
         turnManager.drawTile();
         eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS updateTurnDisplay (pour que isMyTurn soit défini)
         console.log('🎯 Appel de creerSlotCentral...');
@@ -638,6 +635,7 @@ async function startGameForInvite() {
     // Initialiser TurnManager
     turnManager = new TurnManager(eventBus, gameState, deck, multiplayer);
     console.log('🔄 TurnManager initialisé');
+    
     // ✅ Initialiser ZoneMerger et Scoring
     
     // Callbacks
@@ -649,7 +647,7 @@ async function startGameForInvite() {
         gameState.deserialize(gameStateData);
         turnManager.drawTile();
         eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
         
         // ✅ Créer le slot central APRÈS avoir défini isMyTurn
         slotsUI.createCentralSlot();
@@ -677,12 +675,10 @@ async function startGameForInvite() {
     gameSync.onTurnEnded = (nextPlayerIndex, gameStateData) => {
         turnManager.receiveTurnEnded(nextPlayerIndex, gameStateData);
     };
-    };
     
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
     };
-    
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
         
@@ -712,7 +708,7 @@ async function startGameForInvite() {
             delete placedMeeples[key];
         });
         
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
     };
     
     setupEventListeners();
@@ -766,7 +762,7 @@ function afficherMessage(msg) {
 
 function setupEventListeners() {
     document.getElementById('tile-preview').addEventListener('click', () => {
-        if (!turnManager.getIsMyTurn() && gameSync) {
+        if (!isMyTurn && gameSync) {
             console.log('⚠️ Pas votre tour !');
             return;
         }
@@ -789,7 +785,7 @@ function setupEventListeners() {
     });
     
     document.getElementById('end-turn-btn').onclick = () => {
-        if (!turnManager.getIsMyTurn() && gameSync) {
+        if (!isMyTurn && gameSync) {
             alert('Ce n\'est pas votre tour !');
             return;
         }
@@ -846,7 +842,7 @@ function setupEventListeners() {
                 }
                 
                 // Mettre à jour l'affichage
-                turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+                updateTurnDisplay();
             }
         }
         
@@ -883,7 +879,7 @@ function setupEventListeners() {
                 });
                 
                 // Mettre à jour l'affichage
-                turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+                updateTurnDisplay();
                 
                 // Afficher le gagnant
                 const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
@@ -904,7 +900,7 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         
         // Mettre à jour l'affichage du tour
         if (gameState) {
-            turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+            updateTurnDisplay();
         }
     };
     
@@ -943,14 +939,14 @@ function piocherNouvelleTuile() {
     // Émettre événement tile-drawn
     eventBus.emit('tile-drawn', { tile: tuileEnMain });
     // ✅ Synchroniser la pioche si c'est notre tour
-    if (turnManager.getIsMyTurn() && gameSync) {
+    if (isMyTurn && gameSync) {
         gameSync.syncTileDraw(tileData.id, 0);
     }
 
     eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
     
     if (gameState) {
-        turnManager.updateTurnState(); eventBus.emit('turn-changed', { isMyTurn: turnManager.getIsMyTurn(), currentPlayer: turnManager.getCurrentPlayer() });
+        updateTurnDisplay();
     }
     
     // ✅ 5) Rafraîchir les slots APRÈS updateTurnDisplay pour que isMyTurn soit à jour
@@ -998,7 +994,7 @@ function poserTuile(x, y, tile, isFirst = false) {
             zoneMerger.updateZonesForNewTile(x, y);
         }
         
-        if (turnManager.getIsMyTurn() && gameSync) {
+        if (isMyTurn && gameSync) {
             meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
         }
         
@@ -1024,7 +1020,7 @@ function poserTuile(x, y, tile, isFirst = false) {
             zoneMerger.updateZonesForNewTile(x, y);
         }
         
-        if (turnManager.getIsMyTurn() && gameSync) {
+        if (isMyTurn && gameSync) {
             meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
         }
     }
