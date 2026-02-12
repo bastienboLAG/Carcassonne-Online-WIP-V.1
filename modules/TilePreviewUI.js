@@ -29,11 +29,9 @@ export class TilePreviewUI {
             console.error('❌ previewElement est null');
             return;
         }
-        if (!data.tile) {
-            console.error('❌ data.tile est null');
-            return;
-        }
-        this.showTile(data.tile);
+        // TurnManager envoie tileData, mais home.js crée tuileEnMain
+        // On attend que tuileEnMain soit créé par le listener dans home.js
+        // Pour l'instant on ne fait rien ici, showTile sera appelé directement
     }
 
     /**
