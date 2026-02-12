@@ -43,6 +43,11 @@ eventBus.on('tile-drawn', (data) => {
         tuileEnMain.rotation = data.tileData.rotation || 0;
         tuilePosee = false;
         
+        // Afficher la tuile dans la preview
+        if (tilePreviewUI) {
+            tilePreviewUI.showTile(tuileEnMain);
+        }
+        
         // Synchroniser si c'est notre tour et pas depuis le réseau
         if (!data.fromNetwork && turnManager && turnManager.getIsMyTurn() && gameSync) {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
