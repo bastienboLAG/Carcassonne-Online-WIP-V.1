@@ -588,6 +588,15 @@ async function startGame() {
             type: meepleType,
             color: color,
             playerId: playerId
+    
+    gameSync.onMeepleCountUpdate = (playerId, meeples) => {
+        console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
+        const player = gameState.players.find(p => p.id === playerId);
+        if (player) {
+            player.meeples = meeples;
+            eventBus.emit('meeple-count-updated', { playerId, meeples });
+        }
+    };
         };
         
         meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
@@ -734,6 +743,15 @@ async function startGameForInvite() {
     
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
+    
+    gameSync.onMeepleCountUpdate = (playerId, meeples) => {
+        console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
+        const player = gameState.players.find(p => p.id === playerId);
+        if (player) {
+            player.meeples = meeples;
+            eventBus.emit('meeple-count-updated', { playerId, meeples });
+        }
+    };
     };
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
@@ -825,16 +843,35 @@ function setupEventListeners() {
         
         if (tuileEnMain && !tuilePosee) {
             const currentImg = document.getElementById('current-tile-img');
+            
+            // Incrémenter la rotation logique
             tuileEnMain.rotation = (tuileEnMain.rotation + 90) % 360;
-            // Toujours incrémenter visuellement pour éviter retour arrière
+            
+            // Pour l'affichage visuel, toujours incrémenter
             const currentTransform = currentImg.style.transform;
-            const currentDeg = parseInt(currentTransform.match(/rotate\((\d+)deg\)/)?.[1] || '0');
-            const newDeg = currentDeg + 90;
+            const currentDeg = parseInt(currentTransform.match(/rotate\((-?\d+)deg\)/)?.[1] || '0');
+            let newDeg = currentDeg + 90;
+            
+            // Si on atteint 360°, réinitialiser à 0° sans transition
+            if (newDeg >= 360) {
+                // Désactiver transition temporairement
+                currentImg.style.transition = 'none';
+                currentImg.style.transform = 'rotate(0deg)';
+                
+                // Force reflow
+                void currentImg.offsetWidth;
+                
+                // Réactiver transition
+                currentImg.style.transition = '';
+                newDeg = 0;
+            }
+            
             currentImg.style.transform = `rotate(${newDeg}deg)`;
             
             if (gameSync) {
                 gameSync.syncTileRotation(tuileEnMain.rotation);
             }
+            
             // Émettre événement pour rafraîchir les slots
             eventBus.emit('tile-rotated', { rotation: tuileEnMain.rotation });
             
