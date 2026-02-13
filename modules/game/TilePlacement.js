@@ -15,6 +15,14 @@ export class TilePlacement {
         // État
         this.firstTilePlaced = false;
         this.lastPlacedTile = null;
+        
+        // Écouter les événements pour se synchroniser
+        this.eventBus.on('tile-placed', (data) => {
+            if (data.isFirst) {
+                this.firstTilePlaced = true;
+                console.log('🔄 TilePlacement: firstTilePlaced = true');
+            }
+        });
     }
 
     /**
