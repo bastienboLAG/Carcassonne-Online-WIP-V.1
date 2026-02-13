@@ -65,6 +65,27 @@ eventBus.on('turn-changed', (data) => {
     updateTurnDisplay();
 });
 
+// ✅ Écouter turn-ended pour synchroniser TOUS les joueurs (pas juste le nouveau joueur actif)
+eventBus.on('turn-ended', (data) => {
+    console.log('⏭️ Turn ended - recalcul isMyTurn pour tous les joueurs');
+    // Recalculer isMyTurn pour ce joueur
+    if (gameState && multiplayer) {
+        const currentPlayer = gameState.getCurrentPlayer();
+        const newIsMyTurn = currentPlayer && currentPlayer.id === multiplayer.playerId;
+        
+        console.log('   currentPlayer:', currentPlayer?.name, 'newIsMyTurn:', newIsMyTurn);
+        
+        // Émettre turn-changed localement pour ce joueur aussi
+        if (newIsMyTurn !== isMyTurn) {
+            console.log('   → Émission turn-changed local');
+            eventBus.emit('turn-changed', {
+                isMyTurn: newIsMyTurn,
+                currentPlayer: currentPlayer
+            });
+        }
+    }
+});
+
 // Écouter meeple-placed pour afficher et synchroniser
 eventBus.on('meeple-placed', (data) => {
     // Afficher le meeple
