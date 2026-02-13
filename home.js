@@ -826,6 +826,7 @@ function setupEventListeners() {
         if (tuileEnMain && !tuilePosee) {
             const currentImg = document.getElementById('current-tile-img');
             tuileEnMain.rotation = (tuileEnMain.rotation + 90) % 360;
+            // Toujours incrémenter visuellement pour éviter retour arrière
             const currentTransform = currentImg.style.transform;
             const currentDeg = parseInt(currentTransform.match(/rotate\((\d+)deg\)/)?.[1] || '0');
             const newDeg = currentDeg + 90;
