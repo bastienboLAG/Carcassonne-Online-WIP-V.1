@@ -103,19 +103,15 @@ export class SlotsUI {
         slot.style.gridColumn = 50;
         slot.style.gridRow = 50;
         
-        // ✅ Appliquer le style readonly si ce n'est pas notre tour
-        if (!this.isMyTurn && this.gameSync) {
+        // ✅ Si ce n'est pas notre tour : readonly, pas de clic, pas de hover
+        if (!this.isMyTurn) {
             slot.classList.add('slot-readonly');
             slot.style.cursor = 'default';
             slot.style.pointerEvents = 'none';
             console.log('🔒 Slot central readonly (pas notre tour)');
         } else {
+            // ✅ Seulement le joueur actif a un onclick
             slot.onclick = () => {
-                // Vérifier que c'est toujours notre tour
-                if (!this.isMyTurn) {
-                    console.log('⚠️ Pas votre tour - clic slot central ignoré');
-                    return;
-                }
                 if (this.getTileEnMain() && !this.firstTilePlaced && this.onSlotClick) {
                     console.log('✅ Clic sur slot central - pose de la tuile');
                     this.onSlotClick(50, 50, this.getTileEnMain(), true);
@@ -157,18 +153,15 @@ export class SlotsUI {
                 slot.style.gridColumn = nx;
                 slot.style.gridRow = ny;
                 
-                // ✅ Si ce n'est pas notre tour : même apparence mais sans onclick et sans hover gold
-                if (!this.isMyTurn && this.gameSync) {
+                // ✅ Si ce n'est pas notre tour : readonly, pas de clic, pas de hover
+                if (!this.isMyTurn) {
                     slot.classList.add('slot-readonly');
                     slot.style.cursor = 'default';
                     slot.style.pointerEvents = 'none';
+                    // PAS de onclick
                 } else {
+                    // ✅ Seulement le joueur actif a un onclick
                     slot.onclick = () => {
-                        // Vérifier que c'est toujours notre tour
-                        if (!this.isMyTurn) {
-                            console.log('⚠️ Pas votre tour - clic slot ignoré');
-                            return;
-                        }
                         if (this.onSlotClick) {
                             this.onSlotClick(nx, ny, this.getTileEnMain());
                         }
