@@ -187,24 +187,17 @@ export class GameSync {
                 }
                 break;
 
+
+            case 'meeple-count-update':
+                if (this.onMeepleCountUpdate) {
+                    console.log('🎭 [SYNC] Mise à jour compteur meeples:', data.playerId, data.meeples);
+                    this.onMeepleCountUpdate(data.playerId, data.meeples);
+                }
+                break;
             case 'score-update':
                 if (this.onScoreUpdate && data.playerId !== this.multiplayer.playerId) {
                     console.log('💰 [SYNC] Mise à jour des scores reçue');
                     this.onScoreUpdate(data.scoringResults, data.meeplesToReturn);
-                }
-                break;
-
-            case 'meeple-count-update':
-                if (data.playerId !== this.multiplayer.playerId) {
-                    console.log('🎭 [SYNC] Mise à jour compteur meeples:', data.playerId, data.meeples);
-                    const player = this.gameState.players.find(p => p.id === data.playerId);
-                    if (player) {
-                        player.meeples = data.meeples;
-                        // Déclencher updateScorePanel si disponible
-                        if (typeof updateScorePanel === 'function') {
-                            updateScorePanel();
-                        }
-                    }
                 }
                 break;
         }
