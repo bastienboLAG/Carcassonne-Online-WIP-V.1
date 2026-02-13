@@ -481,7 +481,53 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     await startGame();
 });
 
-// ✅ FONCTION POUR DÉMARRER LE JEU
+// ✅ FONCTION COMMUNE D'INITIALISATION DES MODULES
+function initializeGameModules() {
+    console.log('🔧 Initialisation des modules de jeu...');
+    
+    // ScorePanelUI
+    scorePanelUI = new ScorePanelUI(eventBus, gameState);
+    
+    // SlotsUI (UNE SEULE INSTANCE)
+    slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
+    slotsUI.init();
+    slotsUI.setSlotClickHandler(poserTuile);
+    slotsUI.isMyTurn = isMyTurn;
+    slotsUI.firstTilePlaced = firstTilePlaced;
+    
+    // TilePreviewUI
+    tilePreviewUI = new TilePreviewUI(eventBus);
+    tilePreviewUI.init();
+    
+    // ZoneMerger et Scoring
+    zoneMerger = new ZoneMerger(plateau);
+    scoring = new Scoring(zoneMerger);
+    console.log('🔗 ZoneMerger et Scoring initialisés');
+    
+    // TilePlacement
+    tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
+    console.log('📐 TilePlacement initialisé');
+    
+    // MeeplePlacement
+    meeplePlacement = new MeeplePlacement(eventBus, gameState, zoneMerger);
+    meeplePlacement.setPlacedMeeples(placedMeeples);
+    console.log('🎭 MeeplePlacement initialisé');
+    
+    // MeepleCursorsUI
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
+    meepleCursorsUI.init();
+    
+    // MeepleSelectorUI
+    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
+    
+    // MeepleDisplayUI
+    meepleDisplayUI = new MeepleDisplayUI();
+    meepleDisplayUI.init();
+    
+    console.log('✅ Tous les modules initialisés');
+}
+
+// ✅ FONCTION POUR DÉMARRER LE JEU (HÔTE)
 async function startGame() {
     console.log('🎮 [HÔTE] Initialisation du jeu...');
     
@@ -498,43 +544,22 @@ async function startGame() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI(eventBus, gameState);
         gameState.addPlayer(player.id, player.name, player.color);
-    slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
-    slotsUI.init();
-    slotsUI.setSlotClickHandler(poserTuile);
-    slotsUI.isMyTurn = isMyTurn;
-    slotsUI.firstTilePlaced = firstTilePlaced;
     });
-    tilePreviewUI = new TilePreviewUI(eventBus);
-    tilePreviewUI.init();
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
-    // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
-    zoneMerger = new ZoneMerger(plateau);
-    scoring = new Scoring(zoneMerger);
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
-    meepleCursorsUI.init();
     
-    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
-    meepleDisplayUI = new MeepleDisplayUI();
-    meepleDisplayUI.init();
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
     console.log('🔗 GameSync initialisé');
     
     // Initialiser TurnManager
     turnManager = new TurnManager(eventBus, gameState, deck, multiplayer);
-    console.log('🔄 TurnManager initialisé');
     turnManager.init(); // Initialiser le tour
+    console.log('🔄 TurnManager initialisé');
     
-    // ✅ Initialiser ZoneMerger et Scoring
-    console.log('🔗 ZoneMerger et Scoring initialisés');
-    tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
-    console.log('📐 TilePlacement initialisé');
-    meeplePlacement = new MeeplePlacement(eventBus, gameState, zoneMerger);
-    meeplePlacement.setPlacedMeeples(placedMeeples);
-    console.log('🎭 MeeplePlacement initialisé');
+    // Initialiser tous les modules (fonction commune)
+    initializeGameModules();
     
     // Callbacks pour les actions synchronisées
     gameSync.onGameStarted = (deckData, gameStateData) => {
@@ -676,40 +701,23 @@ async function startGameForInvite() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-    scorePanelUI = new ScorePanelUI(eventBus, gameState);
-    slotsUI = new SlotsUI(plateau, gameSync, eventBus, () => tuileEnMain);
-    slotsUI.init();
-    slotsUI.setSlotClickHandler(poserTuile);
-    slotsUI.isMyTurn = isMyTurn;
-    slotsUI.firstTilePlaced = firstTilePlaced;
         gameState.addPlayer(player.id, player.name, player.color);
-    tilePreviewUI = new TilePreviewUI(eventBus);
-    tilePreviewUI.init();
-    // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
-    zoneMerger = new ZoneMerger(plateau);
-    scoring = new Scoring(zoneMerger);
-    tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
-    meeplePlacement = new MeeplePlacement(eventBus, gameState, zoneMerger);
-    meeplePlacement.setPlacedMeeples(placedMeeples);
-    console.log('🎭 MeeplePlacement initialisé');
     });
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
-    meepleCursorsUI.init();
     
-    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
     // Initialiser GameSync
-    meepleDisplayUI = new MeepleDisplayUI();
-    meepleDisplayUI.init();
     gameSync = new GameSync(multiplayer, gameState);
     gameSync.init();
+    console.log('🔗 GameSync initialisé');
     
     // Initialiser TurnManager
     turnManager = new TurnManager(eventBus, gameState, deck, multiplayer);
-    console.log('🔄 TurnManager initialisé');
     turnManager.init(); // Initialiser le tour
+    console.log('🔄 TurnManager initialisé');
     
-    // ✅ Initialiser ZoneMerger et Scoring
+    // Initialiser tous les modules (fonction commune)
+    initializeGameModules();
     
+    // Callbacks pour GameSync (identiques à l'hôte)
     // Callbacks
     gameSync.onGameStarted = (deckData, gameStateData) => {
         console.log('🎮 [INVITÉ] Pioche reçue !');
