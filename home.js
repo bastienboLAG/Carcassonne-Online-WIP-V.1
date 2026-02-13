@@ -1132,7 +1132,6 @@ function placerMeeple(x, y, position, meepleType) {
     // Faire disparaître tous les curseurs (un seul meeple par tour)
     document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
 }
-}
 
 /**
  * Afficher un meeple sur le plateau
