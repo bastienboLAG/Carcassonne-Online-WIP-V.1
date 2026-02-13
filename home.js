@@ -1018,38 +1018,15 @@ function poserTuile(x, y, tile, isFirst = false) {
     tuileEnMain = null;
 }
 function poserTuileSync(x, y, tile) {
-    const boardElement = document.getElementById('board');
-    const img = document.createElement('img');
-    img.src = tile.imagePath;
-    img.className = "tile";
-    img.style.gridColumn = x;
-    img.style.gridRow = y;
-    img.style.transform = `rotate(${tile.rotation}deg)`;
-    boardElement.appendChild(img);
+    console.log('🔄 poserTuileSync appelé:', { x, y, tile });
     
-    const copy = tile.clone();
-    plateau.addTile(x, y, copy);
+    // Utiliser TilePlacement (skipSync pour éviter de re-synchroniser)
+    const isFirst = !firstTilePlaced;
+    tilePlacement.placeTile(x, y, tile, { isFirst, skipSync: true });
     
-    // ✅ Merger les zones pour les tuiles synchronisées
-    if (zoneMerger) {
-        zoneMerger.updateZonesForNewTile(x, y);
-    }
-
+    // Mise à jour état global
     if (!firstTilePlaced) {
         firstTilePlaced = true;
-        eventBus.emit('tile-placed', { x, y, tile });
-        tuilePosee = true;
-        document.querySelectorAll('.slot').forEach(s => s.remove());
-        document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
-        tuileEnMain = null;
-    } else {
-        tuilePosee = true;
-        document.querySelectorAll('.slot').forEach(s => s.remove());
-        
-        // ✅ Afficher le verso après placement synchronisé
-        document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
-        
-        tuileEnMain = null;
     }
 }
 
