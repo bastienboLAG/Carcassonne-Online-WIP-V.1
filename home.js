@@ -859,41 +859,10 @@ function setupEventListeners() {
         
         if (tuileEnMain && !tuilePosee) {
             const currentImg = document.getElementById('current-tile-img');
-            
-            // Incrémenter la rotation logique
             tuileEnMain.rotation = (tuileEnMain.rotation + 90) % 360;
-            
-            // Pour l'affichage visuel, toujours incrémenter
             const currentTransform = currentImg.style.transform;
-            const currentDeg = parseInt(currentTransform.match(/rotate\((-?\d+)deg\)/)?.[1] || '0');
-            let newDeg = currentDeg + 90;
-            
-            console.log('🔄 Rotation:', { 
-                logique: tuileEnMain.rotation, 
-                currentDeg, 
-                newDeg,
-                willReset: newDeg >= 360,
-                transform: currentTransform
-            });
-            
-            // Si on atteint 360°, préparer la réinitialisation APRÈS la transition
-            if (newDeg >= 360) {
-                console.log('⏰ Réinitialisation préparée: 360° → 0° après transition');
-                // Utiliser transitionend pour être sûr que l'animation est terminée
-                const handleTransitionEnd = () => {
-                    console.log('✅ Transition terminée, réinitialisation à 0°');
-                    currentImg.style.transition = 'none';
-                    currentImg.style.transform = 'rotate(0deg)';
-                    void currentImg.offsetWidth; // Force reflow
-                    currentImg.style.transition = '';
-                    console.log('✅ Réinitialisation terminée');
-                    currentImg.removeEventListener('transitionend', handleTransitionEnd);
-                };
-                currentImg.addEventListener('transitionend', handleTransitionEnd, { once: true });
-            }
-            
-            // Appliquer la rotation avec transition
-            console.log(`🎬 Application rotation: rotate(${newDeg}deg)`);
+            const currentDeg = parseInt(currentTransform.match(/rotate\((\d+)deg\)/)?.[1] || '0');
+            const newDeg = currentDeg + 90;
             currentImg.style.transform = `rotate(${newDeg}deg)`;
             
             if (gameSync) {
