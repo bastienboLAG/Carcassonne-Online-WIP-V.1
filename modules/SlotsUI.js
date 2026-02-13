@@ -62,6 +62,18 @@ export class SlotsUI {
      */
     onTurnChanged(data) {
         this.isMyTurn = data.isMyTurn;
+        
+        // Mettre à jour les slots existants (readonly ou non)
+        document.querySelectorAll('.slot').forEach(slot => {
+            if (!this.isMyTurn) {
+                slot.classList.add('slot-readonly');
+                slot.style.cursor = 'default';
+            } else {
+                slot.classList.remove('slot-readonly');
+                slot.style.cursor = 'pointer';
+            }
+        });
+        
         this.refresh();
     }
     
@@ -94,6 +106,11 @@ export class SlotsUI {
             console.log('🔒 Slot central readonly (pas notre tour)');
         } else {
             slot.onclick = () => {
+                // Vérifier que c'est toujours notre tour
+                if (!this.isMyTurn) {
+                    console.log('⚠️ Pas votre tour - clic slot central ignoré');
+                    return;
+                }
                 if (this.getTileEnMain() && !this.firstTilePlaced && this.onSlotClick) {
                     console.log('✅ Clic sur slot central - pose de la tuile');
                     this.onSlotClick(50, 50, this.getTileEnMain(), true);
