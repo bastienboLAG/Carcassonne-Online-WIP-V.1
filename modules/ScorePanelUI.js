@@ -10,6 +10,7 @@ export class ScorePanelUI {
         // S'abonner aux événements
         this.eventBus.on('score-updated', this.onScoreUpdated.bind(this));
         this.eventBus.on('turn-changed', this.onTurnChanged.bind(this));
+        this.eventBus.on('meeple-count-updated', this.onMeepleCountUpdated.bind(this));
     }
 
     /**
@@ -23,6 +24,13 @@ export class ScorePanelUI {
      * Quand le tour change
      */
     onTurnChanged(data) {
+        this.update();
+    }
+
+    /**
+     * Quand le compteur de meeples change
+     */
+    onMeepleCountUpdated(data) {
         this.update();
     }
 
