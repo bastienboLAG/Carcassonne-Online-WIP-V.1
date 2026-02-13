@@ -870,25 +870,28 @@ function setupEventListeners() {
                 logique: tuileEnMain.rotation, 
                 currentDeg, 
                 newDeg,
-                willReset: newDeg >= 360 
+                willReset: newDeg >= 360,
+                transform: currentTransform
             });
             
             // Si on atteint 360°, préparer la réinitialisation APRÈS la transition
             if (newDeg >= 360) {
-                console.log('⏰ Réinitialisation préparée après transition');
+                console.log('⏰ Réinitialisation préparée: 360° → 0° après transition');
                 // Utiliser transitionend pour être sûr que l'animation est terminée
                 const handleTransitionEnd = () => {
-                    console.log('🔄 Réinitialisation à 0°');
+                    console.log('✅ Transition terminée, réinitialisation à 0°');
                     currentImg.style.transition = 'none';
                     currentImg.style.transform = 'rotate(0deg)';
                     void currentImg.offsetWidth; // Force reflow
                     currentImg.style.transition = '';
+                    console.log('✅ Réinitialisation terminée');
                     currentImg.removeEventListener('transitionend', handleTransitionEnd);
                 };
                 currentImg.addEventListener('transitionend', handleTransitionEnd, { once: true });
             }
             
             // Appliquer la rotation avec transition
+            console.log(`🎬 Application rotation: rotate(${newDeg}deg)`);
             currentImg.style.transform = `rotate(${newDeg}deg)`;
             
             if (gameSync) {
