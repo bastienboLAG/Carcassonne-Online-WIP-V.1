@@ -37,8 +37,8 @@ export class SlotsUI {
      * Quand une tuile est piochée
      */
     onTileDrawn(data) {
-        // Ne plus stocker tuileEnMain localement
-        this.refresh();
+        // Ne pas rafraîchir ici - les slots seront rafraîchis par turn-changed et tile-rotated
+        // Si on rafraîchit ici, isMyTurn n'est pas encore à jour
     }
     
     /**
