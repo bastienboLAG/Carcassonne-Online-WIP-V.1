@@ -44,7 +44,7 @@ export class MeeplePlacement {
         
         // 3. Vérifier que la zone n'a pas déjà un meeple
         if (this.zoneMerger) {
-            const mergedZone = this.zoneMerger.findMergedZoneByTileAndPosition(x, y, position);
+            const mergedZone = this.zoneMerger.findMergedZoneForPosition(x, y, position);
             if (mergedZone) {
                 const meeplesInZone = this.zoneMerger.getZoneMeeples(mergedZone, this.placedMeeples);
                 if (meeplesInZone.length > 0) {
