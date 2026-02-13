@@ -141,6 +141,11 @@ export class SlotsUI {
                     slot.style.cursor = 'default';
                 } else {
                     slot.onclick = () => {
+                        // Vérifier que c'est toujours notre tour
+                        if (!this.isMyTurn) {
+                            console.log('⚠️ Pas votre tour - clic slot ignoré');
+                            return;
+                        }
                         if (this.onSlotClick) {
                             this.onSlotClick(nx, ny, this.getTileEnMain());
                         }
