@@ -866,14 +866,23 @@ function setupEventListeners() {
             const currentDeg = parseInt(currentTransform.match(/rotate\((-?\d+)deg\)/)?.[1] || '0');
             let newDeg = currentDeg + 90;
             
+            console.log('🔄 Rotation:', { 
+                logique: tuileEnMain.rotation, 
+                currentDeg, 
+                newDeg,
+                willReset: newDeg >= 360 
+            });
+            
             // Appliquer la rotation avec transition
             currentImg.style.transform = `rotate(${newDeg}deg)`;
             
             // Si on atteint 360°, réinitialiser à 0° APRÈS l'animation
             if (newDeg >= 360) {
+                console.log('⏰ Réinitialisation dans 350ms');
                 // Attendre la fin de la transition CSS (300ms par défaut)
                 setTimeout(() => {
                     if (currentImg) {
+                        console.log('🔄 Réinitialisation à 0°');
                         currentImg.style.transition = 'none';
                         currentImg.style.transform = 'rotate(0deg)';
                         void currentImg.offsetWidth; // Force reflow
@@ -1108,6 +1117,7 @@ function poserTuileSync(x, y, tile) {
     if (!firstTilePlaced) {
         firstTilePlaced = true;
     }
+    tuilePosee = true; // Important: empêcher double placement
 }
 
 function mettreAJourCompteur() {
