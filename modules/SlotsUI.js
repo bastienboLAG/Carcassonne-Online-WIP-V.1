@@ -68,9 +68,11 @@ export class SlotsUI {
             if (!this.isMyTurn) {
                 slot.classList.add('slot-readonly');
                 slot.style.cursor = 'default';
+                slot.style.pointerEvents = 'none'; // Désactiver hover
             } else {
                 slot.classList.remove('slot-readonly');
                 slot.style.cursor = 'pointer';
+                slot.style.pointerEvents = 'auto'; // Réactiver
             }
         });
         
@@ -84,6 +86,8 @@ export class SlotsUI {
         if (this.firstTilePlaced) {
             this.refreshAllSlots();
         }
+        // Note: Les slots sont affichés pour TOUS les joueurs
+        // mais en readonly (pointer-events: none) pour les joueurs inactifs
     }
 
     /**
@@ -103,6 +107,7 @@ export class SlotsUI {
         if (!this.isMyTurn && this.gameSync) {
             slot.classList.add('slot-readonly');
             slot.style.cursor = 'default';
+            slot.style.pointerEvents = 'none';
             console.log('🔒 Slot central readonly (pas notre tour)');
         } else {
             slot.onclick = () => {
@@ -156,6 +161,7 @@ export class SlotsUI {
                 if (!this.isMyTurn && this.gameSync) {
                     slot.classList.add('slot-readonly');
                     slot.style.cursor = 'default';
+                    slot.style.pointerEvents = 'none';
                 } else {
                     slot.onclick = () => {
                         // Vérifier que c'est toujours notre tour
