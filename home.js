@@ -588,6 +588,11 @@ async function startGame() {
             type: meepleType,
             color: color,
             playerId: playerId
+        };
+        
+        
+        meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
+    };
     
     gameSync.onMeepleCountUpdate = (playerId, meeples) => {
         console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
@@ -596,10 +601,6 @@ async function startGame() {
             player.meeples = meeples;
             eventBus.emit('meeple-count-updated', { playerId, meeples });
         }
-    };
-        };
-        
-        meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
     };
     
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
@@ -764,6 +765,15 @@ async function startGameForInvite() {
         };
         
         meepleDisplayUI.showMeeple(x, y, position, meepleType, color);
+    };
+    
+    gameSync.onMeepleCountUpdate = (playerId, meeples) => {
+        console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
+        const player = gameState.players.find(p => p.id === playerId);
+        if (player) {
+            player.meeples = meeples;
+            eventBus.emit('meeple-count-updated', { playerId, meeples });
+        }
     };
     
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
