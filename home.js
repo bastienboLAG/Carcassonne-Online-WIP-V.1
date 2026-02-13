@@ -11,6 +11,7 @@ import { EventBus } from './modules/core/EventBus.js';
 import { RuleRegistry } from './modules/core/RuleRegistry.js';
 import { BaseRules } from './modules/rules/BaseRules.js';
 import { TurnManager } from './modules/game/TurnManager.js';
+import { TilePlacement } from './modules/game/TilePlacement.js';
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
@@ -36,6 +37,7 @@ let gameState = null;
 const eventBus = new EventBus();
 const ruleRegistry = new RuleRegistry(eventBus);
 let turnManager = null;
+let tilePlacement = null;
 eventBus.setDebug(true); // Debug activé pour voir les événements
 eventBus.on('tile-drawn', (data) => {
     if (data.tileData) {
@@ -501,6 +503,8 @@ async function startGame() {
     
     // ✅ Initialiser ZoneMerger et Scoring
     console.log('🔗 ZoneMerger et Scoring initialisés');
+    tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
+    console.log('📐 TilePlacement initialisé');
     
     // Callbacks pour les actions synchronisées
     gameSync.onGameStarted = (deckData, gameStateData) => {
@@ -644,6 +648,7 @@ async function startGameForInvite() {
     // Initialiser ZoneMerger et Scoring AVANT meepleCursorsUI
     zoneMerger = new ZoneMerger(plateau);
     scoring = new Scoring(zoneMerger);
+    tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
     });
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
@@ -982,85 +987,36 @@ function piocherNouvelleTuile() {
 function poserTuile(x, y, tile, isFirst = false) {
     console.log('🎯 poserTuile appelé:', { x, y, tile, isFirst, tuileEnMain });
     
-    if (!tile) {
-        console.error('❌ tile est null/undefined');
+    // Utiliser TilePlacement
+    const success = tilePlacement.placeTile(x, y, tile, { isFirst });
+    
+    if (!success) {
         return;
     }
     
-    if (!isFirst && !plateau.canPlaceTile(x, y, tile)) {
-        console.warn('⚠️ Impossible de placer la tuile ici');
-        return;
-    }
-
-    const boardElement = document.getElementById('board');
-    const img = document.createElement('img');
-    img.src = tile.imagePath;
-    img.className = "tile";
-    img.style.gridColumn = x;
-    img.style.gridRow = y;
-    img.style.transform = `rotate(${tile.rotation}deg)`;
-    boardElement.appendChild(img);
+    // Mise à jour de l'état global
+    tuilePosee = true;
+    firstTilePlaced = true;
+    lastPlacedTile = { x, y };
     
-    const copy = tile.clone();
-    plateau.addTile(x, y, copy);
-
-    if (isFirst) {
-        console.log('✅ Première tuile posée');
-        firstTilePlaced = true;
-        eventBus.emit('tile-placed', { x, y, tile });
-        tuilePosee = true;
-        document.querySelectorAll('.slot').forEach(s => s.remove());
-        
-        document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
-        
-        if (gameSync) {
-            gameSync.syncTilePlacement(x, y, tile);
-        }
-        
-        lastPlacedTile = {x, y};
-        
-        // ✅ Garder tuileEnMain temporairement pour rafraîchir les slots
-        const tempTile = tuileEnMain;
-        tuileEnMain = null;
-        tuileEnMain = tempTile;
-        
-        // ✅ Merger les zones après placement
-        if (zoneMerger) {
-            zoneMerger.updateZonesForNewTile(x, y);
-        }
-        
-        if (isMyTurn && gameSync) {
-            meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
-        }
-        
-        tuileEnMain = null;
-    } else {
-        tuilePosee = true;
-        document.querySelectorAll('.slot').forEach(s => s.remove());
-        
-        document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
-        
-        if (gameSync) {
-            gameSync.syncTilePlacement(x, y, tile);
-        }
-        
-        lastPlacedTile = {x, y};
-        
-        // ✅ Sauvegarder tuileEnMain avant de mettre à null
-        const savedTile = tuileEnMain;
-        tuileEnMain = null;
-        
-        // ✅ Merger les zones après placement
-        if (zoneMerger) {
-            zoneMerger.updateZonesForNewTile(x, y);
-        }
-        
-        if (isMyTurn && gameSync) {
-            meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
-        }
+    // Supprimer les slots
+    document.querySelectorAll('.slot').forEach(s => s.remove());
+    
+    // Afficher le verso
+    document.getElementById('tile-preview').innerHTML = '<img src="./assets/verso.png" style="width: 120px; border: 2px solid #666;">';
+    
+    // Synchroniser
+    if (gameSync) {
+        gameSync.syncTilePlacement(x, y, tile);
     }
+    
+    // Afficher curseurs meeples si notre tour
+    if (isMyTurn && gameSync) {
+        meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
+    }
+    
+    tuileEnMain = null;
 }
-
 function poserTuileSync(x, y, tile) {
     const boardElement = document.getElementById('board');
     const img = document.createElement('img');
