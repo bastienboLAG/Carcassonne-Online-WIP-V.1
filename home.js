@@ -12,6 +12,7 @@ import { RuleRegistry } from './modules/core/RuleRegistry.js';
 import { BaseRules } from './modules/rules/BaseRules.js';
 import { TurnManager } from './modules/game/TurnManager.js';
 import { TilePlacement } from './modules/game/TilePlacement.js';
+import { MeeplePlacement } from './modules/game/MeeplePlacement.js';
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
 import { SlotsUI } from './modules/SlotsUI.js';
 import { TilePreviewUI } from './modules/TilePreviewUI.js';
@@ -37,6 +38,7 @@ let gameState = null;
 const eventBus = new EventBus();
 const ruleRegistry = new RuleRegistry(eventBus);
 let turnManager = null;
+let meeplePlacement = null;
 let tilePlacement = null;
 eventBus.setDebug(true); // Debug activé pour voir les événements
 eventBus.on('tile-drawn', (data) => {
@@ -61,6 +63,26 @@ eventBus.on('turn-changed', (data) => {
     console.log('🔄 Sync isMyTurn global:', isMyTurn);
     // Mettre à jour l'affichage du bouton
     updateTurnDisplay();
+});
+
+// Écouter meeple-placed pour afficher et synchroniser
+eventBus.on('meeple-placed', (data) => {
+    // Afficher le meeple
+    if (meepleDisplayUI) {
+        meepleDisplayUI.showMeeple(data.x, data.y, data.position, data.meepleType, data.playerColor);
+    }
+    
+    // Synchroniser si ce n'est pas déjà synchronisé
+    if (!data.skipSync && gameSync) {
+        gameSync.syncMeeplePlacement(data.x, data.y, data.position, data.meepleType, data.playerColor);
+    }
+});
+
+// Écouter meeple-count-updated pour synchroniser
+eventBus.on('meeple-count-updated', (data) => {
+    if (gameSync && data.playerId === multiplayer.playerId) {
+        gameSync.syncMeepleCount(data.playerId, data.meeples);
+    }
 });
 
 let gameSync = null;
@@ -505,6 +527,9 @@ async function startGame() {
     console.log('🔗 ZoneMerger et Scoring initialisés');
     tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
     console.log('📐 TilePlacement initialisé');
+    meeplePlacement = new MeeplePlacement(eventBus, gameState, zoneMerger);
+    meeplePlacement.setPlacedMeeples(placedMeeples);
+    console.log('🎭 MeeplePlacement initialisé');
     
     // Callbacks pour les actions synchronisées
     gameSync.onGameStarted = (deckData, gameStateData) => {
@@ -649,6 +674,9 @@ async function startGameForInvite() {
     zoneMerger = new ZoneMerger(plateau);
     scoring = new Scoring(zoneMerger);
     tilePlacement = new TilePlacement(eventBus, plateau, zoneMerger);
+    meeplePlacement = new MeeplePlacement(eventBus, gameState, zoneMerger);
+    meeplePlacement.setPlacedMeeples(placedMeeples);
+    console.log('🎭 MeeplePlacement initialisé');
     });
     meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
     meepleCursorsUI.init();
@@ -1090,35 +1118,20 @@ function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
 }
 
 function placerMeeple(x, y, position, meepleType) {
-    // Obtenir la couleur du joueur
     if (!gameState || !multiplayer) return;
-    const player = gameState.players.find(p => p.id === multiplayer.playerId);
-    const playerColor = player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
-    const key = `${x},${y},${position}`;
     
-    console.log('🎭 Placement meeple:', meepleType, 'à', x, y, 'position', position);
+    console.log('🎭 placerMeeple appelé:', { x, y, position, meepleType });
     
-    // Sauvegarder
-    placedMeeples[key] = {
-        type: meepleType,
-        color: playerColor,
-        playerId: multiplayer.playerId
-    };
+    // Utiliser MeeplePlacement
+    const success = meeplePlacement.placeMeeple(x, y, position, meepleType, multiplayer.playerId);
     
-    
-    // ✅ Décrémenter le nombre de meeples disponibles
-    decrementPlayerMeeples(multiplayer.playerId);
-
-    // Afficher le meeple
-    meepleDisplayUI.showMeeple(x, y, position, meepleType, playerColor);
-    
-    // Synchroniser
-    if (gameSync) {
-        gameSync.syncMeeplePlacement(x, y, position, meepleType, playerColor);
+    if (!success) {
+        return;
     }
     
-    // ✅ Faire disparaître TOUS les curseurs (un seul meeple par tour)
+    // Faire disparaître tous les curseurs (un seul meeple par tour)
     document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
+}
 }
 
 /**
