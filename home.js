@@ -81,7 +81,11 @@ eventBus.on('meeple-placed', (data) => {
 // Écouter meeple-count-updated pour synchroniser
 eventBus.on('meeple-count-updated', (data) => {
     if (gameSync && data.playerId === multiplayer.playerId) {
-        gameSync.syncMeepleCount(data.playerId, data.meeples);
+        gameSync.multiplayer.broadcast({
+            type: 'meeple-count-update',
+            playerId: data.playerId,
+            meeples: data.meeples
+        });
     }
 });
 
@@ -862,21 +866,21 @@ function setupEventListeners() {
             const currentDeg = parseInt(currentTransform.match(/rotate\((-?\d+)deg\)/)?.[1] || '0');
             let newDeg = currentDeg + 90;
             
-            // Si on atteint 360°, réinitialiser à 0° sans transition
-            if (newDeg >= 360) {
-                // Désactiver transition temporairement
-                currentImg.style.transition = 'none';
-                currentImg.style.transform = 'rotate(0deg)';
-                
-                // Force reflow
-                void currentImg.offsetWidth;
-                
-                // Réactiver transition
-                currentImg.style.transition = '';
-                newDeg = 0;
-            }
-            
+            // Appliquer la rotation avec transition
             currentImg.style.transform = `rotate(${newDeg}deg)`;
+            
+            // Si on atteint 360°, réinitialiser à 0° APRÈS l'animation
+            if (newDeg >= 360) {
+                // Attendre la fin de la transition CSS (300ms par défaut)
+                setTimeout(() => {
+                    if (currentImg) {
+                        currentImg.style.transition = 'none';
+                        currentImg.style.transform = 'rotate(0deg)';
+                        void currentImg.offsetWidth; // Force reflow
+                        currentImg.style.transition = '';
+                    }
+                }, 350); // Un peu plus que la durée de transition
+            }
             
             if (gameSync) {
                 gameSync.syncTileRotation(tuileEnMain.rotation);
@@ -887,6 +891,7 @@ function setupEventListeners() {
             
             if (firstTilePlaced) {
             }
+        }
         }
     });
     
