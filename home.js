@@ -526,6 +526,7 @@ async function startGame() {
     // Initialiser TurnManager
     turnManager = new TurnManager(eventBus, gameState, deck, multiplayer);
     console.log('🔄 TurnManager initialisé');
+    turnManager.init(); // Initialiser le tour
     
     // ✅ Initialiser ZoneMerger et Scoring
     console.log('🔗 ZoneMerger et Scoring initialisés');
@@ -705,6 +706,7 @@ async function startGameForInvite() {
     // Initialiser TurnManager
     turnManager = new TurnManager(eventBus, gameState, deck, multiplayer);
     console.log('🔄 TurnManager initialisé');
+    turnManager.init(); // Initialiser le tour
     
     // ✅ Initialiser ZoneMerger et Scoring
     
