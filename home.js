@@ -892,7 +892,6 @@ function setupEventListeners() {
             if (firstTilePlaced) {
             }
         }
-        }
     });
     
     document.getElementById('end-turn-btn').onclick = () => {
