@@ -10,7 +10,7 @@ export class TilePreviewUI {
         
         // S'abonner aux événements
         this.eventBus.on('tile-drawn', (data) => this.onTileDrawn(data));
-        this.eventBus.on('tile-rotated', (data) => this.onTileRotated(data));
+        // Note: tile-rotated n'est PAS écouté car la rotation est gérée directement dans home.js
         this.eventBus.on('tile-placed', () => this.showBackside());
         this.eventBus.on('deck-updated', (data) => this.updateCounter(data.remaining, data.total));
     }
@@ -32,15 +32,6 @@ export class TilePreviewUI {
         // TurnManager envoie tileData, mais home.js crée tuileEnMain
         // On attend que tuileEnMain soit créé par le listener dans home.js
         // Pour l'instant on ne fait rien ici, showTile sera appelé directement
-    }
-
-    /**
-     * Quand une tuile est tournée
-     */
-    onTileRotated(data) {
-        if (data.rotation !== undefined) {
-            this.updateRotation(data.rotation);
-        }
     }
 
     /**
@@ -80,13 +71,4 @@ export class TilePreviewUI {
         this.counterElement.textContent = `Tuiles : ${remaining} / ${total}`;
     }
 
-    /**
-     * Mettre à jour la rotation visuelle
-     */
-    updateRotation(rotation) {
-        const img = document.getElementById('current-tile-img');
-        if (img) {
-            img.style.transform = `rotate(${rotation}deg)`;
-        }
-    }
 }
