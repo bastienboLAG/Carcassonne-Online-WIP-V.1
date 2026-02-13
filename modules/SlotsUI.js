@@ -61,18 +61,23 @@ export class SlotsUI {
      * Quand le tour change
      */
     onTurnChanged(data) {
+        console.log('🔄 SlotsUI.onTurnChanged - isMyTurn:', data.isMyTurn);
         this.isMyTurn = data.isMyTurn;
         
         // Mettre à jour les slots existants (readonly ou non)
-        document.querySelectorAll('.slot').forEach(slot => {
+        const slots = document.querySelectorAll('.slot');
+        console.log(`🔄 Mise à jour de ${slots.length} slots existants`);
+        slots.forEach(slot => {
             if (!this.isMyTurn) {
                 slot.classList.add('slot-readonly');
                 slot.style.cursor = 'default';
                 slot.style.pointerEvents = 'none'; // Désactiver hover
+                console.log('  → Slot mis en readonly');
             } else {
                 slot.classList.remove('slot-readonly');
                 slot.style.cursor = 'pointer';
                 slot.style.pointerEvents = 'auto'; // Réactiver
+                console.log('  → Slot mis en actif');
             }
         });
         
@@ -152,6 +157,8 @@ export class SlotsUI {
                 slot.className = "slot";
                 slot.style.gridColumn = nx;
                 slot.style.gridRow = ny;
+                
+                console.log(`🔧 Création slot (${nx},${ny}) - isMyTurn:`, this.isMyTurn);
                 
                 // ✅ Si ce n'est pas notre tour : readonly, pas de clic, pas de hover
                 if (!this.isMyTurn) {
