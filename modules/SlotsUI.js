@@ -173,7 +173,11 @@ export class SlotsUI {
         const directions = [{dx:0, dy:-1}, {dx:1, dy:0}, {dx:0, dy:1}, {dx:-1, dy:0}];
         directions.forEach(dir => {
             const nx = x + dir.dx, ny = y + dir.dy;
-            if (tile && this.plateau.isFree(nx, ny) && this.plateau.canPlaceTile(nx, ny, tile)) {
+            const isFree = this.plateau.isFree(nx, ny);
+            const canPlace = tile && this.plateau.canPlaceTile(nx, ny, tile);
+            console.log(`  Slot (${nx},${ny}): free=${isFree} canPlace=${canPlace} tile=${tile?.id}`);
+            
+            if (tile && isFree && canPlace) {
                 const slot = document.createElement('div');
                 slot.className = "slot";
                 slot.style.gridColumn = nx;
