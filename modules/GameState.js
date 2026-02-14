@@ -44,6 +44,49 @@ export class GameState {
     }
 
     /**
+     * Ajouter des points à un joueur
+     */
+    addScore(playerId, points) {
+        const player = this.players.find(p => p.id === playerId);
+        if (player) {
+            player.score += points;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Obtenir un joueur par son ID
+     */
+    getPlayer(playerId) {
+        return this.players.find(p => p.id === playerId);
+    }
+
+    /**
+     * Décrémenter le nombre de meeples d'un joueur
+     */
+    decrementMeeples(playerId) {
+        const player = this.getPlayer(playerId);
+        if (player && player.meeples > 0) {
+            player.meeples--;
+            return player.meeples;
+        }
+        return null;
+    }
+
+    /**
+     * Incrémenter le nombre de meeples d'un joueur
+     */
+    incrementMeeples(playerId) {
+        const player = this.getPlayer(playerId);
+        if (player) {
+            player.meeples++;
+            return player.meeples;
+        }
+        return null;
+    }
+
+    /**
      * Vérifier si c'est le tour d'un joueur
      */
     isPlayerTurn(playerId) {
