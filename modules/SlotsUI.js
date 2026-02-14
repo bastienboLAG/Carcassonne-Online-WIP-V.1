@@ -46,7 +46,8 @@ export class SlotsUI {
      */
     onTilePlaced(data) {
         this.firstTilePlaced = true;
-        this.refresh();
+        // Ne PAS refresh ici - les slots seront rafraîchis par turn-changed après la fin du tour
+        // Si on refresh ici, isMyTurn n'est pas encore à jour et on crée les slots du mauvais joueur
     }
     
     /**
