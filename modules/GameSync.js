@@ -207,6 +207,13 @@ export class GameSync {
                     this.onReturnToLobby();
                 }
                 break;
+                
+            case 'player-order-update':
+                if (this.onPlayerOrderUpdate) {
+                    console.log('🔄 [SYNC] Ordre des joueurs mis à jour');
+                    this.onPlayerOrderUpdate(data.players);
+                }
+                break;
         }
     }
 }
