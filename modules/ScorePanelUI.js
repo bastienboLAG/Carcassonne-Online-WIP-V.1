@@ -67,7 +67,7 @@ export class ScorePanelUI {
             
             const name = document.createElement('span');
             name.className = 'player-score-name';
-            name.textContent = player.name;
+            name.textContent = player.name + (player.isHost ? ' 👑' : '');
             header.appendChild(name);
             
             const points = document.createElement('span');
