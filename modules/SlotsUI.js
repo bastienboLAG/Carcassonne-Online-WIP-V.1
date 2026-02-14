@@ -38,16 +38,18 @@ export class SlotsUI {
     /**
      * Quand une tuile est piochée
      */
-    /**
-     * Quand une tuile est piochée
-     */
     onTileDrawn(data) {
         // Stocker la tuile pour pouvoir afficher les slots même si on n'est pas le joueur actif
         if (data.tileData) {
             this.currentTile = new Tile(data.tileData);
         }
-        // Ne pas rafraîchir ici - les slots seront rafraîchis par turn-changed et tile-rotated
-        // Si on rafraîchit ici, isMyTurn n'est pas encore à jour
+        
+        // Rafraîchir les slots si on n'est PAS le joueur actif (pour voir les slots du joueur actif)
+        // Le joueur actif rafraîchira via turn-changed
+        if (!this.isMyTurn && this.firstTilePlaced) {
+            console.log('🔄 Refresh slots pour joueur inactif après tile-drawn');
+            this.refresh();
+        }
     }
     
     /**
