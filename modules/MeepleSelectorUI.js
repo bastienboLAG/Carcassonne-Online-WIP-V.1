@@ -3,9 +3,10 @@
  * CODE COPIÉ EXACTEMENT de afficherSelecteurMeeple et getPlayerColor
  */
 export class MeepleSelectorUI {
-    constructor(multiplayer, gameState) {
+    constructor(multiplayer, gameState, config = {}) {
         this.multiplayer = multiplayer;
         this.gameState = gameState;
+        this.config = config;
     }
 
     /**
@@ -47,6 +48,12 @@ export class MeepleSelectorUI {
         let meepleTypes = [];
         
         if (zoneType === 'field') {
+            // Vérifier si les champs sont activés
+            if (this.config.playFields === false) {
+                console.log('🚫 Les champs sont désactivés, pas de meeple proposé');
+                return; // Ne rien afficher
+            }
+            
             // Field → Farmer uniquement
             meepleTypes = [
                 { type: 'Farmer', image: `./assets/Meeples/${this.getPlayerColor()}/Farmer.png` }
