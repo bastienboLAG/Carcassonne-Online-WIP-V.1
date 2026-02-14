@@ -33,6 +33,12 @@ let takenColors = [];
 let inLobby = false;
 let isHost = false;
 
+// Configuration de la partie (règles et options)
+let gameConfig = {
+    playFields: true,
+    showRemainingTiles: true
+};
+
 // ========== VARIABLES JEU ==========
 const plateau = new Board();
 const deck = new Deck();
@@ -446,6 +452,13 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
             // ✅ NOUVEAU : Écouter le signal de démarrage
             if (data.type === 'game-starting') {
                 console.log('🎮 [INVITÉ] L\'hôte démarre la partie !');
+                
+                // Recevoir la configuration
+                if (data.config) {
+                    gameConfig = data.config;
+                    console.log('⚙️ [INVITÉ] Configuration reçue:', gameConfig);
+                }
+                
                 startGameForInvite();
             }
         };
@@ -486,11 +499,17 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     
     console.log('🎮 Démarrage de la partie...');
     
-    // Envoyer le signal aux invités
+    // Lire les options du lobby
+    gameConfig.playFields = document.getElementById('base-fields').checked;
+    gameConfig.showRemainingTiles = document.getElementById('list-remaining').checked;
+    console.log('⚙️ Configuration:', gameConfig);
+    
+    // Envoyer le signal aux invités avec la config
     if (isHost) {
         multiplayer.broadcast({
             type: 'game-starting',
-            message: 'L\'hôte démarre la partie !'
+            message: 'L\'hôte démarre la partie !',
+            config: gameConfig
         });
     }
     
@@ -535,7 +554,7 @@ function initializeGameModules() {
     meepleCursorsUI.init();
     
     // MeepleSelectorUI
-    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState);
+    meepleSelectorUI = new MeepleSelectorUI(multiplayer, gameState, gameConfig);
     
     // MeepleDisplayUI
     meepleDisplayUI = new MeepleDisplayUI();
@@ -705,10 +724,18 @@ async function startGame() {
     // Afficher bouton retour lobby (hôte uniquement)
     document.getElementById('back-to-lobby-btn').style.display = 'block';
     
-    // Enregistrer et activer les règles de base
-    ruleRegistry.register('base', BaseRules);
+    // Enregistrer et activer les règles de base avec la configuration
+    ruleRegistry.register('base', BaseRules, gameConfig);
     ruleRegistry.enable('base');
     console.log('📋 Règles actives:', ruleRegistry.getActiveRules());
+    
+    // Gérer le bouton tuiles restantes selon la config
+    const remainingTilesBtn = document.getElementById('remaining-tiles-btn');
+    if (gameConfig.showRemainingTiles) {
+        remainingTilesBtn.style.display = 'block';
+    } else {
+        remainingTilesBtn.style.display = 'none';
+    }
 }
 
 async function startGameForInvite() {
