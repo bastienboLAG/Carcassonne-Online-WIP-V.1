@@ -20,9 +20,11 @@ import { MeepleCursorsUI } from './modules/MeepleCursorsUI.js';
 import { MeepleSelectorUI } from './modules/MeepleSelectorUI.js';
 import { MeepleDisplayUI } from './modules/MeepleDisplayUI.js';
 import { LobbyUI } from './modules/ui/LobbyUI.js';
+import { ModalUI } from './modules/ui/ModalUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 const lobbyUI = new LobbyUI(multiplayer);
+const modalUI = new ModalUI();
 let gameCode = null;
 let playerName = '';
 let playerColor = 'blue';
@@ -1388,9 +1390,10 @@ document.getElementById('remaining-tiles-btn').addEventListener('click', () => {
         return;
     }
     
-    const remaining = deck.remaining();
-    const total = deck.total();
-    alert(`🎴 Tuiles restantes : ${remaining} / ${total}`);
+    const remainingTiles = deck.getRemainingTilesByType();
+    const totalRemaining = deck.remaining();
+    
+    modalUI.showRemainingTiles(remainingTiles, totalRemaining);
 });
 
 // Bouton "Règles de cette partie ?"
