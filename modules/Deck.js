@@ -42,7 +42,7 @@ export class Deck {
                 this.tiles.push({
                     id: uniqueId, // ex: "base-01"
                     zones: data.zones,
-                    imagePath: data.imagePath // Chemin complet de l'image
+                    imagePath: data.image // Utiliser le champ "image" du JSON
                 });
             }
         }
