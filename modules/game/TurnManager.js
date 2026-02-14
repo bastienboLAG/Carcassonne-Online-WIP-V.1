@@ -185,6 +185,12 @@ export class TurnManager {
             this.drawTile();
         }
         
+        // Émettre turn-changed pour que TOUS les joueurs rafraîchissent (y compris inactifs)
+        this.eventBus.emit('turn-changed', {
+            isMyTurn: this.isMyTurn,
+            currentPlayer: this.getCurrentPlayer()
+        });
+        
         // Émettre événement
         this.eventBus.emit('turn-changed', {
             isMyTurn: this.isMyTurn,
