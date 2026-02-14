@@ -1394,6 +1394,8 @@ function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
     }, 10);
     
     document.body.appendChild(selector);
+}
+
 // ========================================
 // ÉVÉNEMENTS DES NOUVEAUX BOUTONS
 // ========================================
