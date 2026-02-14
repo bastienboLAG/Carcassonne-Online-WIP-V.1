@@ -1049,12 +1049,16 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
  */
 function returnToLobby() {
     console.log('🔙 Retour au lobby...');
+    console.log('   isHost:', isHost, 'multiplayer.peer.open:', multiplayer?.peer?.open);
     
     // Notifier les autres joueurs AVANT de faire les changements locaux
     if (isHost && multiplayer && multiplayer.peer && multiplayer.peer.open) {
+        console.log('📡 Envoi broadcast return-to-lobby');
         multiplayer.broadcast({
             type: 'return-to-lobby'
         });
+    } else {
+        console.log('⚠️ Pas de broadcast (isHost:', isHost, ')');
     }
     
     // Masquer le bouton retour lobby
