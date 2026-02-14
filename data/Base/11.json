@@ -2,7 +2,7 @@
   "id": "11",
   "quantity": 3,
   "extension": "base",
-  "image": "11.png",
+  "image": "./assets/Base/C2/11.png",
   "zones": [
     {
       "id": 1,
@@ -37,4 +37,5 @@
   ]
 
 }
+
 
