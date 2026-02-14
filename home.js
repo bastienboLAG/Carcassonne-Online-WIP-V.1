@@ -1370,12 +1370,7 @@ function afficherSelecteurMeeple(x, y, position, zoneType, mouseX, mouseY) {
         
         option.onclick = (e) => {
             e.stopPropagation();
-            
-            // Utiliser MeeplePlacement au lieu de la fonction locale
-            if (meeplePlacement) {
-                meeplePlacement.placeMeeple(x, y, position, meeple.type, multiplayer.playerId);
-            }
-            
+            placerMeeple(x, y, position, meeple.type);
             setTimeout(() => selector.remove(), 0);
         };
         
@@ -1525,6 +1520,123 @@ function getPlayerColor() {
     if (!gameState || !multiplayer) return 'Blue';
     const player = gameState.players.find(p => p.id === multiplayer.playerId);
     return player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
+}
+
+/**
+ * Placer un meeple
+ */
+function placerMeeple(x, y, position, meepleType) {
+    const key = `${x},${y},${position}`;
+    const playerColor = getPlayerColor();
+    
+    console.log('🎭 Placement meeple:', meepleType, 'à', x, y, 'position', position);
+    
+    // Sauvegarder
+    placedMeeples[key] = {
+        type: meepleType,
+        color: playerColor,
+        playerId: multiplayer.playerId
+    };
+    
+    // Décrémenter le nombre de meeples disponibles
+    decrementPlayerMeeples(multiplayer.playerId);
+
+    // Afficher le meeple
+    afficherMeeple(x, y, position, meepleType, playerColor);
+    
+    // Synchroniser
+    if (gameSync) {
+        gameSync.syncMeeplePlacement(x, y, position, meepleType, playerColor);
+    }
+    
+    // Faire disparaître TOUS les curseurs (un seul meeple par tour)
+    document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
+}
+
+/**
+ * Afficher un meeple sur le plateau
+ */
+function afficherMeeple(x, y, position, meepleType, color) {
+    // Créer un conteneur sur la tuile, pas directement le meeple
+    let container = document.querySelector(`.meeple-container[data-pos="${x},${y}"]`);
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'meeple-container';
+        container.dataset.pos = `${x},${y}`;
+        container.style.gridColumn = x;
+        container.style.gridRow = y;
+        container.style.position = 'relative';
+        container.style.width = '208px';
+        container.style.height = '208px';
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '50';
+        document.getElementById('board').appendChild(container);
+    }
+    
+    const meeple = document.createElement('img');
+    meeple.src = `./assets/Meeples/${color}/${meepleType}.png`;
+    meeple.className = 'meeple';
+    meeple.dataset.key = `${x},${y},${position}`;
+    meeple.dataset.position = position;
+    
+    // Calculer la position dans la grille 5x5
+    const row = Math.floor((position - 1) / 5);
+    const col = (position - 1) % 5;
+    
+    const offsetX = 20.8 + (col * 41.6);
+    const offsetY = 20.8 + (row * 41.6);
+    
+    meeple.style.position = 'absolute';
+    meeple.style.left = `${offsetX}px`;
+    meeple.style.top = `${offsetY}px`;
+    meeple.style.width = '60px';
+    meeple.style.height = '60px';
+    meeple.style.transform = 'translate(-50%, -50%)';
+    meeple.style.pointerEvents = 'none';
+    
+    container.appendChild(meeple);
+}
+
+/**
+ * Décrémenter le nombre de meeples d'un joueur
+ */
+function decrementPlayerMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (player && player.meeples > 0) {
+        player.meeples--;
+        console.log(`🎭 ${player.name} a maintenant ${player.meeples} meeples disponibles`);
+        updateScorePanel();
+        
+        // Synchroniser
+        if (gameSync) {
+            gameSync.multiplayer.broadcast({
+                type: 'meeple-count-update',
+                playerId: playerId,
+                meeples: player.meeples
+            });
+        }
+    }
+}
+
+/**
+ * Incrémenter le nombre de meeples d'un joueur
+ */
+function incrementPlayerMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    if (player && player.meeples < 7) {
+        player.meeples++;
+        console.log(`🎭 ${player.name} récupère un meeple (${player.meeples}/7)`);
+        updateScorePanel();
+        
+        // Synchroniser
+        if (gameSync) {
+            gameSync.multiplayer.broadcast({
+                type: 'meeple-count-update',
+                playerId: playerId,
+                meeples: player.meeples
+            });
+        }
+    }
 }
 
 // ========================================
