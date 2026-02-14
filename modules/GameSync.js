@@ -200,6 +200,13 @@ export class GameSync {
                     this.onScoreUpdate(data.scoringResults, data.meeplesToReturn);
                 }
                 break;
+                
+            case 'return-to-lobby':
+                if (this.onReturnToLobby) {
+                    console.log('🔙 [SYNC] Retour au lobby demandé');
+                    this.onReturnToLobby();
+                }
+                break;
         }
     }
 }
