@@ -2,7 +2,7 @@
   "id": "18",
   "quantity": 3,
   "extension": "base",
-  "image": "18.png",
+  "image": "./assets/Base/C2/18.png",
   "zones": [
     {
       "id": 1,
@@ -21,4 +21,5 @@
       "meeplePosition": "23"
     }
   ]
+
 }
