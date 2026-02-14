@@ -35,10 +35,14 @@ export class Deck {
             // ✅ En mode test, prendre seulement 1 exemplaire de chaque tuile
             const quantity = testMode ? 1 : data.quantity;
             
+            // Construire l'ID unique avec le préfixe de l'extension
+            const uniqueId = `${data.extension}-${data.id}`;
+            
             for (let i = 0; i < quantity; i++) {
                 this.tiles.push({
-                    id: data.id,
-                    zones: data.zones
+                    id: uniqueId, // ex: "base-01"
+                    zones: data.zones,
+                    imagePath: data.imagePath // Chemin complet de l'image
                 });
             }
         }
@@ -46,8 +50,8 @@ export class Deck {
         // Mélanger la pioche
         this.shuffle();
         
-        // Forcer la tuile 04 en première position
-        const index04 = this.tiles.findIndex(t => t.id === "04");
+        // Forcer la tuile base-04 en première position
+        const index04 = this.tiles.findIndex(t => t.id === "base-04");
         if (index04 !== -1) {
             const tile04 = this.tiles.splice(index04, 1)[0];
             this.tiles.unshift(tile04);
@@ -76,5 +80,30 @@ export class Deck {
 
     total() {
         return this.totalTiles;
+    }
+
+    /**
+     * Obtenir les tuiles restantes groupées par type avec leur quantité
+     * @returns {Array} Liste des tuiles avec {id, imagePath, count}
+     */
+    getRemainingTilesByType() {
+        // Compter les tuiles restantes par ID
+        const counts = {};
+        
+        for (let i = this.currentIndex; i < this.tiles.length; i++) {
+            const tile = this.tiles[i];
+            if (!counts[tile.id]) {
+                counts[tile.id] = {
+                    id: tile.id,
+                    imagePath: tile.imagePath,
+                    count: 0
+                };
+            }
+            counts[tile.id].count++;
+        }
+        
+        // Convertir en tableau et trier par quantité décroissante
+        return Object.values(counts)
+            .sort((a, b) => b.count - a.count);
     }
 }
