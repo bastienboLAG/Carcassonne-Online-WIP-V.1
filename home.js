@@ -306,6 +306,10 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
             if (data.type === 'player-info') {
                 const existingPlayer = players.find(p => p.id === from);
                 if (!existingPlayer) {
+                    // Mettre à jour takenColors depuis lobbyUI
+                    lobbyUI.setPlayers(players);
+                    const takenColors = players.map(p => p.color);
+                    
                     let assignedColor = data.color;
                     if (takenColors.includes(data.color)) {
                         assignedColor = getAvailableColor();
@@ -317,7 +321,7 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
                         color: assignedColor,
                         isHost: false
                     });
-                    lobbyUI.updatePlayersList();
+                    lobbyUI.setPlayers(players);
                 }
                 
                 multiplayer.broadcast({
@@ -408,6 +412,7 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
             if (data.type === 'players-update') {
                 console.log('👥 Mise à jour liste joueurs:', data.players);
                 players = data.players;
+                lobbyUI.setPlayers(players);
                 
                 const me = players.find(p => p.id === multiplayer.playerId);
                 if (me && me.color !== playerColor) {
@@ -419,8 +424,6 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
                         colorOption.querySelector('input').checked = true;
                     }
                 }
-                
-                lobbyUI.updatePlayersList();
             }
             
             if (data.type === 'color-change') {
@@ -701,6 +704,9 @@ async function startGame() {
     }
     
     console.log('✅ Initialisation terminée');
+    
+    // Afficher bouton retour lobby (hôte uniquement)
+    document.getElementById('back-to-lobby-btn').style.display = 'block';
     
     // Enregistrer et activer les règles de base
     ruleRegistry.register('base', BaseRules);
@@ -1048,6 +1054,9 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
  */
 function returnToLobby() {
     console.log('🔙 Retour au lobby...');
+    
+    // Masquer le bouton retour lobby
+    document.getElementById('back-to-lobby-btn').style.display = 'none';
     
     // Réinitialiser l'état du jeu
     gameState = null;
