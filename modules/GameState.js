@@ -12,13 +12,14 @@ export class GameState {
     /**
      * Ajouter un joueur
      */
-    addPlayer(playerId, playerName, color) {
+    addPlayer(playerId, playerName, color, isHost = false) {
         this.players.push({
             id: playerId,
             name: playerName,
             color: color,
             score: 0,
-            meeples: 7 // Nombre de meeples disponibles
+            meeples: 7, // Nombre de meeples disponibles
+            isHost: isHost
         });
     }
 
