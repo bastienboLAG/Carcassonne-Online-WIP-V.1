@@ -1510,6 +1510,14 @@ function updateScorePanel() {
     });
 }
 
+/**
+ * Vérifier si le joueur a des meeples disponibles
+ */
+function hasAvailableMeeples(playerId) {
+    const player = gameState.players.find(p => p.id === playerId);
+    return player && player.meeples > 0;
+}
+
 // ========================================
 // ÉVÉNEMENTS DES NOUVEAUX BOUTONS
 // ========================================
