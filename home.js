@@ -19,6 +19,7 @@ import { TilePreviewUI } from './modules/TilePreviewUI.js';
 import { MeepleCursorsUI } from './modules/MeepleCursorsUI.js';
 import { MeepleSelectorUI } from './modules/MeepleSelectorUI.js';
 import { MeepleDisplayUI } from './modules/MeepleDisplayUI.js';
+import { PlayerControlsUI } from './modules/ui/PlayerControlsUI.js';
 // ========== VARIABLES LOBBY ==========
 const multiplayer = new Multiplayer();
 let gameCode = null;
@@ -110,6 +111,51 @@ eventBus.on('meeple-count-updated', (data) => {
     }
 });
 
+// Écouter end-turn-requested de PlayerControlsUI
+eventBus.on('end-turn-requested', () => {
+    terminerTour();
+});
+
+/**
+ * Terminer le tour du joueur actuel
+ */
+function terminerTour() {
+    if (!turnManager) return;
+    
+    // Nettoyer les curseurs de meeple
+    document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
+    lastPlacedTile = null;
+    
+    // Appeler TurnManager qui gère tout (scoring, meeples, sync, next player)
+    const result = turnManager.endTurn(scoring, meeplePlacement, meepleDisplayUI);
+    
+    if (result.success) {
+        // Synchroniser les scores si nécessaire
+        if (result.scoringResults && result.scoringResults.length > 0 && gameSync) {
+            gameSync.syncScoreUpdate(result.scoringResults, result.meeplesToReturn);
+        }
+        
+        // Synchroniser la fin de tour
+        if (gameSync) {
+            gameSync.syncTurnEnd();
+        }
+        
+        // Mettre à jour l'affichage
+        updateTurnDisplay();
+        
+        // Mettre à jour isMyTurn localement
+        const currentPlayer = gameState.getCurrentPlayer();
+        isMyTurn = currentPlayer.id === multiplayer.playerId;
+        console.log('🔄 Mise à jour isMyTurn:', isMyTurn, 'Tour de:', currentPlayer.name);
+        
+        // Émettre turn-changed pour rafraîchir les slots
+        eventBus.emit('turn-changed', {
+            isMyTurn: isMyTurn,
+            currentPlayer: currentPlayer
+        });
+    }
+}
+
 let gameSync = null;
 let zoneMerger = null;
 let scoring = null;
@@ -123,6 +169,7 @@ let tilePreviewUI = null;
 let meepleCursorsUI = null;
 let meepleSelectorUI = null;
 let meepleDisplayUI = null;
+let playerControlsUI = null;
 let isMyTurn = false;
 
 // ✅ NOUVEAU : Variables pour les meeples
@@ -545,6 +592,10 @@ function initializeGameModules() {
     meepleDisplayUI = new MeepleDisplayUI();
     meepleDisplayUI.init();
     
+    // PlayerControlsUI
+    playerControlsUI = new PlayerControlsUI(eventBus, gameSync);
+    playerControlsUI.init();
+    
     console.log('✅ Tous les modules initialisés');
 }
 
@@ -678,7 +729,7 @@ async function startGame() {
     
     // Setup de l'interface
     console.log('🔧 Setup des event listeners...');
-    setupEventListeners();
+    // setupEventListeners() supprimé - logique déplacée dans modules
     console.log('🔧 Setup de la navigation...');
     setupNavigation(document.getElementById('board-container'), document.getElementById('board'));
     
@@ -881,171 +932,6 @@ function afficherMessage(msg) {
     document.getElementById('tile-preview').innerHTML = `<p style="text-align: center; color: white;">${msg}</p>`;
 }
 
-function setupEventListeners() {
-    document.getElementById('tile-preview').addEventListener('click', () => {
-        if (!isMyTurn && gameSync) {
-            console.log('⚠️ Pas votre tour !');
-            return;
-        }
-        
-        if (tuileEnMain && !tuilePosee) {
-            const currentImg = document.getElementById('current-tile-img');
-            tuileEnMain.rotation = (tuileEnMain.rotation + 90) % 360;
-            const currentTransform = currentImg.style.transform;
-            const currentDeg = parseInt(currentTransform.match(/rotate\((\d+)deg\)/)?.[1] || '0');
-            const newDeg = currentDeg + 90;
-            currentImg.style.transform = `rotate(${newDeg}deg)`;
-            
-            if (gameSync) {
-                gameSync.syncTileRotation(tuileEnMain.rotation);
-            }
-            
-            // Émettre événement pour rafraîchir les slots
-            eventBus.emit('tile-rotated', { rotation: tuileEnMain.rotation });
-            
-            if (firstTilePlaced) {
-            }
-        }
-    });
-    
-    document.getElementById('end-turn-btn').onclick = () => {
-        if (!isMyTurn && gameSync) {
-            alert('Ce n\'est pas votre tour !');
-            return;
-        }
-        
-        if (!tuilePosee) {
-            alert('Vous devez poser la tuile avant de terminer votre tour !');
-            return;
-        }
-        
-        console.log('⏭️ Fin de tour - passage au joueur suivant');
-        
-        // ✅ Calculer les scores des zones fermées
-        if (scoring && zoneMerger) {
-            const { scoringResults, meeplesToReturn } = scoring.scoreClosedZones(placedMeeples);
-            
-            if (scoringResults.length > 0) {
-                console.log('💰 Scores calculés:', scoringResults);
-                
-                // Appliquer les scores localement
-                scoringResults.forEach(({ playerId, points, reason }) => {
-                    const player = gameState.players.find(p => p.id === playerId);
-                    if (player) {
-                        player.score += points;
-                        console.log(`  ${player.name} +${points} pts (${reason})`);
-                    }
-                });
-                
-                // Retirer les meeples des zones fermées
-                meeplesToReturn.forEach(key => {
-                    const meeple = placedMeeples[key];
-                    if (meeple) {
-                        console.log(`  Retour meeple de ${meeple.playerId} à ${key}`);
-                        // ✅ Incrémenter le nombre de meeples disponibles
-                        incrementPlayerMeeples(meeple.playerId);
-
-                        
-                        // ✅ Retirer visuellement - chercher tous les meeples et vérifier data-key
-                        const [x, y, position] = key.split(',');
-                        document.querySelectorAll('.meeple').forEach(el => {
-                            if (el.dataset.key === key) {
-                                console.log('    Meeple visuel retiré');
-                                el.remove();
-                            }
-                        });
-                        
-                        // Retirer des données
-                        delete placedMeeples[key];
-                    }
-                });
-                
-                // Synchroniser les scores
-                if (gameSync) {
-                    gameSync.syncScoreUpdate(scoringResults, meeplesToReturn);
-                }
-                
-                // Mettre à jour l'affichage
-                updateTurnDisplay();
-            }
-        }
-        
-        // ✅ Nettoyer les curseurs de meeple
-        document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
-        lastPlacedTile = null;
-        
-        if (gameSync) {
-            // Synchroniser la fin de tour (qui met à jour gameState.currentPlayerIndex)
-            gameSync.syncTurnEnd();
-            
-            // ✅ 6) IMPORTANT : Mettre à jour isMyTurn localement APRÈS avoir changé de tour
-            const currentPlayer = gameState.getCurrentPlayer();
-            isMyTurn = currentPlayer.id === multiplayer.playerId;
-            console.log('🔄 Mise à jour isMyTurn:', isMyTurn, 'Tour de:', currentPlayer.name);
-            
-            // ✅ Émettre turn-changed pour rafraîchir les slots (joueur devient inactif)
-            eventBus.emit('turn-changed', {
-                isMyTurn: isMyTurn,
-                currentPlayer: currentPlayer
-            });
-        }
-        
-        // ✅ Vérifier si c'est la fin de partie (deck vide)
-        if (deck.currentIndex >= deck.totalTiles) {
-            console.log('🏁 FIN DE PARTIE - Calcul des scores finaux');
-            
-            if (scoring && zoneMerger) {
-                const finalScores = scoring.calculateFinalScores(placedMeeples, gameState);
-                
-                console.log('💰 Scores finaux:', finalScores);
-                
-                // Appliquer les scores finaux
-                finalScores.forEach(({ playerId, points, reason }) => {
-                    const player = gameState.players.find(p => p.id === playerId);
-                    if (player) {
-                        player.score += points;
-                        console.log(`  ${player.name} +${points} pts (${reason})`);
-                    }
-                });
-                
-                // Mettre à jour l'affichage
-                updateTurnDisplay();
-                
-                // Afficher le gagnant
-                const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
-                setTimeout(() => {
-                    alert(`🏆 Partie terminée !
-${winner.name} gagne avec ${winner.score} points !
-
-Scores finaux :
-${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
-                }, 500);
-            }
-            
-            return; // Ne pas piocher de nouvelle tuile
-        }
-        
-        // Piocher la nouvelle tuile localement
-        turnManager.drawTile();
-        
-        // Mettre à jour l'affichage du tour
-        if (gameState) {
-            updateTurnDisplay();
-        }
-    };
-    
-    document.getElementById('recenter-btn').onclick = () => {
-        const container = document.getElementById('board-container');
-        container.scrollLeft = 10400 - (container.clientWidth / 2);
-        container.scrollTop = 10400 - (container.clientHeight / 2);
-    };
-    
-    document.getElementById('back-to-lobby-btn').onclick = () => {
-        if (confirm('Voulez-vous vraiment quitter la partie ?')) {
-            location.reload();
-        }
-    };
-}
 
 function piocherNouvelleTuile() {
     console.log('🎲 Pioche d\'une nouvelle tuile...');
