@@ -353,11 +353,6 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
                 players = data.players;
                 lobbyUI.setPlayers(players);
             }
-            
-            if (data.type === 'return-to-lobby') {
-                console.log('🔙 [HÔTE] Retour au lobby demandé');
-                returnToLobby();
-            }
         };
         
     } catch (error) {
@@ -564,7 +559,7 @@ async function startGame() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-        gameState.addPlayer(player.id, player.name, player.color);
+        gameState.addPlayer(player.id, player.name, player.color, player.isHost);
     });
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
     
@@ -724,7 +719,7 @@ async function startGameForInvite() {
     // Initialiser le GameState
     gameState = new GameState();
     players.forEach(player => {
-        gameState.addPlayer(player.id, player.name, player.color);
+        gameState.addPlayer(player.id, player.name, player.color, player.isHost);
     });
     
     // Initialiser GameSync
@@ -1055,6 +1050,13 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
 function returnToLobby() {
     console.log('🔙 Retour au lobby...');
     
+    // Notifier les autres joueurs AVANT de faire les changements locaux
+    if (isHost && multiplayer && multiplayer.peer && multiplayer.peer.open) {
+        multiplayer.broadcast({
+            type: 'return-to-lobby'
+        });
+    }
+    
     // Masquer le bouton retour lobby
     document.getElementById('back-to-lobby-btn').style.display = 'none';
     
@@ -1077,13 +1079,6 @@ function returnToLobby() {
     lobbyUI.show();
     lobbyUI.reset();
     lobbyUI.setPlayers(players);
-    
-    // Notifier les autres joueurs
-    if (isHost && multiplayer && multiplayer.peer && multiplayer.peer.open) {
-        multiplayer.broadcast({
-            type: 'return-to-lobby'
-        });
-    }
     
     // Réafficher les boutons du lobby
     updateLobbyUI();
