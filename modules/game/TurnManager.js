@@ -111,7 +111,7 @@ export class TurnManager {
      * Terminer le tour
      * @returns {Object} { success: boolean, scoringResults?, meeplesToReturn? }
      */
-    endTurn() {
+    endTurn(scoring = null, meeplePlacement = null, meepleDisplayUI = null) {
         // Vérifier que c'est notre tour
         if (!this.isMyTurn) {
             console.error('❌ Ce n\'est pas votre tour');
@@ -126,15 +126,52 @@ export class TurnManager {
 
         console.log('⏭️ Fin de tour - passage au joueur suivant');
         
-        // Émettre événement pour calcul des scores (Scoring écoute cet événement)
+        let scoringResults = [];
+        let meeplesToReturn = [];
+        
+        // ✅ Calculer les scores des zones fermées
+        if (scoring && meeplePlacement) {
+            const placedMeeples = meeplePlacement.getPlacedMeeples();
+            const result = scoring.scoreClosedZones(placedMeeples);
+            scoringResults = result.scoringResults;
+            meeplesToReturn = result.meeplesToReturn;
+            
+            if (scoringResults.length > 0) {
+                console.log('💰 Scores calculés:', scoringResults);
+                
+                // Appliquer les scores
+                scoringResults.forEach(({ playerId, points, reason }) => {
+                    this.gameState.addScore(playerId, points);
+                    const player = this.gameState.getPlayer(playerId);
+                    console.log(`  ${player.name} +${points} pts (${reason})`);
+                });
+                
+                // Retirer les meeples des zones fermées
+                meeplesToReturn.forEach(key => {
+                    console.log(`  Retour meeple: ${key}`);
+                    
+                    // Retirer visuellement
+                    if (meepleDisplayUI) {
+                        meepleDisplayUI.removeMeeple(key);
+                    }
+                    
+                    // Retirer des données
+                    meeplePlacement.removeMeeple(key);
+                });
+            }
+        }
+        
+        // Émettre événement pour calcul des scores
         this.eventBus.emit('turn-ending', { 
-            playerId: this.multiplayer.playerId 
+            playerId: this.multiplayer.playerId,
+            scoringResults,
+            meeplesToReturn
         });
         
         // Passer au joueur suivant
         this.nextPlayer();
         
-        return { success: true };
+        return { success: true, scoringResults, meeplesToReturn };
     }
 
     /**
