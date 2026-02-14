@@ -608,8 +608,8 @@ async function startGame() {
             if (currentImg) {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
-            if (firstTilePlaced) {
-            }
+            // Émettre tile-rotated pour que SlotsUI rafraîchisse
+            eventBus.emit('tile-rotated', { rotation });
         }
     };
     
@@ -761,6 +761,8 @@ async function startGameForInvite() {
             if (currentImg) {
                 currentImg.style.transform = `rotate(${rotation}deg)`;
             }
+            // Émettre tile-rotated pour que SlotsUI rafraîchisse
+            eventBus.emit('tile-rotated', { rotation });
         }
     };
     
