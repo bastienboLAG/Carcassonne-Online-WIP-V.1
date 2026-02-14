@@ -63,6 +63,10 @@ export class SlotsUI {
      * Quand une tuile est tournée
      */
     onTileRotated(data) {
+        // Mettre à jour la rotation de currentTile
+        if (this.currentTile && data.rotation !== undefined) {
+            this.currentTile.rotation = data.rotation;
+        }
         // Rafraîchir les slots car les possibilités changent
         this.refresh();
     }
@@ -142,6 +146,8 @@ export class SlotsUI {
     /**
      * Rafraîchir tous les slots - COPIE EXACTE de rafraichirTousLesSlots()\n     */
     refreshAllSlots() {
+        console.log('🔄 refreshAllSlots - firstTilePlaced:', this.firstTilePlaced, 'isMyTurn:', this.isMyTurn);
+        
         if (this.firstTilePlaced) {
             document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
         }
@@ -149,8 +155,11 @@ export class SlotsUI {
         // Utiliser currentTile (tuile piochée) au lieu de getTileEnMain()
         // pour que le joueur inactif voit aussi les slots
         const tile = this.currentTile || this.getTileEnMain();
+        console.log('🎴 Tuile:', tile ? tile.id : 'null', '(currentTile:', this.currentTile?.id, 'getTileEnMain:', this.getTileEnMain()?.id + ')');
+        
         if (!tile) return;
         
+        console.log('📍 Tuiles placées:', Object.keys(this.plateau.placedTiles).length);
         for (let coord in this.plateau.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
             this.generateSlotsAround(x, y, tile);
