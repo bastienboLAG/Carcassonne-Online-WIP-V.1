@@ -2,7 +2,7 @@
   "id": "23",
   "quantity": 4,
   "extension": "base",
-  "image": "23.png",
+  "image": "./assets/Base/C2/23.png",
   "zones": [
     {
       "id": 1,
@@ -49,3 +49,4 @@
   ]
 
 }
+
