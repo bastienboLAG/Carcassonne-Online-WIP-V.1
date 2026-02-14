@@ -1,7 +1,7 @@
 export class Tile {
     constructor(data) {
         this.id = data.id;
-        this.imagePath = `./assets/Base/C2/${this.id}.png`; 
+        this.imagePath = data.image || data.imagePath; // Support "image" et "imagePath"
         this.zones = data.zones || [];
         this.rotation = 0;
     }
@@ -75,6 +75,13 @@ export class Tile {
         }
 
         return null;
+    }
+
+    /**
+     * Fait tourner la tuile de 90° dans le sens horaire
+     */
+    rotate() {
+        this.rotation = (this.rotation + 90) % 360;
     }
 
     /**
