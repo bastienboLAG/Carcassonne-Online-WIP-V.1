@@ -73,7 +73,8 @@ export class GameState {
             name: p.name,
             color: p.color,
             score: p.score || 0,
-            meeples: p.meeples || 7
+            meeples: p.meeples || 7,
+            isHost: p.isHost || false
         }));
         this.currentPlayerIndex = data.currentPlayerIndex || 0;
         this.placedTiles = data.placedTiles || {};
