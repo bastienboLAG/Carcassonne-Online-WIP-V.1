@@ -829,6 +829,11 @@ async function startGameForInvite() {
         updateTurnDisplay();
     };
     
+    gameSync.onReturnToLobby = () => {
+        console.log('🔙 [INVITÉ] Callback retour lobby appelé');
+        returnToLobby();
+    };
+    
     setupEventListeners();
     setupNavigation(document.getElementById('board-container'), document.getElementById('board'));
     
