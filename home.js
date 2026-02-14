@@ -67,7 +67,7 @@ eventBus.on('turn-changed', (data) => {
 
 // ✅ Écouter turn-ended pour synchroniser TOUS les joueurs (pas juste le nouveau joueur actif)
 eventBus.on('turn-ended', (data) => {
-    console.log('⏭️ Turn ended - recalcul isMyTurn pour tous les joueurs');
+    console.log('⏭️ Turn ended - recalcul isMyTurn et refresh slots pour tous');
     // Recalculer isMyTurn pour ce joueur
     if (gameState && multiplayer) {
         const currentPlayer = gameState.getCurrentPlayer();
@@ -75,16 +75,16 @@ eventBus.on('turn-ended', (data) => {
         
         console.log('   currentPlayer:', currentPlayer?.name, 'newIsMyTurn:', newIsMyTurn);
         
-        // Émettre turn-changed localement pour ce joueur aussi
-        if (newIsMyTurn !== isMyTurn) {
-            console.log('   → Émission turn-changed local');
-            eventBus.emit('turn-changed', {
-                isMyTurn: newIsMyTurn,
-                currentPlayer: currentPlayer
-            });
-        }
+        // TOUJOURS émettre turn-changed pour rafraîchir les slots
+        // Même si isMyTurn ne change pas, les slots doivent être recréés avec la nouvelle tuile
+        console.log('   → Émission turn-changed pour rafraîchir slots');
+        eventBus.emit('turn-changed', {
+            isMyTurn: newIsMyTurn,
+            currentPlayer: currentPlayer
+        });
     }
 });
+
 
 // Écouter meeple-placed pour afficher et synchroniser
 eventBus.on('meeple-placed', (data) => {
@@ -980,6 +980,12 @@ function setupEventListeners() {
             const currentPlayer = gameState.getCurrentPlayer();
             isMyTurn = currentPlayer.id === multiplayer.playerId;
             console.log('🔄 Mise à jour isMyTurn:', isMyTurn, 'Tour de:', currentPlayer.name);
+            
+            // ✅ Émettre turn-changed pour rafraîchir les slots (joueur devient inactif)
+            eventBus.emit('turn-changed', {
+                isMyTurn: isMyTurn,
+                currentPlayer: currentPlayer
+            });
         }
         
         // ✅ Vérifier si c'est la fin de partie (deck vide)
