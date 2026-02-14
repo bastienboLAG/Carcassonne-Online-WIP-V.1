@@ -834,6 +834,12 @@ async function startGameForInvite() {
         returnToLobby();
     };
     
+    gameSync.onPlayerOrderUpdate = (updatedPlayers) => {
+        console.log('🔄 [INVITÉ] Callback ordre joueurs:', updatedPlayers);
+        players = updatedPlayers;
+        lobbyUI.setPlayers(players);
+    };
+    
     setupEventListeners();
     setupNavigation(document.getElementById('board-container'), document.getElementById('board'));
     
