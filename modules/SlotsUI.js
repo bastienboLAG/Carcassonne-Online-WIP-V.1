@@ -1,3 +1,5 @@
+import { Tile } from '../../core/Tile.js';
+
 /**
  * SlotsUI - Gère l'affichage des slots de placement
  * CONNECTÉ À EVENTBUS
@@ -36,7 +38,14 @@ export class SlotsUI {
     /**
      * Quand une tuile est piochée
      */
+    /**
+     * Quand une tuile est piochée
+     */
     onTileDrawn(data) {
+        // Stocker la tuile pour pouvoir afficher les slots même si on n'est pas le joueur actif
+        if (data.tileData) {
+            this.currentTile = new Tile(data.tileData);
+        }
         // Ne pas rafraîchir ici - les slots seront rafraîchis par turn-changed et tile-rotated
         // Si on rafraîchit ici, isMyTurn n'est pas encore à jour
     }
@@ -131,29 +140,31 @@ export class SlotsUI {
     }
 
     /**
-     * Rafraîchir tous les slots - COPIE EXACTE de rafraichirTousLesSlots()
-     */
+     * Rafraîchir tous les slots - COPIE EXACTE de rafraichirTousLesSlots()\n     */
     refreshAllSlots() {
         if (this.firstTilePlaced) {
             document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
         }
         
-        if (!this.getTileEnMain()) return;
+        // Utiliser currentTile (tuile piochée) au lieu de getTileEnMain()
+        // pour que le joueur inactif voit aussi les slots
+        const tile = this.currentTile || this.getTileEnMain();
+        if (!tile) return;
         
         for (let coord in this.plateau.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
-            this.generateSlotsAround(x, y);
+            this.generateSlotsAround(x, y, tile);
         }
     }
 
     /**
      * Générer les slots autour d'une position - COPIE EXACTE de genererSlotsAutour()
      */
-    generateSlotsAround(x, y) {
+    generateSlotsAround(x, y, tile) {
         const directions = [{dx:0, dy:-1}, {dx:1, dy:0}, {dx:0, dy:1}, {dx:-1, dy:0}];
         directions.forEach(dir => {
             const nx = x + dir.dx, ny = y + dir.dy;
-            if (this.getTileEnMain() && this.plateau.isFree(nx, ny) && this.plateau.canPlaceTile(nx, ny, this.getTileEnMain())) {
+            if (tile && this.plateau.isFree(nx, ny) && this.plateau.canPlaceTile(nx, ny, tile)) {
                 const slot = document.createElement('div');
                 slot.className = "slot";
                 slot.style.gridColumn = nx;
