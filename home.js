@@ -1518,6 +1518,15 @@ function hasAvailableMeeples(playerId) {
     return player && player.meeples > 0;
 }
 
+/**
+ * Obtenir la couleur du joueur actuel (capitalisée)
+ */
+function getPlayerColor() {
+    if (!gameState || !multiplayer) return 'Blue';
+    const player = gameState.players.find(p => p.id === multiplayer.playerId);
+    return player ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : 'Blue';
+}
+
 // ========================================
 // ÉVÉNEMENTS DES NOUVEAUX BOUTONS
 // ========================================
