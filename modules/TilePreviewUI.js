@@ -71,4 +71,24 @@ export class TilePreviewUI {
         this.counterElement.textContent = `Tuiles : ${remaining} / ${total}`;
     }
 
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 TilePreviewUI: cleanup');
+        
+        // Nettoyer le DOM
+        if (this.previewElement) {
+            this.previewElement.innerHTML = '';
+        }
+        if (this.counterElement) {
+            this.counterElement.textContent = 'Tuiles : 0 / 0';
+        }
+        
+        // Se désabonner des événements
+        this.eventBus.off('tile-drawn', this.onTileDrawn);
+        this.eventBus.off('tile-placed', this.showBackside);
+        this.eventBus.off('deck-updated', this.updateCounter);
+    }
+
 }
