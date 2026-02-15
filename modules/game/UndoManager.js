@@ -30,6 +30,7 @@ export class UndoManager {
         this.turnStartSnapshot = {
             placedTileKeys: Object.keys(this.plateau.placedTiles), // Seulement les clés
             zones: this.zoneRegistry.serialize(),
+            tileToZone: new Map(this.zoneMerger.tileToZone), // Copie de la map
             placedMeeples: this.deepCopy(placedMeeples),
             playerMeeples: this.gameState.players.map(p => ({
                 id: p.id,
@@ -54,6 +55,7 @@ export class UndoManager {
         this.afterTilePlacedSnapshot = {
             placedTileKeys: Object.keys(this.plateau.placedTiles), // Seulement les clés
             zones: this.zoneRegistry.serialize(),
+            tileToZone: new Map(this.zoneMerger.tileToZone), // Copie de la map
             placedMeeples: this.deepCopy(placedMeeples),
             playerMeeples: this.gameState.players.map(p => ({
                 id: p.id,
@@ -147,9 +149,9 @@ export class UndoManager {
         // Restaurer zones
         this.zoneRegistry.deserialize(snapshot.zones);
         
-        // Reconstruire tileToZone map dans ZoneMerger
-        this.zoneMerger.tileToZone = this.zoneRegistry.rebuildTileToZone();
-        console.log(`  🔄 tileToZone reconstruit: ${this.zoneMerger.tileToZone.size} entrées`);
+        // Restaurer tileToZone map dans ZoneMerger
+        this.zoneMerger.tileToZone = new Map(snapshot.tileToZone);
+        console.log(`  🔄 tileToZone restauré: ${this.zoneMerger.tileToZone.size} entrées`);
         
         // Restaurer meeples placés (vider l'objet et le remplir)
         Object.keys(placedMeeples).forEach(key => delete placedMeeples[key]);
