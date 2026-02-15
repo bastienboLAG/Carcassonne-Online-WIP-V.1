@@ -1169,17 +1169,17 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
             return; // Ne pas piocher de nouvelle tuile
         }
         
+        // ⏪ Reset UndoManager AVANT de piocher (sinon efface le nouveau snapshot)
+        if (undoManager) {
+            undoManager.reset();
+        }
+        
         // Piocher la nouvelle tuile localement
         turnManager.drawTile();
         
         // Mettre à jour l'affichage du tour
         if (gameState) {
             updateTurnDisplay();
-        }
-        
-        // ⏪ Reset UndoManager (impossible d'annuler après fin de tour)
-        if (undoManager) {
-            undoManager.reset();
         }
     };
     
@@ -1628,9 +1628,21 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         
         console.log('✅ Meeple annulé');
     } else if (undoneAction.type === 'tile') {
-        // Retirer la tuile du DOM (peut être .tile ou .slot)
-        const tileKey = `${undoneAction.tile.x},${undoneAction.tile.y}`;
-        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"], .slot[data-pos="${tileKey}"]`);
+        // Retirer la tuile du DOM
+        const x = undoneAction.tile.x;
+        const y = undoneAction.tile.y;
+        const tileKey = `${x},${y}`;
+        
+        // Chercher par data-pos (nouvelle méthode) ou par gridColumn/gridRow (fallback)
+        let tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        if (!tileEl) {
+            // Fallback : chercher par position CSS
+            const tiles = document.querySelectorAll('.tile');
+            tileEl = Array.from(tiles).find(el => 
+                el.style.gridColumn == x && el.style.gridRow == y
+            );
+        }
+        
         if (tileEl) {
             tileEl.remove();
             console.log('  🗑️ Élément DOM retiré:', tileKey);

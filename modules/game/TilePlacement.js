@@ -103,6 +103,7 @@ export class TilePlacement {
         const img = document.createElement('img');
         img.src = tile.imagePath;
         img.className = "tile";
+        img.dataset.pos = `${x},${y}`; // Pour retrouver la tuile lors de l'annulation
         img.style.gridColumn = x;
         img.style.gridRow = y;
         img.style.transform = `rotate(${tile.rotation}deg)`;
