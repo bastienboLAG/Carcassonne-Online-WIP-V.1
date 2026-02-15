@@ -43,8 +43,9 @@ export class GameSync {
     _isGameMessage(type) {
         const gameMessages = [
             'game-start', 'tile-rotated', 'tile-placed', 'turn-ended',
-            'tile-drawn', 'meeple-placed', 'meeple-count-update', 'score-update',
-            'return-to-lobby', 'player-order-update'
+            'tile-drawn', 'meeple-placed', 'meeple-count-update', 'score-update'
+            // NOTE: 'return-to-lobby', 'player-order-update' et 'game-starting' 
+            //       sont gérés par le lobby handler
         ];
         return gameMessages.includes(type);
     }
