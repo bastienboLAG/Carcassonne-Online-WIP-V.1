@@ -1,7 +1,7 @@
 /**
  * Gère le merge incrémental des zones
  */
-import { ZoneRegistry } from '../ZoneRegistry.js';
+import { ZoneRegistry } from '../../Carcassonne-Online/modules/ZoneRegistry.js';
 
 export class ZoneMerger {
     constructor(board) {

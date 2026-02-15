@@ -4,7 +4,7 @@ import { Board } from './modules/Board.js';
 import { Deck } from './modules/Deck.js';
 import { GameState } from './modules/GameState.js';
 import { GameSync } from './modules/GameSync.js';
-import { ZoneMerger } from './modules/ZoneMerger.js';
+import { ZoneMerger } from './modules/game/ZoneMerger.js';
 import { Scoring } from './modules/Scoring.js';
 
 import { EventBus } from './modules/core/EventBus.js';
