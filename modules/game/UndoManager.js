@@ -3,11 +3,12 @@
  * Permet d'annuler la pose de meeple, puis la pose de tuile
  */
 export class UndoManager {
-    constructor(eventBus, gameState, plateau, zoneRegistry) {
+    constructor(eventBus, gameState, plateau, zoneMerger) {
         this.eventBus = eventBus;
         this.gameState = gameState;
         this.plateau = plateau;
-        this.zoneRegistry = zoneRegistry;
+        this.zoneMerger = zoneMerger;
+        this.zoneRegistry = zoneMerger.registry;
         
         // Snapshots pour l'annulation
         this.turnStartSnapshot = null;    // État au début du tour
@@ -145,6 +146,10 @@ export class UndoManager {
         
         // Restaurer zones
         this.zoneRegistry.deserialize(snapshot.zones);
+        
+        // Reconstruire tileToZone map dans ZoneMerger
+        this.zoneMerger.tileToZone = this.zoneRegistry.rebuildTileToZone();
+        console.log(`  🔄 tileToZone reconstruit: ${this.zoneMerger.tileToZone.size} entrées`);
         
         // Restaurer meeples placés (vider l'objet et le remplir)
         Object.keys(placedMeeples).forEach(key => delete placedMeeples[key]);

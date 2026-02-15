@@ -612,7 +612,7 @@ function initializeGameModules() {
     meepleDisplayUI.init();
     
     // UndoManager
-    undoManager = new UndoManager(eventBus, gameState, plateau, zoneMerger.registry);
+    undoManager = new UndoManager(eventBus, gameState, plateau, zoneMerger);
     console.log('⏪ UndoManager initialisé');
     
     console.log('✅ Tous les modules initialisés');
@@ -1656,6 +1656,14 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         
         // Réafficher la tuile dans la preview
         tilePreviewUI.showTile(tuileEnMain);
+        
+        // Si c'est la tuile centrale (première tuile), recréer le slot central
+        if (x === 50 && y === 50 && !firstTilePlaced) {
+            console.log('  🎯 Recréation du slot central');
+            if (slotsUI) {
+                slotsUI.createCentralSlot();
+            }
+        }
         
         // Réafficher les slots
         if (slotsUI && firstTilePlaced) {
