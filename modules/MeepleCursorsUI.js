@@ -215,4 +215,15 @@ export class MeepleCursorsUI {
     hideCursors() {
         document.querySelectorAll('.meeple-cursors-container').forEach(c => c.remove());
     }
+
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 MeepleCursorsUI: cleanup');
+        
+        // Supprimer tous les curseurs
+        this.hideCursors();
+        document.querySelectorAll('.meeple-cursor').forEach(el => el.remove());
+    }
 }
