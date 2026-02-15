@@ -522,7 +522,20 @@ export class ZoneMerger {
 
         mergedZone.tiles.forEach(({ x, y, zoneIndex }) => {
             const tile = this.board.placedTiles[`${x},${y}`];
+            
+            // ⚠️ Sécurité : ignorer les références fantômes (tuiles annulées)
+            if (!tile) {
+                console.warn(`⚠️ Zone fantôme détectée: tuile (${x},${y}) n'existe plus`);
+                return;
+            }
+            
             const zone = tile.zones[zoneIndex];
+            
+            // ⚠️ Sécurité : vérifier que la zone existe
+            if (!zone) {
+                console.warn(`⚠️ Zone ${zoneIndex} introuvable sur tuile (${x},${y})`);
+                return;
+            }
 
             const positions = Array.isArray(zone.meeplePosition) 
                 ? zone.meeplePosition 
