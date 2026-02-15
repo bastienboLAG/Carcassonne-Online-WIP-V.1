@@ -1661,6 +1661,9 @@ document.getElementById('undo-btn').addEventListener('click', () => {
             if (slotsUI) {
                 slotsUI.firstTilePlaced = false;
             }
+            if (tilePlacement) {
+                tilePlacement.firstTilePlaced = false;
+            }
             console.log('  🔄 firstTilePlaced remis à false');
         }
         
