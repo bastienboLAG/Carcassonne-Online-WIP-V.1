@@ -538,8 +538,14 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
     console.log('🎮 Démarrage de la partie...');
     
     // Lire les options du lobby
-    gameConfig.playFields = document.getElementById('base-fields').checked;
-    gameConfig.showRemainingTiles = document.getElementById('list-remaining').checked;
+    gameConfig = {
+        playFields: document.getElementById('base-fields').checked,
+        showRemainingTiles: document.getElementById('list-remaining').checked,
+        testDeck: document.getElementById('use-test-deck').checked,
+        extensions: {
+            base: true // Toujours activé pour l'instant
+        }
+    };
     console.log('⚙️ Configuration:', gameConfig);
     
     // Envoyer le signal aux invités avec la config
@@ -1523,7 +1529,11 @@ document.getElementById('remaining-tiles-btn').addEventListener('click', () => {
 
 // Bouton "Règles de cette partie ?"
 document.getElementById('rules-btn').addEventListener('click', () => {
-    console.log('📜 Affichage des règles (fonctionnalité à implémenter)');
-    alert('Fonctionnalité à venir : Afficher les règles actives pour cette partie');
+    if (!gameConfig) {
+        alert('Aucune partie en cours');
+        return;
+    }
+    
+    modalUI.showGameRules(gameConfig);
 });
 
