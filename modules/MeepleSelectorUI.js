@@ -48,12 +48,6 @@ export class MeepleSelectorUI {
         let meepleTypes = [];
         
         if (zoneType === 'field') {
-            // Vérifier si les champs sont activés
-            if (this.config.playFields === false) {
-                console.log('🚫 Les champs sont désactivés, pas de meeple proposé');
-                return; // Ne rien afficher
-            }
-            
             // Field → Farmer uniquement
             meepleTypes = [
                 { type: 'Farmer', image: `./assets/Meeples/${this.getPlayerColor()}/Farmer.png` }
