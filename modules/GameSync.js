@@ -22,9 +22,30 @@ export class GameSync {
      * Initialiser les listeners pour les messages réseau
      */
     init() {
+        // Sauvegarder l'ancien handler (de joinGame)
+        const previousHandler = this.multiplayer.onDataReceived;
+        
         this.multiplayer.onDataReceived = (data, from) => {
-            this._handleGameMessage(data, from);
+            // D'abord essayer de gérer comme message de jeu
+            if (this._isGameMessage(data.type)) {
+                this._handleGameMessage(data, from);
+            } else if (previousHandler) {
+                // Sinon appeler l'ancien handler (pour game-starting, etc.)
+                previousHandler(data, from);
+            }
         };
+    }
+    
+    /**
+     * Vérifier si un message est un message de jeu (géré par GameSync)
+     */
+    _isGameMessage(type) {
+        const gameMessages = [
+            'game-start', 'tile-rotated', 'tile-placed', 'turn-ended',
+            'tile-drawn', 'meeple-placed', 'meeple-count-update', 'score-update',
+            'return-to-lobby', 'player-order-update'
+        ];
+        return gameMessages.includes(type);
     }
 
     /**
@@ -198,20 +219,6 @@ export class GameSync {
                 if (this.onScoreUpdate && data.playerId !== this.multiplayer.playerId) {
                     console.log('💰 [SYNC] Mise à jour des scores reçue');
                     this.onScoreUpdate(data.scoringResults, data.meeplesToReturn);
-                }
-                break;
-                
-            case 'return-to-lobby':
-                if (this.onReturnToLobby) {
-                    console.log('🔙 [SYNC] Retour au lobby demandé');
-                    this.onReturnToLobby();
-                }
-                break;
-                
-            case 'player-order-update':
-                if (this.onPlayerOrderUpdate) {
-                    console.log('🔄 [SYNC] Ordre des joueurs mis à jour');
-                    this.onPlayerOrderUpdate(data.players);
                 }
                 break;
         }
