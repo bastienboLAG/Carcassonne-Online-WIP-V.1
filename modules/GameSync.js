@@ -2,10 +2,11 @@
  * Gère la synchronisation du jeu en multijoueur
  */
 export class GameSync {
-    constructor(multiplayer, gameState) {
+    constructor(multiplayer, gameState, originalHandler = null) {
         this.multiplayer = multiplayer;
         this.gameState = gameState;
         this.isHost = multiplayer.isHost;
+        this.originalHandler = originalHandler; // Handler du lobby à préserver
         
         // Callbacks pour les actions de jeu
         this.onDeckReceived = null;
@@ -22,8 +23,8 @@ export class GameSync {
      * Initialiser les listeners pour les messages réseau
      */
     init() {
-        // Sauvegarder l'ancien handler (de joinGame)
-        const previousHandler = this.multiplayer.onDataReceived;
+        // Utiliser le handler original sauvegardé, sinon l'actuel
+        const previousHandler = this.originalHandler || this.multiplayer.onDataReceived;
         
         this.multiplayer.onDataReceived = (data, from) => {
             // D'abord essayer de gérer comme message de jeu
