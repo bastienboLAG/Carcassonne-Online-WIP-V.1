@@ -213,7 +213,7 @@ export class ModalUI {
         const optionsSection = this._createSection('⚙️ Options', optionsList);
         content.appendChild(optionsSection);
         
-        // Section Extensions (avec arborescence)
+        // Section Extensions (avec arborescence visuelle - v2)
         const extensionsSection = document.createElement('div');
         extensionsSection.style.cssText = `
             margin-bottom: 20px;
