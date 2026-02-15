@@ -255,6 +255,7 @@ export class ModalUI {
                     margin-left: 5px;
                     font-size: 15px;
                     color: #a8d8a8;
+                    padding-left: 20px;
                 `;
             } else {
                 fieldLine.textContent = '   └─ Les champs (désactivés)';
@@ -263,6 +264,7 @@ export class ModalUI {
                     font-size: 15px;
                     color: #888;
                     font-style: italic;
+                    padding-left: 20px;
                 `;
             }
             baseContainer.appendChild(fieldLine);
