@@ -32,6 +32,7 @@ let players = []; // Synchronisé avec lobbyUI.getPlayers()
 let takenColors = [];
 let inLobby = false;
 let isHost = false;
+let eventListenersInstalled = false; // Éviter double listeners
 
 // Configuration de la partie (règles et options)
 let gameConfig = {
@@ -963,6 +964,12 @@ function afficherMessage(msg) {
 }
 
 function setupEventListeners() {
+    // N'installer les listeners qu'une seule fois
+    if (eventListenersInstalled) {
+        console.log('⚠️ Event listeners déjà installés, skip');
+        return;
+    }
+    
     document.getElementById('tile-preview').addEventListener('click', () => {
         if (!isMyTurn && gameSync) {
             console.log('⚠️ Pas votre tour !');
@@ -1126,6 +1133,9 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
             returnToLobby();
         }
     };
+    
+    eventListenersInstalled = true;
+    console.log('✅ Event listeners installés');
 }
 
 /**
@@ -1192,6 +1202,11 @@ function returnToLobby() {
         deck.tiles = [];
         deck.currentIndex = 0;
         deck.totalTiles = 0;
+    }
+    
+    // Réinitialiser le plateau (IMPORTANT pour éviter tuiles fantômes)
+    if (plateau) {
+        plateau.reset();
     }
     
     // Réinitialiser l'état du jeu
