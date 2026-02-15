@@ -950,29 +950,53 @@ async function startGameForInvite() {
  * Gérer l'annulation reçue d'un autre joueur
  */
 function handleRemoteUndo(undoneAction) {
-    if (!undoManager) return;
-    
     console.log('⏪ Application de l\'annulation distante:', undoneAction);
     
-    // Appliquer l'annulation localement (sans re-synchroniser)
-    const localUndone = undoManager.undo(placedMeeples);
-    
-    if (!localUndone) {
-        console.error('❌ Impossible d\'annuler localement');
-        return;
-    }
-    
-    // Appliquer les changements visuels
+    // Appliquer les changements visuels directement (sans snapshots)
     if (undoneAction.type === 'meeple') {
         const key = undoneAction.meeple.key;
+        
+        // Retirer visuellement
         document.querySelectorAll(`.meeple[data-key="${key}"]`).forEach(el => el.remove());
+        
+        // Retirer de placedMeeples
+        if (placedMeeples[key]) {
+            delete placedMeeples[key];
+        }
+        
         console.log('✅ Meeple distant annulé');
+        
     } else if (undoneAction.type === 'tile') {
-        const tileKey = `${undoneAction.tile.x},${undoneAction.tile.y}`;
-        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        const x = undoneAction.tile.x;
+        const y = undoneAction.tile.y;
+        const tileKey = `${x},${y}`;
+        
+        // Retirer visuellement
+        let tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        if (!tileEl) {
+            // Fallback pour anciennes tuiles sans data-pos
+            const tiles = document.querySelectorAll('.tile');
+            tileEl = Array.from(tiles).find(el => 
+                el.style.gridColumn == x && el.style.gridRow == y
+            );
+        }
         if (tileEl) {
             tileEl.remove();
         }
+        
+        // Retirer du plateau
+        if (plateau.placedTiles[tileKey]) {
+            delete plateau.placedTiles[tileKey];
+        }
+        
+        // Si c'est la tuile centrale, recréer le slot central pour tout le monde
+        if (x === 50 && y === 50) {
+            document.querySelectorAll('.slot-central').forEach(s => s.remove());
+            if (slotsUI) {
+                slotsUI.createCentralSlot();
+            }
+        }
+        
         console.log('✅ Tuile distante annulée');
     }
     
