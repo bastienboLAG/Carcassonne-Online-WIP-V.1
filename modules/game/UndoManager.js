@@ -149,6 +149,22 @@ export class UndoManager {
         // Restaurer zones
         this.zoneRegistry.deserialize(snapshot.zones);
         
+        // Nettoyer les zones : retirer les tuiles qui n'existent plus dans le plateau
+        for (const [zoneId, zone] of this.zoneRegistry.zones) {
+            zone.tiles = zone.tiles.filter(({x, y}) => {
+                const key = `${x},${y}`;
+                return this.plateau.placedTiles[key] !== undefined;
+            });
+        }
+        
+        // Supprimer les zones vides
+        for (const [zoneId, zone] of this.zoneRegistry.zones) {
+            if (zone.tiles.length === 0) {
+                this.zoneRegistry.zones.delete(zoneId);
+                console.log(`  🗑️ Zone vide supprimée: ${zoneId}`);
+            }
+        }
+        
         // Restaurer tileToZone map dans ZoneMerger
         this.zoneMerger.tileToZone = new Map(snapshot.tileToZone);
         console.log(`  🔄 tileToZone restauré: ${this.zoneMerger.tileToZone.size} entrées`);

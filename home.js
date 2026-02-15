@@ -1657,11 +1657,17 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         // Si c'est la tuile centrale (première tuile), remettre firstTilePlaced à false
         if (x === 50 && y === 50) {
             firstTilePlaced = false;
+            if (slotsUI) {
+                slotsUI.firstTilePlaced = false;
+            }
             console.log('  🔄 firstTilePlaced remis à false');
         }
         
         // Réafficher la tuile dans la preview
         tilePreviewUI.showTile(tuileEnMain);
+        
+        // Réémettre tile-drawn pour que SlotsUI mette à jour currentTile
+        eventBus.emit('tile-drawn', { tileData: tuileEnMain });
         
         // Si c'est la tuile centrale, recréer le slot central
         if (x === 50 && y === 50) {
