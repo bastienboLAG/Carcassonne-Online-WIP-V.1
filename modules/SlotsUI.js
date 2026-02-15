@@ -150,18 +150,30 @@ export class SlotsUI {
     refreshAllSlots() {
         console.log('🔄 refreshAllSlots - firstTilePlaced:', this.firstTilePlaced, 'isMyTurn:', this.isMyTurn);
         
+        // Supprimer les anciens slots (sauf central)
         if (this.firstTilePlaced) {
             document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
         }
         
-        // Utiliser currentTile (tuile piochée) au lieu de getTileEnMain()
-        // pour que le joueur inactif voit aussi les slots
+        // Vérifier qu'il y a une tuile en main
         const tile = this.currentTile || this.getTileEnMain();
         console.log('🎴 Tuile:', tile ? tile.id : 'null', '(currentTile:', this.currentTile?.id, 'getTileEnMain:', this.getTileEnMain()?.id + ')');
         
-        if (!tile) return;
+        if (!tile) {
+            console.log('⚠️ Pas de tuile, pas de slots');
+            return;
+        }
         
-        console.log('📍 Tuiles placées:', Object.keys(this.plateau.placedTiles).length);
+        // Vérifier qu'il y a des tuiles sur le plateau
+        const placedTilesCount = Object.keys(this.plateau.placedTiles).length;
+        console.log('📍 Tuiles placées:', placedTilesCount);
+        
+        if (placedTilesCount === 0) {
+            console.log('⚠️ Plateau vide, pas de slots');
+            return;
+        }
+        
+        // Générer les slots autour des tuiles placées
         for (let coord in this.plateau.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
             this.generateSlotsAround(x, y, tile);
