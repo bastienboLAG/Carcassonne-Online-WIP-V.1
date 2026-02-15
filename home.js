@@ -65,6 +65,11 @@ eventBus.on('tile-drawn', (data) => {
             tilePreviewUI.showTile(tuileEnMain);
         }
         
+        // 📸 Sauvegarder snapshot au début du tour (si c'est notre tour)
+        if (undoManager && isMyTurn && !data.fromNetwork) {
+            undoManager.saveTurnStart(placedMeeples);
+        }
+        
         // Synchroniser si c'est notre tour et pas depuis le réseau
         if (!data.fromNetwork && turnManager && turnManager.getIsMyTurn() && gameSync) {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
@@ -1320,11 +1325,6 @@ function piocherNouvelleTuile() {
     }
 
     eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
-    
-    // 📸 Sauvegarder snapshot au début du tour
-    if (undoManager && isMyTurn) {
-        undoManager.saveTurnStart(placedMeeples);
-    }
     
     if (gameState) {
         updateTurnDisplay();
