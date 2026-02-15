@@ -1,7 +1,7 @@
 /**
  * Gère le merge incrémental des zones
  */
-import { ZoneRegistry } from './ZoneRegistry.js';
+import { ZoneRegistry } from '../ZoneRegistry.js';
 
 export class ZoneMerger {
     constructor(board) {
@@ -144,7 +144,7 @@ export class ZoneMerger {
 
         const edges = Array.isArray(zone.edges) ? zone.edges : [zone.edges];
         
-        console.log(`      🔎 Recherche voisins pour zone ${zoneIndex}, edges originaux:`, zone.edges);
+        // console.log(`      🔎 Recherche voisins pour zone ${zoneIndex}, edges originaux:`, zone.edges);
         
         const directions = [
             { edge: 'north', dx: 0, dy: -1, opposite: 'south' },
@@ -157,7 +157,7 @@ export class ZoneMerger {
             // ✅ Ne PAS simplifier, garder l'edge complet avec suffixes
             const rotatedEdge = this._rotateEdge(edge, rotation);
             
-            console.log(`        Edge "${edge}" → après rotation → "${rotatedEdge}"`);
+            // console.log(`        Edge "${edge}" → après rotation → "${rotatedEdge}"`);
             
             // Extraire la direction principale pour trouver le voisin
             const mainDirection = rotatedEdge.split('-')[0];
@@ -172,7 +172,7 @@ export class ZoneMerger {
             const neighborTile = this.board.placedTiles[`${nx},${ny}`];
 
             if (!neighborTile) {
-                console.log(`          Pas de voisin à (${nx},${ny})`);
+                // console.log(`          Pas de voisin à (${nx},${ny})`);
                 return;
             }
 
@@ -199,7 +199,7 @@ export class ZoneMerger {
                 
                 const hasOppositeEdge = rotatedNeighborEdges.includes(oppositeEdge);
                 
-                console.log(`            Cherche "${oppositeEdge}" dans`, rotatedNeighborEdges, '→', hasOppositeEdge ? '✅' : '❌');
+                // console.log(`            Cherche "${oppositeEdge}" dans`, rotatedNeighborEdges, '→', hasOppositeEdge ? '✅' : '❌');
 
                 if (hasOppositeEdge) {
                     // ✅ Chercher dans le registry au lieu de tileToZone

@@ -992,6 +992,7 @@ function handleRemoteUndo(undoneAction) {
             firstTilePlaced = false;
             if (slotsUI) {
                 slotsUI.firstTilePlaced = false;
+                slotsUI.currentTile = null; // Réinitialiser la tuile en cours
             }
             if (tilePlacement) {
                 tilePlacement.firstTilePlaced = false;
@@ -1696,6 +1697,7 @@ document.getElementById('undo-btn').addEventListener('click', () => {
             firstTilePlaced = false;
             if (slotsUI) {
                 slotsUI.firstTilePlaced = false;
+                slotsUI.currentTile = null; // Réinitialiser
             }
             if (tilePlacement) {
                 tilePlacement.firstTilePlaced = false;
