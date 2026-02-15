@@ -304,6 +304,23 @@ document.getElementById('create-game-btn').addEventListener('click', async () =>
         
         console.log('🎮 Partie créée ! Code:', gameCode);
         
+        // Listeners pour synchroniser les checkboxes d'options
+        document.getElementById('base-fields').addEventListener('change', (e) => {
+            multiplayer.broadcast({
+                type: 'option-change',
+                option: 'base-fields',
+                value: e.target.checked
+            });
+        });
+        
+        document.getElementById('list-remaining').addEventListener('change', (e) => {
+            multiplayer.broadcast({
+                type: 'option-change',
+                option: 'list-remaining',
+                value: e.target.checked
+            });
+        });
+        
         multiplayer.onPlayerJoined = (playerId) => {
             console.log('👤 Nouveau joueur connecté (ID):', playerId);
         };
@@ -449,6 +466,14 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
                 returnToLobby();
             }
             
+            if (data.type === 'option-change') {
+                console.log('⚙️ [INVITÉ] Option changée:', data.option, '=', data.value);
+                const checkbox = document.getElementById(data.option);
+                if (checkbox) {
+                    checkbox.checked = data.value;
+                }
+            }
+            
             // ✅ NOUVEAU : Écouter le signal de démarrage
             if (data.type === 'game-starting') {
                 console.log('🎮 [INVITÉ] L\'hôte démarre la partie !');
@@ -550,7 +575,7 @@ function initializeGameModules() {
     console.log('🎭 MeeplePlacement initialisé');
     
     // MeepleCursorsUI
-    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau);
+    meepleCursorsUI = new MeepleCursorsUI(multiplayer, zoneMerger, plateau, gameConfig);
     meepleCursorsUI.init();
     
     // MeepleSelectorUI
@@ -868,6 +893,19 @@ async function startGameForInvite() {
         players = updatedPlayers;
         lobbyUI.setPlayers(players);
     };
+    
+    // Enregistrer et activer les règles de base avec la configuration
+    ruleRegistry.register('base', BaseRules, gameConfig);
+    ruleRegistry.enable('base');
+    console.log('📋 [INVITÉ] Règles actives:', ruleRegistry.getActiveRules());
+    
+    // Gérer le bouton tuiles restantes selon la config
+    const remainingTilesBtn = document.getElementById('remaining-tiles-btn');
+    if (gameConfig.showRemainingTiles) {
+        remainingTilesBtn.style.display = 'block';
+    } else {
+        remainingTilesBtn.style.display = 'none';
+    }
     
     setupEventListeners();
     setupNavigation(document.getElementById('board-container'), document.getElementById('board'));
