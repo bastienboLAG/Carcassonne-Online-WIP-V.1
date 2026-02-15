@@ -78,6 +78,13 @@ export class UndoManager {
      * @returns {Object|null} - Info sur ce qui a été annulé, ou null si rien à annuler
      */
     undo(placedMeeples) {
+        console.log('🔍 État avant annulation:', {
+            meeplePlacedThisTurn: this.meeplePlacedThisTurn,
+            tilePlacedThisTurn: this.tilePlacedThisTurn,
+            hasAfterTilePlacedSnapshot: !!this.afterTilePlacedSnapshot,
+            hasTurnStartSnapshot: !!this.turnStartSnapshot
+        });
+        
         // Cas 1 : Annuler la pose de meeple
         if (this.meeplePlacedThisTurn && this.afterTilePlacedSnapshot) {
             console.log('⏪ Annulation : retrait du meeple');
