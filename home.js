@@ -1127,7 +1127,6 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
  */
 function returnToLobby() {
     console.log('🔙 Retour au lobby...');
-    console.log('   isHost:', isHost, 'multiplayer.peer.open:', multiplayer?.peer?.open);
     
     // Notifier les autres joueurs AVANT de faire les changements locaux
     if (isHost && multiplayer && multiplayer.peer && multiplayer.peer.open) {
@@ -1135,12 +1134,59 @@ function returnToLobby() {
         multiplayer.broadcast({
             type: 'return-to-lobby'
         });
-    } else {
-        console.log('⚠️ Pas de broadcast (isHost:', isHost, ')');
     }
     
     // Masquer le bouton retour lobby
     document.getElementById('back-to-lobby-btn').style.display = 'none';
+    
+    // ✅ CLEANUP COMPLET DES MODULES via leurs méthodes destroy()
+    console.log('🧹 Nettoyage des modules...');
+    
+    // Détruire les modules UI
+    if (tilePreviewUI) {
+        tilePreviewUI.destroy();
+        tilePreviewUI = null;
+    }
+    if (slotsUI) {
+        slotsUI.destroy();
+        slotsUI = null;
+    }
+    if (meepleCursorsUI) {
+        meepleCursorsUI.destroy();
+        meepleCursorsUI = null;
+    }
+    if (meepleSelectorUI) {
+        meepleSelectorUI.destroy();
+        meepleSelectorUI = null;
+    }
+    if (meepleDisplayUI) {
+        meepleDisplayUI.destroy();
+        meepleDisplayUI = null;
+    }
+    if (scorePanelUI) {
+        scorePanelUI.destroy();
+        scorePanelUI = null;
+    }
+    
+    // Réinitialiser les modules de jeu
+    gameSync = null;
+    zoneMerger = null;
+    scoring = null;
+    tilePlacement = null;
+    meeplePlacement = null;
+    turnManager = null;
+    
+    // Désactiver les règles
+    if (ruleRegistry) {
+        ruleRegistry.disable('base');
+    }
+    
+    // Réinitialiser le deck (IMPORTANT pour éviter l'addition)
+    if (deck) {
+        deck.tiles = [];
+        deck.currentIndex = 0;
+        deck.totalTiles = 0;
+    }
     
     // Réinitialiser l'état du jeu
     gameState = null;
@@ -1152,10 +1198,8 @@ function returnToLobby() {
     lastPlacedTile = null;
     isMyTurn = false;
     
-    // Nettoyer le plateau
+    // Nettoyer le plateau (board vidé par les destroy() mais on s'assure)
     document.getElementById('board').innerHTML = '';
-    document.getElementById('players-scores').innerHTML = '';
-    document.getElementById('tile-preview').innerHTML = '';
     
     // Afficher le lobby (via LobbyUI)
     lobbyUI.show();
