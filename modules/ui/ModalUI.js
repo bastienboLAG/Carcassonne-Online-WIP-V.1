@@ -192,31 +192,43 @@ export class ModalUI {
         
         // Section Départ
         const startSection = this._createSection('🎯 Départ', [
-            config.testDeck 
-                ? '⚠️ Deck de test (15 tuiles)' 
-                : '✓ Deck complet (72 tuiles)'
+            'Tuile unique'
         ]);
         content.appendChild(startSection);
         
         // Section Options
-        const optionsList = [
-            config.playFields 
-                ? '✓ Les champs sont activés' 
-                : '✗ Les champs sont désactivés',
-            config.showRemainingTiles 
-                ? '✓ Liste des tuiles restantes disponible' 
-                : '✗ Liste des tuiles restantes masquée'
-        ];
+        const optionsList = [];
+        if (config.showRemainingTiles) {
+            optionsList.push('✓ Lister les tuiles restantes');
+        }
+        if (config.testDeck) {
+            optionsList.push('⚠️ Deck de test (15 tuiles)');
+        }
+        
+        // Si aucune option, afficher message
+        if (optionsList.length === 0) {
+            optionsList.push('Aucune option activée');
+        }
+        
         const optionsSection = this._createSection('⚙️ Options', optionsList);
         content.appendChild(optionsSection);
         
         // Section Extensions
         const extensionsList = [];
         if (config.extensions?.base) {
+            // Sous-section Base avec ses options
+            const baseOptions = [];
+            if (config.playFields) {
+                baseOptions.push('  ✓ Les champs');
+            }
+            
             extensionsList.push('✓ Base (Carcassonne)');
+            extensionsList.push(...baseOptions);
         }
         // Prêt pour futures extensions
-        // if (config.extensions?.auberges) extensionsList.push('✓ Auberges et Cathédrales');
+        // if (config.extensions?.auberges) {
+        //     extensionsList.push('✓ Auberges et Cathédrales');
+        // }
         
         const extensionsSection = this._createSection('🎲 Extensions', extensionsList);
         content.appendChild(extensionsSection);
