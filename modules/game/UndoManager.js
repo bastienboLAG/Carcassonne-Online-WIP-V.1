@@ -27,7 +27,7 @@ export class UndoManager {
         console.log('📸 Sauvegarde snapshot début de tour');
         
         this.turnStartSnapshot = {
-            placedTiles: this.deepCopy(this.plateau.placedTiles),
+            placedTileKeys: Object.keys(this.plateau.placedTiles), // Seulement les clés
             zones: this.zoneRegistry.serialize(),
             placedMeeples: this.deepCopy(placedMeeples),
             playerMeeples: this.gameState.players.map(p => ({
@@ -51,7 +51,7 @@ export class UndoManager {
         console.log('📸 Sauvegarde snapshot après pose tuile');
         
         this.afterTilePlacedSnapshot = {
-            placedTiles: this.deepCopy(this.plateau.placedTiles),
+            placedTileKeys: Object.keys(this.plateau.placedTiles), // Seulement les clés
             zones: this.zoneRegistry.serialize(),
             placedMeeples: this.deepCopy(placedMeeples),
             playerMeeples: this.gameState.players.map(p => ({
@@ -124,8 +124,17 @@ export class UndoManager {
      * Restaurer un snapshot
      */
     restoreSnapshot(snapshot, placedMeeples) {
-        // Restaurer plateau
-        this.plateau.placedTiles = this.deepCopy(snapshot.placedTiles);
+        // Restaurer plateau : retirer les tuiles qui ne devraient pas être là
+        const currentKeys = Object.keys(this.plateau.placedTiles);
+        const savedKeys = snapshot.placedTileKeys;
+        
+        // Supprimer les tuiles ajoutées depuis le snapshot
+        currentKeys.forEach(key => {
+            if (!savedKeys.includes(key)) {
+                delete this.plateau.placedTiles[key];
+                console.log(`  🗑️ Tuile retirée: ${key}`);
+            }
+        });
         
         // Restaurer zones
         this.zoneRegistry.deserialize(snapshot.zones);
