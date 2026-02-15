@@ -11,6 +11,7 @@ import { EventBus } from './modules/core/EventBus.js';
 import { RuleRegistry } from './modules/core/RuleRegistry.js';
 import { BaseRules } from './modules/rules/BaseRules.js';
 import { TurnManager } from './modules/game/TurnManager.js';
+import { UndoManager } from './modules/game/UndoManager.js';
 import { TilePlacement } from './modules/game/TilePlacement.js';
 import { MeeplePlacement } from './modules/game/MeeplePlacement.js';
 import { ScorePanelUI } from './modules/ScorePanelUI.js';
@@ -49,6 +50,7 @@ let gameState = null;
 const eventBus = new EventBus();
 const ruleRegistry = new RuleRegistry(eventBus);
 let turnManager = null;
+let undoManager = null;
 let meeplePlacement = null;
 let tilePlacement = null;
 eventBus.setDebug(true); // Debug activé pour voir les événements
@@ -604,6 +606,10 @@ function initializeGameModules() {
     meepleDisplayUI = new MeepleDisplayUI();
     meepleDisplayUI.init();
     
+    // UndoManager
+    undoManager = new UndoManager(eventBus, gameState, plateau, zoneMerger.registry);
+    console.log('⏪ UndoManager initialisé');
+    
     console.log('✅ Tous les modules initialisés');
 }
 
@@ -733,6 +739,11 @@ async function startGame() {
         
         // Mettre à jour l'affichage
         updateTurnDisplay();
+    };
+    
+    gameSync.onTurnUndo = (undoneAction) => {
+        console.log('⏪ [SYNC] Annulation distante reçue');
+        handleRemoteUndo(undoneAction);
     };
     
     // Setup de l'interface
@@ -902,6 +913,11 @@ async function startGameForInvite() {
         updateTurnDisplay();
     };
     
+    gameSync.onTurnUndo = (undoneAction) => {
+        console.log('⏪ [SYNC] Annulation distante reçue');
+        handleRemoteUndo(undoneAction);
+    };
+    
     // Enregistrer et activer les règles de base avec la configuration
     ruleRegistry.register('base', BaseRules, gameConfig);
     ruleRegistry.enable('base');
@@ -924,6 +940,40 @@ async function startGameForInvite() {
 }
 
 // ========== FONCTIONS JEU ==========
+/**
+ * Gérer l'annulation reçue d'un autre joueur
+ */
+function handleRemoteUndo(undoneAction) {
+    if (!undoManager) return;
+    
+    console.log('⏪ Application de l\'annulation distante:', undoneAction);
+    
+    // Appliquer l'annulation localement (sans re-synchroniser)
+    const localUndone = undoManager.undo(placedMeeples);
+    
+    if (!localUndone) {
+        console.error('❌ Impossible d\'annuler localement');
+        return;
+    }
+    
+    // Appliquer les changements visuels
+    if (undoneAction.type === 'meeple') {
+        const key = undoneAction.meeple.key;
+        document.querySelectorAll(`.meeple[data-key="${key}"]`).forEach(el => el.remove());
+        console.log('✅ Meeple distant annulé');
+    } else if (undoneAction.type === 'tile') {
+        const tileKey = `${undoneAction.tile.x},${undoneAction.tile.y}`;
+        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        if (tileEl) {
+            tileEl.remove();
+        }
+        console.log('✅ Tuile distante annulée');
+    }
+    
+    // Mettre à jour l'affichage
+    eventBus.emit('score-updated');
+}
+
 function updateTurnDisplay() {
     if (!gameState || gameState.players.length === 0) {
         isMyTurn = true;
@@ -1121,6 +1171,11 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         if (gameState) {
             updateTurnDisplay();
         }
+        
+        // ⏪ Reset UndoManager (impossible d'annuler après fin de tour)
+        if (undoManager) {
+            undoManager.reset();
+        }
     };
     
     document.getElementById('recenter-btn').onclick = () => {
@@ -1186,6 +1241,10 @@ function returnToLobby() {
     }
     
     // Réinitialiser les modules de jeu
+    if (undoManager) {
+        undoManager.destroy();
+        undoManager = null;
+    }
     gameSync = null;
     zoneMerger = null;
     scoring = null;
@@ -1262,6 +1321,11 @@ function piocherNouvelleTuile() {
 
     eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
     
+    // 📸 Sauvegarder snapshot au début du tour
+    if (undoManager && isMyTurn) {
+        undoManager.saveTurnStart(placedMeeples);
+    }
+    
     if (gameState) {
         updateTurnDisplay();
     }
@@ -1300,6 +1364,11 @@ function poserTuile(x, y, tile, isFirst = false) {
     // Afficher curseurs meeples si notre tour
     if (isMyTurn && gameSync) {
         meepleCursorsUI.showCursors(x, y, gameState, placedMeeples, afficherSelecteurMeeple);
+    }
+    
+    // 📸 Sauvegarder snapshot après pose de tuile
+    if (undoManager && isMyTurn) {
+        undoManager.saveAfterTilePlaced(x, y, tile, placedMeeples);
     }
     
     tuileEnMain = null;
@@ -1387,6 +1456,12 @@ function placerMeeple(x, y, position, meepleType) {
     
     if (!success) {
         return;
+    }
+    
+    // 🎭 Marquer placement meeple dans UndoManager
+    if (undoManager && isMyTurn) {
+        const key = `${x},${y},${position}`;
+        undoManager.markMeeplePlaced(x, y, position, key);
     }
     
     // Faire disparaître tous les curseurs (un seul meeple par tour)
@@ -1508,10 +1583,83 @@ function incrementPlayerMeeples(playerId) {
 // ÉVÉNEMENTS DES NOUVEAUX BOUTONS
 // ========================================
 
-// Bouton "Annuler le coup !" (à implémenter plus tard)
+// Bouton "Annuler le coup !"
 document.getElementById('undo-btn').addEventListener('click', () => {
-    console.log('⏮️ Annulation du coup (fonctionnalité à implémenter)');
-    alert('Fonctionnalité à venir : Annuler le dernier coup joué');
+    if (!undoManager) {
+        alert('Aucune partie en cours');
+        return;
+    }
+    
+    if (!isMyTurn) {
+        alert('Ce n\'est pas votre tour !');
+        return;
+    }
+    
+    if (!undoManager.canUndo()) {
+        alert('Rien à annuler');
+        return;
+    }
+    
+    console.log('⏪ Annulation de l\'action...');
+    
+    // Annuler localement
+    const undoneAction = undoManager.undo(placedMeeples);
+    
+    if (!undoneAction) {
+        return;
+    }
+    
+    // Appliquer les changements visuels
+    if (undoneAction.type === 'meeple') {
+        // Retirer le meeple du DOM
+        const key = undoneAction.meeple.key;
+        document.querySelectorAll(`.meeple[data-key="${key}"]`).forEach(el => el.remove());
+        
+        // Réafficher les curseurs
+        if (lastPlacedTile) {
+            meepleCursorsUI.showCursors(
+                lastPlacedTile.x, 
+                lastPlacedTile.y, 
+                gameState, 
+                placedMeeples, 
+                afficherSelecteurMeeple
+            );
+        }
+        
+        console.log('✅ Meeple annulé');
+    } else if (undoneAction.type === 'tile') {
+        // Retirer la tuile du DOM
+        const tileKey = `${undoneAction.tile.x},${undoneAction.tile.y}`;
+        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        if (tileEl) {
+            tileEl.remove();
+        }
+        
+        // Remettre la tuile en main
+        tuileEnMain = undoneAction.tile.tile;
+        tuilePosee = false;
+        
+        // Réafficher la tuile dans la preview
+        tilePreviewUI.showTile(tuileEnMain);
+        
+        // Réafficher les slots
+        if (slotsUI && firstTilePlaced) {
+            slotsUI.refreshAllSlots();
+        }
+        
+        // Masquer les curseurs
+        meepleCursorsUI.hideCursors();
+        
+        console.log('✅ Tuile annulée');
+    }
+    
+    // Synchroniser avec les autres joueurs
+    if (gameSync) {
+        gameSync.syncUndo(undoneAction);
+    }
+    
+    // Mettre à jour l'affichage
+    eventBus.emit('score-updated');
 });
 
 // Bouton "Tuiles restantes dans la pioche ?"
