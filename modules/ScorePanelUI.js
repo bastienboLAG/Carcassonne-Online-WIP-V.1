@@ -67,7 +67,7 @@ export class ScorePanelUI {
             
             const name = document.createElement('span');
             name.className = 'player-score-name';
-            name.textContent = player.name + (player.isHost ? ' 👑' : '');
+            name.textContent = player.name;
             header.appendChild(name);
             
             const points = document.createElement('span');
@@ -98,5 +98,25 @@ export class ScorePanelUI {
             card.appendChild(meeplesDisplay);
             playersScoresDiv.appendChild(card);
         });
+    }
+
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 ScorePanelUI: cleanup');
+        
+        // Nettoyer le panneau des scores
+        const playersScoresDiv = document.getElementById('players-scores');
+        if (playersScoresDiv) {
+            playersScoresDiv.innerHTML = '';
+        }
+        
+        // Se désabonner des événements
+        if (this.eventBus) {
+            this.eventBus.off('score-updated', this.onScoreUpdated);
+            this.eventBus.off('turn-changed', this.onTurnChanged);
+            this.eventBus.off('meeple-count-updated', this.onMeepleCountUpdated);
+        }
     }
 }
