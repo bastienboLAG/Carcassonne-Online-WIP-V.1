@@ -88,4 +88,12 @@ export class Board {
         // La tuile doit avoir au moins un voisin
         return hasNeighbor;
     }
+
+    /**
+     * Réinitialiser le plateau (retirer toutes les tuiles)
+     */
+    reset() {
+        this.placedTiles = {};
+        console.log('🧹 Board: plateau réinitialisé');
+    }
 }
