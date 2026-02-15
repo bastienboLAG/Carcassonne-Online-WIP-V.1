@@ -206,4 +206,24 @@ export class SlotsUI {
             }
         });
     }
+
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 SlotsUI: cleanup');
+        
+        // Supprimer tous les slots du DOM
+        document.querySelectorAll('.slot').forEach(el => el.remove());
+        
+        // Se désabonner des événements
+        if (this.eventBus) {
+            this.eventBus.off('tile-drawn', this.onTileDrawn);
+            this.eventBus.off('tile-placed', this.onTilePlaced);
+            this.eventBus.off('tile-rotated', this.onTileRotated);
+            this.eventBus.off('turn-changed', this.onTurnChanged);
+        }
+        
+        this.onSlotClick = null;
+    }
 }
