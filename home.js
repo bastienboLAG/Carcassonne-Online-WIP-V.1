@@ -66,7 +66,8 @@ eventBus.on('tile-drawn', (data) => {
         }
         
         // 📸 Sauvegarder snapshot au début du tour (si c'est notre tour)
-        if (undoManager && isMyTurn && !data.fromNetwork) {
+        // NE PAS sauvegarder si c'est une annulation (fromUndo: true)
+        if (undoManager && isMyTurn && !data.fromNetwork && !data.fromUndo) {
             undoManager.saveTurnStart(placedMeeples);
         }
         
@@ -1667,11 +1668,13 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         tilePreviewUI.showTile(tuileEnMain);
         
         // Réémettre tile-drawn pour que SlotsUI mette à jour currentTile (avec la rotation actuelle)
+        // IMPORTANT : ajouter fromUndo: true pour éviter de sauvegarder un nouveau snapshot
         eventBus.emit('tile-drawn', { 
             tileData: {
                 ...tuileEnMain,
                 rotation: tuileEnMain.rotation
-            }
+            },
+            fromUndo: true  // Flag pour indiquer que c'est une annulation
         });
         
         // Si c'est la tuile centrale, supprimer l'ancien slot et en recréer un nouveau
