@@ -239,7 +239,7 @@ export class ModalUI {
             
             // Ligne Base
             const baseLine = document.createElement('div');
-            baseLine.textContent = '├─ ✓ Base (Carcassonne)';
+            baseLine.textContent = '└─ ✓ Base (Carcassonne)';
             baseLine.style.cssText = `
                 margin-left: 5px;
                 font-size: 15px;
@@ -250,14 +250,14 @@ export class ModalUI {
             // Les champs s'affichent toujours avec leur statut
             const fieldLine = document.createElement('div');
             if (config.playFields) {
-                fieldLine.textContent = '│  └─ ✓ Les champs';
+                fieldLine.textContent = '   └─ ✓ Les champs';
                 fieldLine.style.cssText = `
                     margin-left: 5px;
                     font-size: 15px;
                     color: #a8d8a8;
                 `;
             } else {
-                fieldLine.textContent = '│  └─ Les champs (désactivés)';
+                fieldLine.textContent = '   └─ Les champs (désactivés)';
                 fieldLine.style.cssText = `
                     margin-left: 5px;
                     font-size: 15px;
