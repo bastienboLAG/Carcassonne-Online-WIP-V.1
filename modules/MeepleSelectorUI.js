@@ -117,4 +117,12 @@ export class MeepleSelectorUI {
         const selector = document.getElementById('meeple-selector');
         if (selector) selector.remove();
     }
+
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 MeepleSelectorUI: cleanup');
+        this.hide();
+    }
 }
