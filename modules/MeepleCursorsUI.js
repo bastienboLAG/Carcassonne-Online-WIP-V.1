@@ -3,10 +3,11 @@
  * CODE COPIÉ EXACTEMENT de afficherCurseursMeeple, afficherSelecteurMeeple
  */
 export class MeepleCursorsUI {
-    constructor(multiplayer, zoneMerger, plateau) {
+    constructor(multiplayer, zoneMerger, plateau, config = {}) {
         this.multiplayer = multiplayer;
         this.zoneMerger = zoneMerger;
         this.plateau = plateau;
+        this.config = config;
         this.boardElement = null;
     }
 
@@ -130,6 +131,12 @@ export class MeepleCursorsUI {
         
         // Créer un curseur pour chaque position valide
         validPositions.forEach(({position, zoneType}) => {
+            // Filtrer les champs si désactivés
+            if (zoneType === 'field' && this.config.playFields === false) {
+                console.log('🚫 Champs désactivés, pas de curseur field à position', position);
+                return;
+            }
+            
             const key = `${x},${y},${position}`;
             
             console.log('🔍 Vérification position', position, 'key:', key);
