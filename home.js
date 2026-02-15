@@ -986,8 +986,18 @@ function handleRemoteUndo(undoneAction) {
             tileEl.remove();
         }
         
-        // Si tuile centrale, recréer le slot
+        // Si tuile centrale, recréer le slot et remettre firstTilePlaced à false
         if (x === 50 && y === 50) {
+            // Remettre firstTilePlaced à false partout
+            firstTilePlaced = false;
+            if (slotsUI) {
+                slotsUI.firstTilePlaced = false;
+            }
+            if (tilePlacement) {
+                tilePlacement.firstTilePlaced = false;
+            }
+            
+            // Recréer le slot central
             document.querySelectorAll('.slot-central').forEach(s => s.remove());
             if (slotsUI) {
                 slotsUI.createCentralSlot();
