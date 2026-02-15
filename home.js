@@ -489,6 +489,12 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
                 
                 startGameForInvite();
             }
+            
+            // ✅ Écouter le retour au lobby
+            if (data.type === 'return-to-lobby') {
+                console.log('🔙 [INVITÉ] Retour au lobby demandé par l\'hôte');
+                returnToLobby();
+            }
         };
         
         // Sauvegarder globalement ET assigner
@@ -888,17 +894,6 @@ async function startGameForInvite() {
         });
         
         updateTurnDisplay();
-    };
-    
-    gameSync.onReturnToLobby = () => {
-        console.log('🔙 [INVITÉ] Callback retour lobby appelé');
-        returnToLobby();
-    };
-    
-    gameSync.onPlayerOrderUpdate = (updatedPlayers) => {
-        console.log('🔄 [INVITÉ] Callback ordre joueurs:', updatedPlayers);
-        players = updatedPlayers;
-        lobbyUI.setPlayers(players);
     };
     
     // Enregistrer et activer les règles de base avec la configuration
