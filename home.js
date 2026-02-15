@@ -1628,11 +1628,14 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         
         console.log('✅ Meeple annulé');
     } else if (undoneAction.type === 'tile') {
-        // Retirer la tuile du DOM
+        // Retirer la tuile du DOM (peut être .tile ou .slot)
         const tileKey = `${undoneAction.tile.x},${undoneAction.tile.y}`;
-        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
+        const tileEl = document.querySelector(`.tile[data-pos="${tileKey}"], .slot[data-pos="${tileKey}"]`);
         if (tileEl) {
             tileEl.remove();
+            console.log('  🗑️ Élément DOM retiré:', tileKey);
+        } else {
+            console.warn('  ⚠️ Élément DOM non trouvé:', tileKey);
         }
         
         // Remettre la tuile en main

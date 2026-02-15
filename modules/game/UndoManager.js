@@ -170,6 +170,7 @@ export class UndoManager {
      * Reset à la fin du tour
      */
     reset() {
+        console.log('🔄 UndoManager: reset() appelé');
         this.turnStartSnapshot = null;
         this.afterTilePlacedSnapshot = null;
         this.tilePlacedThisTurn = false;
