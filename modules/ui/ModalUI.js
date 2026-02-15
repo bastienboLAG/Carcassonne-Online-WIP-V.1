@@ -1,5 +1,5 @@
 /**
- * test ModalUI - Gère l'affichage des modals (tuiles restantes, règles, etc.)
+ * ModalUI - Gère l'affichage des modals (tuiles restantes, règles, etc.)
  */
 export class ModalUI {
     constructor() {
@@ -247,16 +247,25 @@ export class ModalUI {
             baseContainer.appendChild(baseLine);
             
             // Options de Base (indentées)
+            // Les champs s'affichent toujours avec leur statut
+            const fieldLine = document.createElement('div');
             if (config.playFields) {
-                const fieldLine = document.createElement('div');
                 fieldLine.textContent = '│  └─ ✓ Les champs';
                 fieldLine.style.cssText = `
                     margin-left: 5px;
                     font-size: 15px;
                     color: #a8d8a8;
                 `;
-                baseContainer.appendChild(fieldLine);
+            } else {
+                fieldLine.textContent = '│  └─ Les champs (désactivés)';
+                fieldLine.style.cssText = `
+                    margin-left: 5px;
+                    font-size: 15px;
+                    color: #888;
+                    font-style: italic;
+                `;
             }
+            baseContainer.appendChild(fieldLine);
             
             extensionsSection.appendChild(baseContainer);
         }
