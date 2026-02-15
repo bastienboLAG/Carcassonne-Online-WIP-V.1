@@ -213,24 +213,61 @@ export class ModalUI {
         const optionsSection = this._createSection('⚙️ Options', optionsList);
         content.appendChild(optionsSection);
         
-        // Section Extensions
-        const extensionsList = [];
+        // Section Extensions (avec arborescence)
+        const extensionsSection = document.createElement('div');
+        extensionsSection.style.cssText = `
+            margin-bottom: 20px;
+        `;
+        
+        const extensionsTitle = document.createElement('h3');
+        extensionsTitle.textContent = '🎲 Extensions';
+        extensionsTitle.style.cssText = `
+            color: #f39c12;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        `;
+        extensionsSection.appendChild(extensionsTitle);
+        
+        // Base avec arborescence
         if (config.extensions?.base) {
-            // Sous-section Base avec ses options
-            const baseOptions = [];
+            const baseContainer = document.createElement('div');
+            baseContainer.style.cssText = `
+                font-family: 'Courier New', monospace;
+                color: #e0e0e0;
+                line-height: 1.6;
+            `;
+            
+            // Ligne Base
+            const baseLine = document.createElement('div');
+            baseLine.textContent = '├─ ✓ Base (Carcassonne)';
+            baseLine.style.cssText = `
+                margin-left: 5px;
+                font-size: 15px;
+            `;
+            baseContainer.appendChild(baseLine);
+            
+            // Options de Base (indentées)
             if (config.playFields) {
-                baseOptions.push('  ✓ Les champs');
+                const fieldLine = document.createElement('div');
+                fieldLine.textContent = '│  └─ ✓ Les champs';
+                fieldLine.style.cssText = `
+                    margin-left: 5px;
+                    font-size: 15px;
+                    color: #a8d8a8;
+                `;
+                baseContainer.appendChild(fieldLine);
             }
             
-            extensionsList.push('✓ Base (Carcassonne)');
-            extensionsList.push(...baseOptions);
+            extensionsSection.appendChild(baseContainer);
         }
+        
         // Prêt pour futures extensions
         // if (config.extensions?.auberges) {
-        //     extensionsList.push('✓ Auberges et Cathédrales');
+        //     const aubergesLine = document.createElement('div');
+        //     aubergesLine.textContent = '└─ ✓ Auberges et Cathédrales';
+        //     ...
         // }
         
-        const extensionsSection = this._createSection('🎲 Extensions', extensionsList);
         content.appendChild(extensionsSection);
         
         modal.appendChild(content);
