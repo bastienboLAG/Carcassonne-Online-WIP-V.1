@@ -1666,12 +1666,19 @@ document.getElementById('undo-btn').addEventListener('click', () => {
         // Réafficher la tuile dans la preview
         tilePreviewUI.showTile(tuileEnMain);
         
-        // Réémettre tile-drawn pour que SlotsUI mette à jour currentTile
-        eventBus.emit('tile-drawn', { tileData: tuileEnMain });
+        // Réémettre tile-drawn pour que SlotsUI mette à jour currentTile (avec la rotation actuelle)
+        eventBus.emit('tile-drawn', { 
+            tileData: {
+                ...tuileEnMain,
+                rotation: tuileEnMain.rotation
+            }
+        });
         
-        // Si c'est la tuile centrale, recréer le slot central
+        // Si c'est la tuile centrale, supprimer l'ancien slot et en recréer un nouveau
         if (x === 50 && y === 50) {
             console.log('  🎯 Recréation du slot central');
+            // Supprimer l'ancien slot s'il existe
+            document.querySelectorAll('.slot-central').forEach(s => s.remove());
             if (slotsUI) {
                 slotsUI.createCentralSlot();
             }

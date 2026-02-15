@@ -42,12 +42,12 @@ export class SlotsUI {
         // Stocker la tuile pour pouvoir afficher les slots même si on n'est pas le joueur actif
         if (data.tileData) {
             this.currentTile = new Tile(data.tileData);
+            this.currentTile.rotation = data.tileData.rotation || 0;
         }
         
-        // Rafraîchir les slots si on n'est PAS le joueur actif (pour voir les slots du joueur actif)
-        // Le joueur actif rafraîchira via turn-changed
-        if (!this.isMyTurn && this.firstTilePlaced) {
-            console.log('🔄 Refresh slots pour joueur inactif après tile-drawn');
+        // Rafraîchir les slots pour TOUT LE MONDE (joueur actif et inactif)
+        if (this.firstTilePlaced) {
+            console.log('🔄 Refresh slots après tile-drawn');
             this.refresh();
         }
     }
