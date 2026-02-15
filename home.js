@@ -121,6 +121,7 @@ eventBus.on('meeple-count-updated', (data) => {
 });
 
 let gameSync = null;
+let originalLobbyHandler = null; // Handler de joinGame pour les messages lobby
 let zoneMerger = null;
 let scoring = null;
 let tuileEnMain = null;
@@ -422,7 +423,8 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
     }
     
     try {
-        multiplayer.onDataReceived = (data, from) => {
+        // Créer et sauvegarder le handler lobby (AVANT que GameSync le modifie)
+        const lobbyHandler = (data, from) => {
             console.log('📨 [INVITÉ] Reçu:', data);
             
             if (data.type === 'welcome') {
@@ -487,6 +489,10 @@ document.getElementById('join-confirm-btn').addEventListener('click', async () =
                 startGameForInvite();
             }
         };
+        
+        // Sauvegarder globalement ET assigner
+        originalLobbyHandler = lobbyHandler;
+        multiplayer.onDataReceived = lobbyHandler;
         
         await multiplayer.joinGame(code);
         document.getElementById('join-modal').style.display = 'none';
@@ -609,8 +615,8 @@ async function startGame() {
     });
     console.log('👥 Joueurs ajoutés au GameState:', gameState.players);
     
-    // Initialiser GameSync
-    gameSync = new GameSync(multiplayer, gameState);
+    // Initialiser GameSync (hôte n'a pas de lobby handler à préserver)
+    gameSync = new GameSync(multiplayer, gameState, null);
     gameSync.init();
     console.log('🔗 GameSync initialisé');
     
@@ -776,8 +782,8 @@ async function startGameForInvite() {
         gameState.addPlayer(player.id, player.name, player.color, player.isHost);
     });
     
-    // Initialiser GameSync
-    gameSync = new GameSync(multiplayer, gameState);
+    // Initialiser GameSync avec handler lobby original pour préserver game-starting
+    gameSync = new GameSync(multiplayer, gameState, originalLobbyHandler);
     gameSync.init();
     console.log('🔗 GameSync initialisé');
     
