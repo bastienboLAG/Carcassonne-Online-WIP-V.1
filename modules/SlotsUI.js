@@ -39,16 +39,22 @@ export class SlotsUI {
      * Quand une tuile est piochée
      */
     onTileDrawn(data) {
+        console.log('🎴 onTileDrawn appelé avec:', data);
+        
         // Stocker la tuile pour pouvoir afficher les slots même si on n'est pas le joueur actif
         if (data.tileData) {
             this.currentTile = new Tile(data.tileData);
             this.currentTile.rotation = data.tileData.rotation || 0;
+            console.log('  → currentTile mis à jour:', this.currentTile.id, 'rotation:', this.currentTile.rotation);
         }
         
         // Rafraîchir les slots pour TOUT LE MONDE (joueur actif et inactif)
+        console.log('  → Vérification refresh: firstTilePlaced =', this.firstTilePlaced);
         if (this.firstTilePlaced) {
-            console.log('🔄 Refresh slots après tile-drawn');
+            console.log('  → ✅ Appel de refresh()');
             this.refresh();
+        } else {
+            console.log('  → ❌ Pas de refresh (firstTilePlaced = false)');
         }
     }
     
@@ -148,36 +154,49 @@ export class SlotsUI {
     /**
      * Rafraîchir tous les slots - COPIE EXACTE de rafraichirTousLesSlots()\n     */
     refreshAllSlots() {
-        console.log('🔄 refreshAllSlots - firstTilePlaced:', this.firstTilePlaced, 'isMyTurn:', this.isMyTurn);
+        console.log('═══════════════════════════════════════');
+        console.log('🔄 refreshAllSlots appelé');
+        console.log('  firstTilePlaced:', this.firstTilePlaced);
+        console.log('  isMyTurn:', this.isMyTurn);
+        console.log('  plateau.placedTiles:', Object.keys(this.plateau.placedTiles));
         
         // Supprimer les anciens slots (sauf central)
         if (this.firstTilePlaced) {
-            document.querySelectorAll('.slot:not(.slot-central)').forEach(s => s.remove());
+            const slotsToRemove = document.querySelectorAll('.slot:not(.slot-central)');
+            console.log('  → Suppression de', slotsToRemove.length, 'slots existants');
+            slotsToRemove.forEach(s => s.remove());
         }
         
         // Vérifier qu'il y a une tuile en main
         const tile = this.currentTile || this.getTileEnMain();
-        console.log('🎴 Tuile:', tile ? tile.id : 'null', '(currentTile:', this.currentTile?.id, 'getTileEnMain:', this.getTileEnMain()?.id + ')');
+        console.log('  currentTile:', this.currentTile?.id || 'null');
+        console.log('  getTileEnMain():', this.getTileEnMain()?.id || 'null');
+        console.log('  → tile finale:', tile?.id || 'null');
         
         if (!tile) {
-            console.log('⚠️ Pas de tuile, pas de slots');
+            console.log('  ❌ STOP: Pas de tuile');
+            console.log('═══════════════════════════════════════');
             return;
         }
         
         // Vérifier qu'il y a des tuiles sur le plateau
         const placedTilesCount = Object.keys(this.plateau.placedTiles).length;
-        console.log('📍 Tuiles placées:', placedTilesCount);
+        console.log('  Tuiles sur plateau:', placedTilesCount);
         
         if (placedTilesCount === 0) {
-            console.log('⚠️ Plateau vide, pas de slots');
+            console.log('  ❌ STOP: Plateau vide');
+            console.log('═══════════════════════════════════════');
             return;
         }
         
         // Générer les slots autour des tuiles placées
+        console.log('  ✅ Génération des slots...');
         for (let coord in this.plateau.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
+            console.log('    → Autour de', coord);
             this.generateSlotsAround(x, y, tile);
         }
+        console.log('═══════════════════════════════════════');
     }
 
     /**
