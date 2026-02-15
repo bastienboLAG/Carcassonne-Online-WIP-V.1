@@ -156,6 +156,137 @@ export class ModalUI {
     }
 
     /**
+     * Afficher les règles de la partie
+     */
+    showGameRules(config) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-content';
+        modal.style.cssText = `
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        `;
+        
+        // Titre
+        const title = document.createElement('h2');
+        title.textContent = '📜 Règles de cette partie';
+        title.style.cssText = `
+            color: white;
+            margin: 0 0 25px 0;
+            text-align: center;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+        `;
+        modal.appendChild(title);
+        
+        // Contenu
+        const content = document.createElement('div');
+        content.style.cssText = `
+            color: #e0e0e0;
+            line-height: 1.8;
+        `;
+        
+        // Section Départ
+        const startSection = this._createSection('🎯 Départ', [
+            config.testDeck 
+                ? '⚠️ Deck de test (15 tuiles)' 
+                : '✓ Deck complet (72 tuiles)'
+        ]);
+        content.appendChild(startSection);
+        
+        // Section Options
+        const optionsList = [
+            config.playFields 
+                ? '✓ Les champs sont activés' 
+                : '✗ Les champs sont désactivés',
+            config.showRemainingTiles 
+                ? '✓ Liste des tuiles restantes disponible' 
+                : '✗ Liste des tuiles restantes masquée'
+        ];
+        const optionsSection = this._createSection('⚙️ Options', optionsList);
+        content.appendChild(optionsSection);
+        
+        // Section Extensions
+        const extensionsList = [];
+        if (config.extensions?.base) {
+            extensionsList.push('✓ Base (Carcassonne)');
+        }
+        // Prêt pour futures extensions
+        // if (config.extensions?.auberges) extensionsList.push('✓ Auberges et Cathédrales');
+        
+        const extensionsSection = this._createSection('🎲 Extensions', extensionsList);
+        content.appendChild(extensionsSection);
+        
+        modal.appendChild(content);
+        
+        // Bouton fermer
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Fermer';
+        closeBtn.style.cssText = `
+            display: block;
+            margin: 25px auto 0;
+            padding: 12px 40px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        `;
+        closeBtn.onmouseover = () => closeBtn.style.background = '#2980b9';
+        closeBtn.onmouseout = () => closeBtn.style.background = '#3498db';
+        closeBtn.onclick = () => this.hide();
+        modal.appendChild(closeBtn);
+        
+        this.show(modal);
+    }
+
+    /**
+     * Créer une section de règles
+     */
+    _createSection(title, items) {
+        const section = document.createElement('div');
+        section.style.cssText = `
+            margin-bottom: 20px;
+        `;
+        
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = title;
+        sectionTitle.style.cssText = `
+            color: #f39c12;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        `;
+        section.appendChild(sectionTitle);
+        
+        const list = document.createElement('ul');
+        list.style.cssText = `
+            margin: 0;
+            padding-left: 20px;
+            list-style: none;
+        `;
+        
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            li.style.cssText = `
+                margin-bottom: 8px;
+                font-size: 15px;
+            `;
+            list.appendChild(li);
+        });
+        
+        section.appendChild(list);
+        return section;
+    }
+
+    /**
      * Afficher la modal
      */
     show(content) {
