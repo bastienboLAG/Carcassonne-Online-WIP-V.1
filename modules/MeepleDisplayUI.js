@@ -74,4 +74,15 @@ export class MeepleDisplayUI {
             container.remove();
         }
     }
+
+    /**
+     * Détruire le module et nettoyer
+     */
+    destroy() {
+        console.log('🧹 MeepleDisplayUI: cleanup');
+        
+        // Supprimer tous les meeples et conteneurs
+        document.querySelectorAll('.meeple-container').forEach(el => el.remove());
+        document.querySelectorAll('.meeple').forEach(el => el.remove());
+    }
 }
