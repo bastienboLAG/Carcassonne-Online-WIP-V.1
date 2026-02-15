@@ -119,4 +119,24 @@ export class ZoneRegistry {
             console.log(`  ${id}: ${zone.type}, ${zone.tiles.length} tuiles, fermée=${zone.isComplete}`);
         }
     }
+
+    /**
+     * Sérialiser le registry pour sauvegarde
+     */
+    serialize() {
+        return {
+            zones: Array.from(this.zones.entries()),
+            nextId: this.nextId,
+            closedCitiesHistory: [...this.closedCitiesHistory]
+        };
+    }
+
+    /**
+     * Désérialiser le registry depuis une sauvegarde
+     */
+    deserialize(data) {
+        this.zones = new Map(data.zones);
+        this.nextId = data.nextId;
+        this.closedCitiesHistory = [...data.closedCitiesHistory];
+    }
 }
