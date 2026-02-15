@@ -65,9 +65,10 @@ eventBus.on('tile-drawn', (data) => {
             tilePreviewUI.showTile(tuileEnMain);
         }
         
-        // 📸 Sauvegarder snapshot au début du tour (si c'est notre tour)
+        // 📸 Sauvegarder snapshot au début du tour (POUR TOUT LE MONDE)
+        // Même si on n'est pas le joueur actif, on sauvegarde pour pouvoir restaurer les annulations distantes
         // NE PAS sauvegarder si c'est une annulation (fromUndo: true)
-        if (undoManager && isMyTurn && !data.fromNetwork && !data.fromUndo) {
+        if (undoManager && !data.fromNetwork && !data.fromUndo) {
             undoManager.saveTurnStart(placedMeeples);
         }
         
@@ -950,20 +951,22 @@ async function startGameForInvite() {
  * Gérer l'annulation reçue d'un autre joueur
  */
 function handleRemoteUndo(undoneAction) {
+    if (!undoManager) return;
+    
     console.log('⏪ Application de l\'annulation distante:', undoneAction);
     
-    // Appliquer les changements visuels directement (sans snapshots)
+    // Restaurer le snapshot (tout le monde a des snapshots maintenant)
+    const localUndone = undoManager.undo(placedMeeples);
+    
+    if (!localUndone) {
+        console.error('❌ Impossible d\'annuler localement');
+        return;
+    }
+    
+    // Appliquer les changements visuels
     if (undoneAction.type === 'meeple') {
         const key = undoneAction.meeple.key;
-        
-        // Retirer visuellement
         document.querySelectorAll(`.meeple[data-key="${key}"]`).forEach(el => el.remove());
-        
-        // Retirer de placedMeeples
-        if (placedMeeples[key]) {
-            delete placedMeeples[key];
-        }
-        
         console.log('✅ Meeple distant annulé');
         
     } else if (undoneAction.type === 'tile') {
@@ -974,7 +977,6 @@ function handleRemoteUndo(undoneAction) {
         // Retirer visuellement
         let tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
         if (!tileEl) {
-            // Fallback pour anciennes tuiles sans data-pos
             const tiles = document.querySelectorAll('.tile');
             tileEl = Array.from(tiles).find(el => 
                 el.style.gridColumn == x && el.style.gridRow == y
@@ -984,12 +986,7 @@ function handleRemoteUndo(undoneAction) {
             tileEl.remove();
         }
         
-        // Retirer du plateau
-        if (plateau.placedTiles[tileKey]) {
-            delete plateau.placedTiles[tileKey];
-        }
-        
-        // Si c'est la tuile centrale, recréer le slot central pour tout le monde
+        // Si tuile centrale, recréer le slot
         if (x === 50 && y === 50) {
             document.querySelectorAll('.slot-central').forEach(s => s.remove());
             if (slotsUI) {
@@ -1410,6 +1407,11 @@ function poserTuileSync(x, y, tile) {
         firstTilePlaced = true;
     }
     tuilePosee = true; // Important: empêcher double placement
+    
+    // 📸 Sauvegarder snapshot après pose de tuile (pour pouvoir restaurer les annulations distantes)
+    if (undoManager) {
+        undoManager.saveAfterTilePlaced(x, y, tile, placedMeeples);
+    }
 }
 
 function mettreAJourCompteur() {
