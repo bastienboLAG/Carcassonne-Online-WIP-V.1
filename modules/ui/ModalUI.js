@@ -1,5 +1,5 @@
 /**
- * ModalUI - Gère l'affichage des modals (tuiles restantes, règles, etc.)
+ * test ModalUI - Gère l'affichage des modals (tuiles restantes, règles, etc.)
  */
 export class ModalUI {
     constructor() {
