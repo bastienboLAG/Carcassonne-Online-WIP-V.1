@@ -1335,6 +1335,8 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         
         // Afficher la modale
         modal.style.display = 'flex';
+        // Forcer la transparence du fond
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
     };
     
     // Bouton fermer la modale
