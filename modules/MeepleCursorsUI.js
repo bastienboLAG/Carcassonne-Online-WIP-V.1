@@ -181,20 +181,20 @@ export class MeepleCursorsUI {
             cursor.style.width = '12px';
             cursor.style.height = '12px';
             cursor.style.borderRadius = '50%';
-            cursor.style.backgroundColor = 'rgba(0, 255, 255, 0.7)'; // Cyan transparent
-            cursor.style.border = '2px solid #00FFFF'; // Cyan vif
+            cursor.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'; // Noir transparent
+            cursor.style.border = '2px solid #000000'; // Noir
             cursor.style.cursor = 'pointer';
             cursor.style.pointerEvents = 'auto';
             cursor.style.transition = 'all 0.2s';
             cursor.style.transform = 'translate(-50%, -50%)';
             
             cursor.onmouseenter = () => {
-                cursor.style.backgroundColor = 'rgba(0, 255, 255, 1)'; // Cyan opaque au survol
+                cursor.style.backgroundColor = 'rgba(0, 0, 0, 1)'; // Noir opaque au survol
                 cursor.style.transform = 'translate(-50%, -50%) scale(1.3)';
             };
             
             cursor.onmouseleave = () => {
-                cursor.style.backgroundColor = 'rgba(0, 255, 255, 0.7)'; // Retour cyan transparent
+                cursor.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'; // Retour noir transparent
                 cursor.style.transform = 'translate(-50%, -50%) scale(1)';
             };
             

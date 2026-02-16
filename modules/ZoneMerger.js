@@ -311,7 +311,11 @@ export class ZoneMerger {
                     ? localZone.features.adjacentCities 
                     : [localZone.features.adjacentCities];
                 
+                const before = mergedZone.adjacentCities.length;
                 mergedZone.adjacentCities = [...new Set([...mergedZone.adjacentCities, ...cities])];
+                const after = mergedZone.adjacentCities.length;
+                
+                console.log(`  📍 adjacentCities pour ${mergedZone.id}: ${before} → ${after} (ajout de ${cities})`);
             }
         }
     }

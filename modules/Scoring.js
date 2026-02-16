@@ -195,17 +195,27 @@ export class Scoring {
         // 4. Champs (farmers) : 3 pts par ville complète adjacente
         const closedCities = this.zoneMerger.getClosedCities();
         
+        console.log('🌾 === CALCUL DES CHAMPS ===');
+        console.log(`  Villes fermées disponibles: ${closedCities.map(c => c.id).join(', ')}`);
+        
         allZones.forEach(mergedZone => {
             if (mergedZone.type !== 'field') return;
 
             const meeples = this.zoneMerger.getZoneMeeples(mergedZone, placedMeeples);
             if (meeples.length === 0) return;
 
+            console.log(`\n  🌾 Champ ${mergedZone.id}:`);
+            console.log(`    Meeples: ${meeples.map(m => m.playerId).join(', ')}`);
+            console.log(`    adjacentCities: [${mergedZone.adjacentCities || []}]`);
+
             const adjacentClosedCities = this._countAdjacentClosedCities(mergedZone, closedCities);
             if (adjacentClosedCities === 0) return;
 
             const owners = this._getZoneOwners(meeples);
             const points = adjacentClosedCities * 3;
+            
+            console.log(`    Propriétaires: ${owners.join(', ')}`);
+            console.log(`    Points attribués: ${points} (${adjacentClosedCities} villes × 3)`);
 
             owners.forEach(playerId => {
                 finalScores.push({
