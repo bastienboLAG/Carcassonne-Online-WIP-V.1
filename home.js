@@ -736,10 +736,20 @@ async function startGame() {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
         // Appliquer les scores
-        scoringResults.forEach(({ playerId, points, reason }) => {
+        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
+                
+                // Incrémenter le détail selon le type
+                if (zoneType === 'city') {
+                    player.scoreDetail.cities += points;
+                } else if (zoneType === 'road') {
+                    player.scoreDetail.roads += points;
+                } else if (zoneType === 'abbey') {
+                    player.scoreDetail.monasteries += points;
+                }
+                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -757,6 +767,14 @@ async function startGame() {
     gameSync.onTurnUndo = (undoneAction) => {
         console.log('⏪ [SYNC] Annulation distante reçue');
         handleRemoteUndo(undoneAction);
+    };
+    
+    gameSync.onGameEnded = (detailedScores) => {
+        console.log('🏁 [SYNC] Fin de partie reçue');
+        showFinalScoresModal(detailedScores);
+        const endTurnBtn = document.getElementById('end-turn-btn');
+        endTurnBtn.textContent = 'Tableau des scores';
+        endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
     };
     
     // Setup de l'interface
@@ -915,10 +933,20 @@ async function startGameForInvite() {
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
-        scoringResults.forEach(({ playerId, points, reason }) => {
+        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
+                
+                // Incrémenter le détail selon le type
+                if (zoneType === 'city') {
+                    player.scoreDetail.cities += points;
+                } else if (zoneType === 'road') {
+                    player.scoreDetail.roads += points;
+                } else if (zoneType === 'abbey') {
+                    player.scoreDetail.monasteries += points;
+                }
+                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -934,6 +962,14 @@ async function startGameForInvite() {
     gameSync.onTurnUndo = (undoneAction) => {
         console.log('⏪ [SYNC] Annulation distante reçue');
         handleRemoteUndo(undoneAction);
+    };
+    
+    gameSync.onGameEnded = (detailedScores) => {
+        console.log('🏁 [SYNC] Fin de partie reçue');
+        showFinalScoresModal(detailedScores);
+        const endTurnBtn = document.getElementById('end-turn-btn');
+        endTurnBtn.textContent = 'Tableau des scores';
+        endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
     };
     
     // Enregistrer et activer les règles de base avec la configuration
@@ -1026,6 +1062,64 @@ function handleRemoteUndo(undoneAction) {
     
     // Mettre à jour l'affichage
     eventBus.emit('score-updated');
+}
+
+/**
+ * Afficher la modale des scores finaux
+ */
+function showFinalScoresModal(detailedScores) {
+    const modal = document.getElementById('final-scores-modal');
+    const tbody = document.getElementById('final-scores-body');
+    
+    // Vider le tableau
+    tbody.innerHTML = '';
+    
+    // Remplir avec les scores (déjà triés par score décroissant)
+    detailedScores.forEach(player => {
+        const row = document.createElement('tr');
+        
+        // Colonne joueur avec meeple coloré
+        const nameCell = document.createElement('td');
+        nameCell.innerHTML = `
+            <div class="player-name-cell">
+                <img src="meeples/meeple-${player.color}.png" alt="${player.color}">
+                <span>${player.name}</span>
+            </div>
+        `;
+        row.appendChild(nameCell);
+        
+        // Colonnes des scores
+        const citiesCell = document.createElement('td');
+        citiesCell.textContent = player.cities;
+        row.appendChild(citiesCell);
+        
+        const roadsCell = document.createElement('td');
+        roadsCell.textContent = player.roads;
+        row.appendChild(roadsCell);
+        
+        const monasteriesCell = document.createElement('td');
+        monasteriesCell.textContent = player.monasteries;
+        row.appendChild(monasteriesCell);
+        
+        const fieldsCell = document.createElement('td');
+        fieldsCell.textContent = player.fields;
+        row.appendChild(fieldsCell);
+        
+        const totalCell = document.createElement('td');
+        totalCell.textContent = player.total;
+        totalCell.style.fontWeight = 'bold';
+        row.appendChild(totalCell);
+        
+        tbody.appendChild(row);
+    });
+    
+    // Afficher la modale
+    modal.style.display = 'flex';
+    
+    // Bouton fermer
+    document.getElementById('close-final-scores-btn').onclick = () => {
+        modal.style.display = 'none';
+    };
 }
 
 function updateTurnDisplay() {
@@ -1122,10 +1216,20 @@ function setupEventListeners() {
                 console.log('💰 Scores calculés:', scoringResults);
                 
                 // Appliquer les scores localement
-                scoringResults.forEach(({ playerId, points, reason }) => {
+                scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
                     const player = gameState.players.find(p => p.id === playerId);
                     if (player) {
                         player.score += points;
+                        
+                        // Incrémenter le détail selon le type
+                        if (zoneType === 'city') {
+                            player.scoreDetail.cities += points;
+                        } else if (zoneType === 'road') {
+                            player.scoreDetail.roads += points;
+                        } else if (zoneType === 'abbey') {
+                            player.scoreDetail.monasteries += points;
+                        }
+                        
                         console.log(`  ${player.name} +${points} pts (${reason})`);
                     }
                 });
@@ -1188,31 +1292,26 @@ function setupEventListeners() {
             console.log('🏁 FIN DE PARTIE - Calcul des scores finaux');
             
             if (scoring && zoneMerger) {
-                const finalScores = scoring.calculateFinalScores(placedMeeples, gameState);
+                // Utiliser la nouvelle méthode qui applique ET retourne le détail
+                const detailedScores = scoring.applyAndGetFinalScores(placedMeeples, gameState);
                 
-                console.log('💰 Scores finaux:', finalScores);
-                
-                // Appliquer les scores finaux
-                finalScores.forEach(({ playerId, points, reason }) => {
-                    const player = gameState.players.find(p => p.id === playerId);
-                    if (player) {
-                        player.score += points;
-                        console.log(`  ${player.name} +${points} pts (${reason})`);
-                    }
-                });
+                console.log('💰 Scores finaux détaillés:', detailedScores);
                 
                 // Mettre à jour l'affichage
                 updateTurnDisplay();
                 
-                // Afficher le gagnant
-                const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
-                setTimeout(() => {
-                    alert(`🏆 Partie terminée !
-${winner.name} gagne avec ${winner.score} points !
-
-Scores finaux :
-${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
-                }, 500);
+                // Afficher la modale des scores
+                showFinalScoresModal(detailedScores);
+                
+                // Changer le bouton pour rouvrir la modale
+                const endTurnBtn = document.getElementById('end-turn-btn');
+                endTurnBtn.textContent = 'Tableau des scores';
+                endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
+                
+                // Synchroniser l'état de fin de partie
+                if (gameSync) {
+                    gameSync.syncGameEnded(detailedScores);
+                }
             }
             
             return; // Ne pas piocher de nouvelle tuile
