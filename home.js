@@ -675,10 +675,25 @@ async function startGame() {
     gameSync.onTileRotated = (rotation) => {
         console.log('🔄 [SYNC] Rotation reçue:', rotation);
         if (tuileEnMain) {
+            const oldRotation = tuileEnMain.rotation;
             tuileEnMain.rotation = rotation;
+            
             const currentImg = document.getElementById('current-tile-img');
             if (currentImg) {
-                currentImg.style.transform = `rotate(${rotation}deg)`;
+                // Si 270° → 0°, passer par 360° pour rotation horaire
+                if (oldRotation === 270 && rotation === 0) {
+                    currentImg.style.transform = `rotate(360deg)`;
+                    // Puis remettre à 0 après la transition pour éviter l'accumulation
+                    setTimeout(() => {
+                        currentImg.style.transition = 'none';
+                        currentImg.style.transform = `rotate(0deg)`;
+                        setTimeout(() => {
+                            currentImg.style.transition = '';
+                        }, 10);
+                    }, 200); // Durée de la transition CSS
+                } else {
+                    currentImg.style.transform = `rotate(${rotation}deg)`;
+                }
             }
             // Émettre tile-rotated pour que SlotsUI rafraîchisse
             eventBus.emit('tile-rotated', { rotation });
@@ -844,10 +859,25 @@ async function startGameForInvite() {
     
     gameSync.onTileRotated = (rotation) => {
         if (tuileEnMain) {
+            const oldRotation = tuileEnMain.rotation;
             tuileEnMain.rotation = rotation;
+            
             const currentImg = document.getElementById('current-tile-img');
             if (currentImg) {
-                currentImg.style.transform = `rotate(${rotation}deg)`;
+                // Si 270° → 0°, passer par 360° pour rotation horaire
+                if (oldRotation === 270 && rotation === 0) {
+                    currentImg.style.transform = `rotate(360deg)`;
+                    // Puis remettre à 0 après la transition
+                    setTimeout(() => {
+                        currentImg.style.transition = 'none';
+                        currentImg.style.transform = `rotate(0deg)`;
+                        setTimeout(() => {
+                            currentImg.style.transition = '';
+                        }, 10);
+                    }, 200);
+                } else {
+                    currentImg.style.transform = `rotate(${rotation}deg)`;
+                }
             }
             // Émettre tile-rotated pour que SlotsUI rafraîchisse
             eventBus.emit('tile-rotated', { rotation });
