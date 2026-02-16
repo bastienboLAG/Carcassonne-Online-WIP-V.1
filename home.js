@@ -1258,7 +1258,7 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         }
         
         const { x, y } = lastPlacedTile;
-        const tileElement = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+        const tileElement = document.querySelector(`.tile[data-pos="${x},${y}"]`);
         
         if (!tileElement) {
             console.warn('⚠️ Tuile non trouvée pour highlight');
