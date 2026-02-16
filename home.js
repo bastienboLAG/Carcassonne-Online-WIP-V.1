@@ -1303,7 +1303,7 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
             const nameCell = document.createElement('td');
             nameCell.innerHTML = `
                 <div class="player-name-cell">
-                    <img src="assets/meeples/meeple-${player.color}.png" alt="${player.color}">
+                    <img src="assets/Meeples/${player.color.charAt(0).toUpperCase() + player.color.slice(1)}/Normal.png" alt="${player.color}">
                     <span>${player.name}</span>
                 </div>
             `;

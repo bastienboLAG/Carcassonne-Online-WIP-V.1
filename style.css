@@ -766,8 +766,8 @@ button:disabled {
 }
 
 /* Modale des scores finaux */
-#final-scores-modal {
-    background-color: rgba(0, 0, 0, 0.4) !important; /* Fond très transparent pour voir le plateau */
+#final-scores-modal.modal {
+    background-color: rgba(0, 0, 0, 0.3) !important; /* Fond très transparent pour voir le plateau */
 }
 
 .final-scores-content {
@@ -807,10 +807,6 @@ button:disabled {
     text-align: center;
     color: #ecf0f1;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-#final-scores-table tbody tr:hover {
-    background-color: rgba(52, 152, 219, 0.3);
 }
 
 #final-scores-table tbody tr:first-child {
