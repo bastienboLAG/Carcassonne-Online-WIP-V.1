@@ -751,7 +751,6 @@ async function startGame() {
                 }
                 
                 console.log(`  ${player.name} +${points} pts (${reason})`);
-                console.log(`  📊 DEBUG scoreDetail ${player.name}:`, JSON.stringify(player.scoreDetail));
             }
         });
         
@@ -941,7 +940,6 @@ async function startGameForInvite() {
                 }
                 
                 console.log(`  ${player.name} +${points} pts (${reason})`);
-                console.log(`  📊 DEBUG scoreDetail ${player.name}:`, JSON.stringify(player.scoreDetail));
             }
         });
         
@@ -1172,7 +1170,6 @@ function setupEventListeners() {
                         }
                         
                         console.log(`  ${player.name} +${points} pts (${reason})`);
-                        console.log(`  📊 DEBUG scoreDetail ${player.name}:`, JSON.stringify(player.scoreDetail));
                     }
                 });
                 
