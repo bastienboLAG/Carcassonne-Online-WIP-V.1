@@ -764,3 +764,73 @@ button:disabled {
     position: relative;
     z-index: 10;
 }
+
+/* Modale des scores finaux */
+#final-scores-modal {
+    background-color: rgba(0, 0, 0, 0.4) !important; /* Fond très transparent pour voir le plateau */
+}
+
+.final-scores-content {
+    max-width: 700px;
+    background-color: rgba(44, 62, 80, 0.92); /* Contenu semi-transparent */
+    backdrop-filter: blur(8px); /* Flou pour effet de verre */
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.final-scores-content h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ecf0f1;
+    font-size: 28px;
+}
+
+#final-scores-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: rgba(52, 73, 94, 0.7);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#final-scores-table th {
+    background-color: rgba(41, 128, 185, 0.85);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#final-scores-table td {
+    padding: 12px;
+    text-align: center;
+    color: #ecf0f1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#final-scores-table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.3);
+}
+
+#final-scores-table tbody tr:first-child {
+    background-color: rgba(241, 196, 15, 0.25); /* Gagnant en surbrillance dorée */
+    font-weight: bold;
+}
+
+.player-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.player-name-cell img {
+    width: 30px;
+    height: 30px;
+}
+
+#close-final-scores-btn {
+    width: 100%;
+    margin-top: 10px;
+}
