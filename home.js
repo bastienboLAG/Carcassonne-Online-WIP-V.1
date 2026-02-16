@@ -955,17 +955,18 @@ function handleRemoteUndo(undoneAction) {
     
     console.log('⏪ Application de l\'annulation distante:', undoneAction);
     
-    // Restaurer le snapshot (tout le monde a des snapshots maintenant)
-    const localUndone = undoManager.undo(placedMeeples);
-    
-    if (!localUndone) {
-        console.error('❌ Impossible d\'annuler localement');
-        return;
-    }
-    
-    // Appliquer les changements visuels
+    // Appliquer directement selon le type (ne pas utiliser undoManager.undo() 
+    // car il ne connaît pas l'état local du joueur actif)
     if (undoneAction.type === 'meeple') {
         const key = undoneAction.meeple.key;
+        
+        // Restaurer snapshot AVANT pose meeple (afterTilePlacedSnapshot)
+        if (undoManager.afterTilePlacedSnapshot) {
+            undoManager.restoreSnapshot(undoManager.afterTilePlacedSnapshot, placedMeeples);
+            console.log('  🔄 Snapshot après tuile restauré');
+        }
+        
+        // Retirer visuellement le meeple
         document.querySelectorAll(`.meeple[data-key="${key}"]`).forEach(el => el.remove());
         console.log('✅ Meeple distant annulé');
         
@@ -974,7 +975,13 @@ function handleRemoteUndo(undoneAction) {
         const y = undoneAction.tile.y;
         const tileKey = `${x},${y}`;
         
-        // Retirer visuellement
+        // Restaurer snapshot début de tour (turnStartSnapshot)
+        if (undoManager.turnStartSnapshot) {
+            undoManager.restoreSnapshot(undoManager.turnStartSnapshot, placedMeeples);
+            console.log('  🔄 Snapshot début tour restauré');
+        }
+        
+        // Retirer visuellement la tuile
         let tileEl = document.querySelector(`.tile[data-pos="${tileKey}"]`);
         if (!tileEl) {
             const tiles = document.querySelectorAll('.tile');
@@ -988,17 +995,15 @@ function handleRemoteUndo(undoneAction) {
         
         // Si tuile centrale, recréer le slot et remettre firstTilePlaced à false
         if (x === 50 && y === 50) {
-            // Remettre firstTilePlaced à false partout
             firstTilePlaced = false;
             if (slotsUI) {
                 slotsUI.firstTilePlaced = false;
-                slotsUI.currentTile = null; // Réinitialiser la tuile en cours
+                slotsUI.currentTile = null;
             }
             if (tilePlacement) {
                 tilePlacement.firstTilePlaced = false;
             }
             
-            // Recréer le slot central
             document.querySelectorAll('.slot-central').forEach(s => s.remove());
             if (slotsUI) {
                 slotsUI.createCentralSlot();
