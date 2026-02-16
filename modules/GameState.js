@@ -18,13 +18,7 @@ export class GameState {
             name: playerName,
             color: color,
             score: 0,
-            meeples: 7, // Nombre de meeples disponibles
-            scoreDetail: {
-                cities: 0,
-                roads: 0,
-                monasteries: 0,
-                fields: 0
-            }
+            meeples: 7 // Nombre de meeples disponibles
         });
     }
 
@@ -78,13 +72,7 @@ export class GameState {
             name: p.name,
             color: p.color,
             score: p.score || 0,
-            meeples: p.meeples ?? 7,  // ?? au lieu de || pour accepter 0
-            scoreDetail: p.scoreDetail || {
-                cities: 0,
-                roads: 0,
-                monasteries: 0,
-                fields: 0
-            }
+            meeples: p.meeples ?? 7  // ?? au lieu de || pour accepter 0
         }));
         this.currentPlayerIndex = data.currentPlayerIndex || 0;
         this.placedTiles = data.placedTiles || {};

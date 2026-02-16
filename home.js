@@ -150,10 +150,6 @@ let isMyTurn = false;
 let lastPlacedTile = null; // Dernière tuile posée {x, y}
 let placedMeeples = {}; // Meeples placés: "x,y,position" => {type, color, playerId}
 
-// ✅ Variables de fin de partie
-let gameEnded = false;
-let finalScoresData = null;
-
 let isDragging = false;
 let startX = 0;
 let startY = 0;
@@ -740,20 +736,10 @@ async function startGame() {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
         // Appliquer les scores
-        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
+        scoringResults.forEach(({ playerId, points, reason }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
-                
-                // Incrémenter le détail selon le type
-                if (zoneType === 'city') {
-                    player.scoreDetail.cities += points;
-                } else if (zoneType === 'road') {
-                    player.scoreDetail.roads += points;
-                } else if (zoneType === 'abbey') {
-                    player.scoreDetail.monasteries += points;
-                }
-                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -771,17 +757,6 @@ async function startGame() {
     gameSync.onTurnUndo = (undoneAction) => {
         console.log('⏪ [SYNC] Annulation distante reçue');
         handleRemoteUndo(undoneAction);
-    };
-    
-    gameSync.onGameEnded = (detailedScores) => {
-        console.log('🏁 [SYNC] Fin de partie reçue');
-        finalScoresData = detailedScores;
-        gameEnded = true;
-        eventBus.emit('score-updated');
-        showFinalScoresModal(detailedScores);
-        const endTurnBtn = document.getElementById('end-turn-btn');
-        endTurnBtn.textContent = 'Tableau des scores';
-        endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
     };
     
     // Setup de l'interface
@@ -940,20 +915,10 @@ async function startGameForInvite() {
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
-        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
+        scoringResults.forEach(({ playerId, points, reason }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
-                
-                // Incrémenter le détail selon le type
-                if (zoneType === 'city') {
-                    player.scoreDetail.cities += points;
-                } else if (zoneType === 'road') {
-                    player.scoreDetail.roads += points;
-                } else if (zoneType === 'abbey') {
-                    player.scoreDetail.monasteries += points;
-                }
-                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -969,17 +934,6 @@ async function startGameForInvite() {
     gameSync.onTurnUndo = (undoneAction) => {
         console.log('⏪ [SYNC] Annulation distante reçue');
         handleRemoteUndo(undoneAction);
-    };
-    
-    gameSync.onGameEnded = (detailedScores) => {
-        console.log('🏁 [SYNC] Fin de partie reçue');
-        finalScoresData = detailedScores;
-        gameEnded = true;
-        eventBus.emit('score-updated');
-        showFinalScoresModal(detailedScores);
-        const endTurnBtn = document.getElementById('end-turn-btn');
-        endTurnBtn.textContent = 'Tableau des scores';
-        endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
     };
     
     // Enregistrer et activer les règles de base avec la configuration
@@ -1074,64 +1028,6 @@ function handleRemoteUndo(undoneAction) {
     eventBus.emit('score-updated');
 }
 
-/**
- * Afficher la modale des scores finaux
- */
-function showFinalScoresModal(detailedScores) {
-    const modal = document.getElementById('final-scores-modal');
-    const tbody = document.getElementById('final-scores-body');
-    
-    // Vider le tableau
-    tbody.innerHTML = '';
-    
-    // Remplir avec les scores (déjà triés par score décroissant)
-    detailedScores.forEach(player => {
-        const row = document.createElement('tr');
-        
-        // Colonne joueur avec meeple coloré
-        const nameCell = document.createElement('td');
-        nameCell.innerHTML = `
-            <div class="player-name-cell">
-                <img src="assets/meeples/meeple-${player.color}.png" alt="${player.color}">
-                <span>${player.name}</span>
-            </div>
-        `;
-        row.appendChild(nameCell);
-        
-        // Colonnes des scores
-        const citiesCell = document.createElement('td');
-        citiesCell.textContent = player.cities;
-        row.appendChild(citiesCell);
-        
-        const roadsCell = document.createElement('td');
-        roadsCell.textContent = player.roads;
-        row.appendChild(roadsCell);
-        
-        const monasteriesCell = document.createElement('td');
-        monasteriesCell.textContent = player.monasteries;
-        row.appendChild(monasteriesCell);
-        
-        const fieldsCell = document.createElement('td');
-        fieldsCell.textContent = player.fields;
-        row.appendChild(fieldsCell);
-        
-        const totalCell = document.createElement('td');
-        totalCell.textContent = player.total;
-        totalCell.style.fontWeight = 'bold';
-        row.appendChild(totalCell);
-        
-        tbody.appendChild(row);
-    });
-    
-    // Afficher la modale
-    modal.style.display = 'flex';
-    
-    // Bouton fermer
-    document.getElementById('close-final-scores-btn').onclick = () => {
-        modal.style.display = 'none';
-    };
-}
-
 function updateTurnDisplay() {
     if (!gameState || gameState.players.length === 0) {
         isMyTurn = true;
@@ -1151,6 +1047,15 @@ function updateTurnDisplay() {
         } else {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
+        }
+        
+        // ✅ Changer le texte si le deck est vide
+        if (deck.currentIndex >= deck.totalTiles) {
+            endTurnBtn.textContent = 'Calculer le score final';
+            endTurnBtn.classList.add('final-score-btn');
+        } else {
+            endTurnBtn.textContent = 'Terminer mon tour';
+            endTurnBtn.classList.remove('final-score-btn');
         }
     }
     
@@ -1217,20 +1122,10 @@ function setupEventListeners() {
                 console.log('💰 Scores calculés:', scoringResults);
                 
                 // Appliquer les scores localement
-                scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
+                scoringResults.forEach(({ playerId, points, reason }) => {
                     const player = gameState.players.find(p => p.id === playerId);
                     if (player) {
                         player.score += points;
-                        
-                        // Incrémenter le détail selon le type
-                        if (zoneType === 'city') {
-                            player.scoreDetail.cities += points;
-                        } else if (zoneType === 'road') {
-                            player.scoreDetail.roads += points;
-                        } else if (zoneType === 'abbey') {
-                            player.scoreDetail.monasteries += points;
-                        }
-                        
                         console.log(`  ${player.name} +${points} pts (${reason})`);
                     }
                 });
@@ -1289,41 +1184,38 @@ function setupEventListeners() {
         }
         
         // ✅ Vérifier si c'est la fin de partie (deck vide)
-        if (deck.currentIndex >= deck.totalTiles && !gameEnded) {
+        if (deck.currentIndex >= deck.totalTiles) {
             console.log('🏁 FIN DE PARTIE - Calcul des scores finaux');
             
             if (scoring && zoneMerger) {
-                // Utiliser la nouvelle méthode qui applique ET retourne le détail
-                finalScoresData = scoring.applyAndGetFinalScores(placedMeeples, gameState);
-                gameEnded = true;
+                const finalScores = scoring.calculateFinalScores(placedMeeples, gameState);
                 
-                console.log('💰 Scores finaux détaillés:', finalScoresData);
+                console.log('💰 Scores finaux:', finalScores);
                 
-                // Mettre à jour l'affichage des scores
-                eventBus.emit('score-updated');
+                // Appliquer les scores finaux
+                finalScores.forEach(({ playerId, points, reason }) => {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    if (player) {
+                        player.score += points;
+                        console.log(`  ${player.name} +${points} pts (${reason})`);
+                    }
+                });
+                
+                // Mettre à jour l'affichage
                 updateTurnDisplay();
                 
-                // Afficher la modale des scores
-                showFinalScoresModal(finalScoresData);
-                
-                // Changer le bouton pour rouvrir la modale
-                const endTurnBtn = document.getElementById('end-turn-btn');
-                endTurnBtn.textContent = 'Tableau des scores';
-                endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
-                
-                // Synchroniser l'état de fin de partie
-                if (gameSync) {
-                    gameSync.syncGameEnded(finalScoresData);
-                }
+                // Afficher le gagnant
+                const winner = gameState.players.reduce((a, b) => a.score > b.score ? a : b);
+                setTimeout(() => {
+                    alert(`🏆 Partie terminée !
+${winner.name} gagne avec ${winner.score} points !
+
+Scores finaux :
+${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
+                }, 500);
             }
             
             return; // Ne pas piocher de nouvelle tuile
-        } else if (gameEnded) {
-            // Partie déjà terminée, juste rouvrir la modale
-            if (finalScoresData) {
-                showFinalScoresModal(finalScoresData);
-            }
-            return;
         }
         
         // ⏪ Reset UndoManager AVANT de piocher (sinon efface le nouveau snapshot)
@@ -1440,23 +1332,6 @@ function returnToLobby() {
     placedMeeples = {};
     lastPlacedTile = null;
     isMyTurn = false;
-    
-    // Réinitialiser l'état de fin de partie
-    gameEnded = false;
-    finalScoresData = null;
-    
-    // Fermer la modale des scores si ouverte
-    const finalScoresModal = document.getElementById('final-scores-modal');
-    if (finalScoresModal) {
-        finalScoresModal.style.display = 'none';
-    }
-    
-    // Réinitialiser le bouton "Terminer mon tour"
-    const endTurnBtn = document.getElementById('end-turn-btn');
-    if (endTurnBtn) {
-        endTurnBtn.textContent = 'Terminer mon tour';
-        endTurnBtn.onclick = null; // Sera réassigné lors de la prochaine partie
-    }
     
     // Nettoyer le plateau (board vidé par les destroy() mais on s'assure)
     document.getElementById('board').innerHTML = '';
