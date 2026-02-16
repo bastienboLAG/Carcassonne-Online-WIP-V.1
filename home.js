@@ -1282,66 +1282,6 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         }
     };
     
-    // ========================================
-    // BOUTON TEMPORAIRE DE TEST DE LA MODALE
-    // ========================================
-    document.getElementById('test-modal-btn').onclick = () => {
-        const modal = document.getElementById('final-scores-modal');
-        const tbody = document.getElementById('final-scores-body');
-        
-        // Données de test
-        const testScores = [
-            { name: 'Joueur 1', color: 'blue', cities: 32, roads: 12, monasteries: 8, fields: 15, total: 67 },
-            { name: 'Joueur 2', color: 'red', cities: 28, roads: 18, monasteries: 0, fields: 12, total: 58 }
-        ];
-        
-        // Remplir le tableau
-        tbody.innerHTML = '';
-        testScores.forEach(player => {
-            const row = document.createElement('tr');
-            
-            const nameCell = document.createElement('td');
-            nameCell.innerHTML = `
-                <div class="player-name-cell">
-                    <img src="assets/meeples/meeple-${player.color}.png" alt="${player.color}">
-                    <span>${player.name}</span>
-                </div>
-            `;
-            row.appendChild(nameCell);
-            
-            const citiesCell = document.createElement('td');
-            citiesCell.textContent = player.cities;
-            row.appendChild(citiesCell);
-            
-            const roadsCell = document.createElement('td');
-            roadsCell.textContent = player.roads;
-            row.appendChild(roadsCell);
-            
-            const monasteriesCell = document.createElement('td');
-            monasteriesCell.textContent = player.monasteries;
-            row.appendChild(monasteriesCell);
-            
-            const fieldsCell = document.createElement('td');
-            fieldsCell.textContent = player.fields;
-            row.appendChild(fieldsCell);
-            
-            const totalCell = document.createElement('td');
-            totalCell.textContent = player.total;
-            totalCell.style.fontWeight = 'bold';
-            row.appendChild(totalCell);
-            
-            tbody.appendChild(row);
-        });
-        
-        // Afficher la modale
-        modal.style.display = 'flex';
-    };
-    
-    // Bouton fermer la modale
-    document.getElementById('close-final-scores-btn').onclick = () => {
-        document.getElementById('final-scores-modal').style.display = 'none';
-    };
-    
     eventListenersInstalled = true;
     console.log('✅ Event listeners installés');
 }
