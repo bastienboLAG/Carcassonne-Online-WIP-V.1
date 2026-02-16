@@ -57,7 +57,12 @@ export class Scoring {
 
             // Attribuer les points aux propriétaires
             owners.forEach(playerId => {
-                scoringResults.push({ playerId, points, reason });
+                scoringResults.push({ 
+                    playerId, 
+                    points, 
+                    reason,
+                    zoneType: mergedZone.type // ← Ajout du type de zone
+                });
                 console.log(`  ${playerId} gagne ${points} points pour ${reason}`);
             });
 

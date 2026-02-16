@@ -736,10 +736,20 @@ async function startGame() {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
         // Appliquer les scores
-        scoringResults.forEach(({ playerId, points, reason }) => {
+        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
+                
+                // ✅ Incrémenter le détail selon le type de zone
+                if (zoneType === 'city') {
+                    player.scoreDetail.cities += points;
+                } else if (zoneType === 'road') {
+                    player.scoreDetail.roads += points;
+                } else if (zoneType === 'abbey') {
+                    player.scoreDetail.monasteries += points;
+                }
+                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -915,10 +925,20 @@ async function startGameForInvite() {
     gameSync.onScoreUpdate = (scoringResults, meeplesToReturn) => {
         console.log('💰 [SYNC] Mise à jour des scores reçue');
         
-        scoringResults.forEach(({ playerId, points, reason }) => {
+        scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
             const player = gameState.players.find(p => p.id === playerId);
             if (player) {
                 player.score += points;
+                
+                // ✅ Incrémenter le détail selon le type de zone
+                if (zoneType === 'city') {
+                    player.scoreDetail.cities += points;
+                } else if (zoneType === 'road') {
+                    player.scoreDetail.roads += points;
+                } else if (zoneType === 'abbey') {
+                    player.scoreDetail.monasteries += points;
+                }
+                
                 console.log(`  ${player.name} +${points} pts (${reason})`);
             }
         });
@@ -1135,10 +1155,20 @@ function setupEventListeners() {
                 console.log('💰 Scores calculés:', scoringResults);
                 
                 // Appliquer les scores localement
-                scoringResults.forEach(({ playerId, points, reason }) => {
+                scoringResults.forEach(({ playerId, points, reason, zoneType }) => {
                     const player = gameState.players.find(p => p.id === playerId);
                     if (player) {
                         player.score += points;
+                        
+                        // ✅ Incrémenter le détail selon le type de zone
+                        if (zoneType === 'city') {
+                            player.scoreDetail.cities += points;
+                        } else if (zoneType === 'road') {
+                            player.scoreDetail.roads += points;
+                        } else if (zoneType === 'abbey') {
+                            player.scoreDetail.monasteries += points;
+                        }
+                        
                         console.log(`  ${player.name} +${points} pts (${reason})`);
                     }
                 });
