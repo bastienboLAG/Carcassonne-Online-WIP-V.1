@@ -18,6 +18,7 @@ export class GameSync {
         this.onMeeplePlaced = null;
         this.onScoreUpdate = null;
         this.onTurnUndo = null;
+        this.onGameEnded = null;
     }
 
     /**
@@ -45,7 +46,7 @@ export class GameSync {
         const gameMessages = [
             'game-start', 'tile-rotated', 'tile-placed', 'turn-ended',
             'tile-drawn', 'meeple-placed', 'meeple-count-update', 'score-update',
-            'turn-undo'
+            'turn-undo', 'game-ended'
             // NOTE: 'return-to-lobby', 'player-order-update' et 'game-starting' 
             //       sont gérés par le lobby handler
         ];
@@ -175,6 +176,18 @@ export class GameSync {
     }
 
     /**
+     * Synchroniser la fin de partie
+     */
+    syncGameEnded(detailedScores) {
+        console.log('🏁 Sync game ended:', detailedScores);
+        this.multiplayer.broadcast({
+            type: 'game-ended',
+            scores: detailedScores,
+            playerId: this.multiplayer.playerId
+        });
+    }
+
+    /**
      * Gérer les messages reçus
      * @private
      */
@@ -242,6 +255,13 @@ export class GameSync {
                 if (this.onTurnUndo && data.playerId !== this.multiplayer.playerId) {
                     console.log('⏪ [SYNC] Annulation reçue:', data.action);
                     this.onTurnUndo(data.action);
+                }
+                break;
+            
+            case 'game-ended':
+                if (this.onGameEnded && data.playerId !== this.multiplayer.playerId) {
+                    console.log('🏁 [SYNC] Fin de partie reçue');
+                    this.onGameEnded(data.scores);
                 }
                 break;
         }

@@ -235,6 +235,57 @@ export class Scoring {
     }
 
     /**
+     * Appliquer les scores finaux et retourner le détail complet
+     * Cette méthode calcule les scores finaux, les applique au gameState,
+     * et retourne un tableau trié des scores détaillés de chaque joueur
+     * @returns {Array} Tableau des scores détaillés, trié par score décroissant
+     */
+    applyAndGetFinalScores(placedMeeples, gameState) {
+        const finalScores = this.calculateFinalScores(placedMeeples, gameState);
+        
+        console.log('📊 Application des scores finaux...');
+        
+        // Appliquer les scores finaux au gameState
+        finalScores.forEach(({ playerId, points, reason }) => {
+            const player = gameState.players.find(p => p.id === playerId);
+            if (player) {
+                player.score += points;
+                
+                // Identifier le type de zone pour le détail
+                if (reason.includes('Ville')) {
+                    player.scoreDetail.cities += points;
+                } else if (reason.includes('Route')) {
+                    player.scoreDetail.roads += points;
+                } else if (reason.includes('Abbaye')) {
+                    player.scoreDetail.monasteries += points;
+                } else if (reason.includes('Champ')) {
+                    player.scoreDetail.fields += points;
+                }
+                
+                console.log(`  ${player.name} +${points} pts (${reason})`);
+            }
+        });
+        
+        // Créer le détail complet pour chaque joueur, trié par score décroissant
+        const detailedScores = gameState.players
+            .map(p => ({
+                id: p.id,
+                name: p.name,
+                color: p.color,
+                cities: p.scoreDetail.cities,
+                roads: p.scoreDetail.roads,
+                monasteries: p.scoreDetail.monasteries,
+                fields: p.scoreDetail.fields,
+                total: p.score
+            }))
+            .sort((a, b) => b.total - a.total); // Tri décroissant
+        
+        console.log('✅ Scores finaux appliqués et triés');
+        
+        return detailedScores;
+    }
+
+    /**
      * Compter les tuiles adjacentes à une position (pour abbaye incomplète)
      */
     _countAdjacentTiles(x, y) {
