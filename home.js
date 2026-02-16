@@ -1251,6 +1251,31 @@ ${gameState.players.map(p => `${p.name}: ${p.score} pts`).join('\n')}`);
         container.scrollTop = 10400 - (container.clientHeight / 2);
     };
     
+    document.getElementById('highlight-tile-btn').onclick = () => {
+        if (!lastPlacedTile) {
+            // Aucune tuile posée, ne rien faire silencieusement
+            return;
+        }
+        
+        const { x, y } = lastPlacedTile;
+        const tileElement = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+        
+        if (!tileElement) {
+            console.warn('⚠️ Tuile non trouvée pour highlight');
+            return;
+        }
+        
+        // Ajouter la classe d'animation
+        tileElement.classList.add('tile-highlight');
+        
+        // Retirer après 3 secondes
+        setTimeout(() => {
+            tileElement.classList.remove('tile-highlight');
+        }, 3000);
+        
+        console.log('✨ Highlight activé sur tuile', x, y);
+    };
+    
     document.getElementById('back-to-lobby-btn').onclick = () => {
         if (confirm('Retourner au lobby ? (La partie sera terminée mais les joueurs resteront connectés)')) {
             returnToLobby();
@@ -1447,6 +1472,7 @@ function poserTuileSync(x, y, tile) {
         firstTilePlaced = true;
     }
     tuilePosee = true; // Important: empêcher double placement
+    lastPlacedTile = { x, y }; // Pour le bouton highlight
     
     // 📸 Sauvegarder snapshot après pose de tuile (pour pouvoir restaurer les annulations distantes)
     if (undoManager) {

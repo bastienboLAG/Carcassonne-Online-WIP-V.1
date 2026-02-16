@@ -726,3 +726,41 @@ button:disabled {
 #end-turn-btn, #undo-btn, #recenter-btn {
     width: 80%;
 }
+
+/* Animations pour highlight de tuile */
+@keyframes borderPulse {
+    0%, 100% { 
+        border-color: gold;
+        border-width: 3px;
+    }
+    50% { 
+        border-color: rgba(255, 215, 0, 0.3);
+        border-width: 5px;
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% { 
+        box-shadow: 0 0 20px 5px rgba(255, 215, 0, 0.8);
+    }
+    50% { 
+        box-shadow: 0 0 30px 10px rgba(255, 215, 0, 1);
+    }
+}
+
+@keyframes colorFlash {
+    0%, 100% { 
+        background-color: transparent;
+    }
+    50% { 
+        background-color: rgba(255, 215, 0, 0.3);
+    }
+}
+
+.tile-highlight {
+    border: 3px solid gold !important;
+    animation: borderPulse 1s ease-in-out, glowPulse 1s ease-in-out, colorFlash 0.5s ease-in-out;
+    animation-iteration-count: infinite, infinite, 6;
+    position: relative;
+    z-index: 10;
+}
