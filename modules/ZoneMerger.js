@@ -30,6 +30,9 @@ export class ZoneMerger {
             this._processNewZone(x, y, zoneIndex, zone);
         });
 
+        // Résoudre les adjacentCities (convertir IDs locaux en IDs de zones mergées)
+        this._resolveAdjacentCities(x, y);
+
         // Vérifier les fermetures et mettre à jour isComplete
         this._updateCompletionStatus();
         
@@ -58,14 +61,14 @@ export class ZoneMerger {
             // Nouvelle zone isolée
             const newZone = this.registry.createZone(zone.type);
             newZone.tiles.push({ x, y, zoneIndex });
-            this._addShields(newZone, zone);
+            this._addShields(newZone, zone, `${x},${y}`);
             this.tileToZone.set(key, newZone.id);
             
         } else if (adjacentZones.length === 1) {
             // Étendre une zone existante
             const existingZone = this.registry.getZone(adjacentZones[0]);
             existingZone.tiles.push({ x, y, zoneIndex });
-            this._addShields(existingZone, zone);
+            this._addShields(existingZone, zone, `${x},${y}`);
             this.tileToZone.set(key, existingZone.id);
             console.log(`    ✅ Ajouté à zone existante ${adjacentZones[0]}`);
             
@@ -76,7 +79,7 @@ export class ZoneMerger {
             
             // Ajouter la nouvelle tuile
             primaryZone.tiles.push({ x, y, zoneIndex });
-            this._addShields(primaryZone, zone);
+            this._addShields(primaryZone, zone, `${x},${y}`);
             this.tileToZone.set(key, primaryZone.id);
             
             // Fusionner les autres zones dans la primaire
@@ -296,28 +299,92 @@ export class ZoneMerger {
 
     /**
      * Ajouter les blasons et adjacentCities d'une zone à une zone mergée
+     * Note: adjacentCities contient des IDs locaux qui seront résolus plus tard
      * @private
      */
-    _addShields(mergedZone, localZone) {
+    _addShields(mergedZone, localZone, tilePosition) {
         if (localZone.features) {
             const features = Array.isArray(localZone.features) ? localZone.features : [localZone.features];
             if (features.includes('shield')) {
                 mergedZone.shields++;
             }
             
-            // ✅ Ajouter adjacentCities si présent
+            // ✅ Stocker temporairement les IDs locaux avec la position de la tuile
             if (typeof localZone.features === 'object' && localZone.features.adjacentCities) {
                 const cities = Array.isArray(localZone.features.adjacentCities) 
                     ? localZone.features.adjacentCities 
                     : [localZone.features.adjacentCities];
                 
-                const before = mergedZone.adjacentCities.length;
-                mergedZone.adjacentCities = [...new Set([...mergedZone.adjacentCities, ...cities])];
-                const after = mergedZone.adjacentCities.length;
+                // Stocker les IDs locaux avec la position de tuile pour résolution ultérieure
+                if (!mergedZone._unresolvedCities) {
+                    mergedZone._unresolvedCities = [];
+                }
                 
-                console.log(`  📍 adjacentCities pour ${mergedZone.id}: ${before} → ${after} (ajout de ${cities})`);
+                cities.forEach(localId => {
+                    mergedZone._unresolvedCities.push({
+                        localId: localId,
+                        tilePos: tilePosition
+                    });
+                });
+                
+                console.log(`  📍 adjacentCities locaux ajoutés pour ${mergedZone.id}: ${cities} (tuile ${tilePosition})`);
             }
         }
+    }
+
+    /**
+     * Résoudre les adjacentCities : convertir IDs locaux en IDs de zones mergées
+     * Appelé après avoir traité toutes les zones d'une tuile
+     * @private
+     */
+    _resolveAdjacentCities(x, y) {
+        // Pour chaque zone de type field de cette tuile
+        const tile = this.board.placedTiles[`${x},${y}`];
+        if (!tile) return;
+        
+        tile.zones.forEach((zone, zoneIndex) => {
+            if (zone.type !== 'field') return;
+            
+            const key = `${x},${y},${zoneIndex}`;
+            const mergedZoneId = this.tileToZone.get(key);
+            if (!mergedZoneId) return;
+            
+            const mergedZone = this.registry.getZone(mergedZoneId);
+            if (!mergedZone || !mergedZone._unresolvedCities) return;
+            
+            console.log(`  🔍 Résolution adjacentCities pour ${mergedZoneId}...`);
+            
+            // Pour chaque ID local à résoudre
+            mergedZone._unresolvedCities.forEach(({ localId, tilePos }) => {
+                const [tx, ty] = tilePos.split(',').map(Number);
+                const sourceTile = this.board.placedTiles[tilePos];
+                
+                if (!sourceTile) {
+                    console.warn(`    ⚠️ Tuile ${tilePos} introuvable`);
+                    return;
+                }
+                
+                // Trouver la zone de type city avec cet ID local dans cette tuile
+                sourceTile.zones.forEach((cityZone, cityZoneIndex) => {
+                    if (cityZone.type === 'city' && cityZone.id === localId) {
+                        // Trouver l'ID de la zone mergée pour cette city
+                        const cityKey = `${tx},${ty},${cityZoneIndex}`;
+                        const cityMergedId = this.tileToZone.get(cityKey);
+                        
+                        if (cityMergedId) {
+                            mergedZone.adjacentCities.push(cityMergedId);
+                            console.log(`    ✅ ID local ${localId} → zone mergée ${cityMergedId}`);
+                        }
+                    }
+                });
+            });
+            
+            // Dédupliquer et nettoyer
+            mergedZone.adjacentCities = [...new Set(mergedZone.adjacentCities)];
+            delete mergedZone._unresolvedCities;
+            
+            console.log(`    → adjacentCities résolu: [${mergedZone.adjacentCities.join(', ')}]`);
+        });
     }
 
     /**

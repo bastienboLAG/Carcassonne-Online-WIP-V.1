@@ -257,34 +257,23 @@ export class Scoring {
         console.log('  adjacentCities dans la zone:', fieldZone.adjacentCities);
         console.log('  Villes fermées disponibles:', closedCities.length);
         
-        // ✅ Utiliser adjacentCities qui a été sauvegardé lors du merge
         if (!fieldZone.adjacentCities || fieldZone.adjacentCities.length === 0) {
             console.log('  ❌ Pas de villes adjacentes');
             return 0;
         }
         
         let count = 0;
+        const closedCityIds = new Set(closedCities.map(c => c.id));
         
-        // Pour chaque ville adjacente référencée
-        fieldZone.adjacentCities.forEach(cityId => {
-            console.log(`  Vérification city ID ${cityId}...`);
+        // adjacentCities contient maintenant les IDs de zones mergées
+        fieldZone.adjacentCities.forEach(cityZoneId => {
+            console.log(`  Vérification zone mergée ${cityZoneId}...`);
             
-            // Vérifier si une ville fermée contient cette city
-            const isComplete = closedCities.some(closedCity => {
-                // Chercher dans les tuiles de la ville fermée
-                return closedCity.tiles.some(({ x, y, zoneIndex }) => {
-                    const tile = this.zoneMerger.board.placedTiles[`${x},${y}`];
-                    const zone = tile.zones[zoneIndex];
-                    // Vérifier si la zone a l'ID correspondant
-                    return zone.id === cityId;
-                });
-            });
-            
-            if (isComplete) {
-                console.log(`    ✅ Ville ${cityId} est fermée`);
+            if (closedCityIds.has(cityZoneId)) {
+                console.log(`    ✅ Zone ${cityZoneId} est fermée`);
                 count++;
             } else {
-                console.log(`    ❌ Ville ${cityId} n'est pas fermée`);
+                console.log(`    ❌ Zone ${cityZoneId} n'est pas fermée`);
             }
         });
         
