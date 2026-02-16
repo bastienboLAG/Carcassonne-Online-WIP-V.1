@@ -767,7 +767,7 @@ button:disabled {
 
 /* Modale des scores finaux */
 #final-scores-modal.modal {
-    background-color: rgba(0, 0, 0, 0.3) !important; /* Fond très transparent pour voir le plateau */
+    background-color: rgba(0, 0, 0, 0.05) !important; /* Fond quasi transparent */
 }
 
 .final-scores-content {
