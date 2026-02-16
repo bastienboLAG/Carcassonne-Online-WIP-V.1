@@ -12,14 +12,13 @@ export class GameState {
     /**
      * Ajouter un joueur
      */
-    addPlayer(playerId, playerName, color, isHost = false) {
+    addPlayer(playerId, playerName, color) {
         this.players.push({
             id: playerId,
             name: playerName,
             color: color,
             score: 0,
-            meeples: 7, // Nombre de meeples disponibles
-            isHost: isHost
+            meeples: 7 // Nombre de meeples disponibles
         });
     }
 
@@ -73,8 +72,7 @@ export class GameState {
             name: p.name,
             color: p.color,
             score: p.score || 0,
-            meeples: p.meeples || 7,
-            isHost: p.isHost || false
+            meeples: p.meeples ?? 7  // ?? au lieu de || pour accepter 0
         }));
         this.currentPlayerIndex = data.currentPlayerIndex || 0;
         this.placedTiles = data.placedTiles || {};
