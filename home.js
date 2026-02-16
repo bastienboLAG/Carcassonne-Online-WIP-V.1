@@ -150,6 +150,10 @@ let isMyTurn = false;
 let lastPlacedTile = null; // Dernière tuile posée {x, y}
 let placedMeeples = {}; // Meeples placés: "x,y,position" => {type, color, playerId}
 
+// ✅ Variables de fin de partie
+let gameEnded = false;
+let finalScoresData = null;
+
 let isDragging = false;
 let startX = 0;
 let startY = 0;
@@ -771,10 +775,13 @@ async function startGame() {
     
     gameSync.onGameEnded = (detailedScores) => {
         console.log('🏁 [SYNC] Fin de partie reçue');
+        finalScoresData = detailedScores;
+        gameEnded = true;
+        eventBus.emit('score-updated');
         showFinalScoresModal(detailedScores);
         const endTurnBtn = document.getElementById('end-turn-btn');
         endTurnBtn.textContent = 'Tableau des scores';
-        endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
+        endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
     };
     
     // Setup de l'interface
@@ -966,10 +973,13 @@ async function startGameForInvite() {
     
     gameSync.onGameEnded = (detailedScores) => {
         console.log('🏁 [SYNC] Fin de partie reçue');
+        finalScoresData = detailedScores;
+        gameEnded = true;
+        eventBus.emit('score-updated');
         showFinalScoresModal(detailedScores);
         const endTurnBtn = document.getElementById('end-turn-btn');
         endTurnBtn.textContent = 'Tableau des scores';
-        endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
+        endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
     };
     
     // Enregistrer et activer les règles de base avec la configuration
@@ -1082,7 +1092,7 @@ function showFinalScoresModal(detailedScores) {
         const nameCell = document.createElement('td');
         nameCell.innerHTML = `
             <div class="player-name-cell">
-                <img src="meeples/meeple-${player.color}.png" alt="${player.color}">
+                <img src="assets/meeples/meeple-${player.color}.png" alt="${player.color}">
                 <span>${player.name}</span>
             </div>
         `;
@@ -1141,15 +1151,6 @@ function updateTurnDisplay() {
         } else {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
-        }
-        
-        // ✅ Changer le texte si le deck est vide
-        if (deck.currentIndex >= deck.totalTiles) {
-            endTurnBtn.textContent = 'Calculer le score final';
-            endTurnBtn.classList.add('final-score-btn');
-        } else {
-            endTurnBtn.textContent = 'Terminer mon tour';
-            endTurnBtn.classList.remove('final-score-btn');
         }
     }
     
@@ -1288,33 +1289,41 @@ function setupEventListeners() {
         }
         
         // ✅ Vérifier si c'est la fin de partie (deck vide)
-        if (deck.currentIndex >= deck.totalTiles) {
+        if (deck.currentIndex >= deck.totalTiles && !gameEnded) {
             console.log('🏁 FIN DE PARTIE - Calcul des scores finaux');
             
             if (scoring && zoneMerger) {
                 // Utiliser la nouvelle méthode qui applique ET retourne le détail
-                const detailedScores = scoring.applyAndGetFinalScores(placedMeeples, gameState);
+                finalScoresData = scoring.applyAndGetFinalScores(placedMeeples, gameState);
+                gameEnded = true;
                 
-                console.log('💰 Scores finaux détaillés:', detailedScores);
+                console.log('💰 Scores finaux détaillés:', finalScoresData);
                 
-                // Mettre à jour l'affichage
+                // Mettre à jour l'affichage des scores
+                eventBus.emit('score-updated');
                 updateTurnDisplay();
                 
                 // Afficher la modale des scores
-                showFinalScoresModal(detailedScores);
+                showFinalScoresModal(finalScoresData);
                 
                 // Changer le bouton pour rouvrir la modale
                 const endTurnBtn = document.getElementById('end-turn-btn');
                 endTurnBtn.textContent = 'Tableau des scores';
-                endTurnBtn.onclick = () => showFinalScoresModal(detailedScores);
+                endTurnBtn.onclick = () => showFinalScoresModal(finalScoresData);
                 
                 // Synchroniser l'état de fin de partie
                 if (gameSync) {
-                    gameSync.syncGameEnded(detailedScores);
+                    gameSync.syncGameEnded(finalScoresData);
                 }
             }
             
             return; // Ne pas piocher de nouvelle tuile
+        } else if (gameEnded) {
+            // Partie déjà terminée, juste rouvrir la modale
+            if (finalScoresData) {
+                showFinalScoresModal(finalScoresData);
+            }
+            return;
         }
         
         // ⏪ Reset UndoManager AVANT de piocher (sinon efface le nouveau snapshot)
@@ -1431,6 +1440,23 @@ function returnToLobby() {
     placedMeeples = {};
     lastPlacedTile = null;
     isMyTurn = false;
+    
+    // Réinitialiser l'état de fin de partie
+    gameEnded = false;
+    finalScoresData = null;
+    
+    // Fermer la modale des scores si ouverte
+    const finalScoresModal = document.getElementById('final-scores-modal');
+    if (finalScoresModal) {
+        finalScoresModal.style.display = 'none';
+    }
+    
+    // Réinitialiser le bouton "Terminer mon tour"
+    const endTurnBtn = document.getElementById('end-turn-btn');
+    if (endTurnBtn) {
+        endTurnBtn.textContent = 'Terminer mon tour';
+        endTurnBtn.onclick = null; // Sera réassigné lors de la prochaine partie
+    }
     
     // Nettoyer le plateau (board vidé par les destroy() mais on s'assure)
     document.getElementById('board').innerHTML = '';
