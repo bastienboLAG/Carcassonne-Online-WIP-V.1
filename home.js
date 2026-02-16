@@ -1059,6 +1059,19 @@ function updateTurnDisplay() {
         }
     }
     
+    // Mettre à jour l'état du bouton "Annuler le coup !"
+    const undoBtn = document.getElementById('undo-btn');
+    if (undoBtn) {
+        undoBtn.disabled = !isMyTurn;
+        if (!isMyTurn) {
+            undoBtn.style.opacity = '0.5';
+            undoBtn.style.cursor = 'not-allowed';
+        } else {
+            undoBtn.style.opacity = '1';
+            undoBtn.style.cursor = 'pointer';
+        }
+    }
+    
     // ✅ Mettre à jour le tableau de scores
     eventBus.emit('score-updated');
 }
@@ -1645,7 +1658,7 @@ document.getElementById('undo-btn').addEventListener('click', () => {
     }
     
     if (!isMyTurn) {
-        alert('Ce n\'est pas votre tour !');
+        // Bouton déjà grisé, ne rien faire
         return;
     }
     
