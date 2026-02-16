@@ -553,6 +553,7 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
         playFields: document.getElementById('base-fields').checked,
         showRemainingTiles: document.getElementById('list-remaining').checked,
         testDeck: document.getElementById('use-test-deck').checked,
+        enableDebug: document.getElementById('enable-debug').checked,
         extensions: {
             base: true // Toujours activé pour l'instant
         }
@@ -825,6 +826,14 @@ async function startGame() {
     } else {
         remainingTilesBtn.style.display = 'none';
     }
+    
+    // Gérer le bouton de test debug selon la config
+    const testModalBtn = document.getElementById('test-modal-btn');
+    if (gameConfig.enableDebug) {
+        testModalBtn.style.display = 'block';
+    } else {
+        testModalBtn.style.display = 'none';
+    }
 }
 
 async function startGameForInvite() {
@@ -989,6 +998,14 @@ async function startGameForInvite() {
         remainingTilesBtn.style.display = 'none';
     }
     
+    // Gérer le bouton de test debug selon la config
+    const testModalBtn = document.getElementById('test-modal-btn');
+    if (gameConfig.enableDebug) {
+        testModalBtn.style.display = 'block';
+    } else {
+        testModalBtn.style.display = 'none';
+    }
+    
     setupEventListeners();
     setupNavigation(document.getElementById('board-container'), document.getElementById('board'));
     
@@ -1095,10 +1112,14 @@ function updateTurnDisplay() {
                 }
             };
         } else {
-            // Partie en cours : comportement normal
+            // Partie en cours : comportement normal (ne pas toucher à onclick)
             endTurnBtn.textContent = 'Terminer mon tour';
             endTurnBtn.classList.remove('final-score-btn');
-            endTurnBtn.onclick = null; // Retirer le onclick custom
+            
+            // Réinitialiser onclick seulement si on revient d'un état gameEnded
+            if (endTurnBtn.onclick) {
+                endTurnBtn.onclick = null;
+            }
             
             endTurnBtn.disabled = !isMyTurn;
             if (!isMyTurn) {
@@ -1342,6 +1363,15 @@ function setupEventListeners() {
     // Bouton fermer la modale
     document.getElementById('close-final-scores-btn').onclick = () => {
         document.getElementById('final-scores-modal').style.display = 'none';
+    };
+    
+    // Bouton de test debug (seulement si enableDebug = true)
+    document.getElementById('test-modal-btn').onclick = () => {
+        const testScores = [
+            { id: '1', name: 'Joueur 1', color: 'Blue', cities: 32, roads: 12, monasteries: 8, fields: 15, total: 67 },
+            { id: '2', name: 'Joueur 2', color: 'Red', cities: 28, roads: 18, monasteries: 0, fields: 12, total: 58 }
+        ];
+        showFinalScoresModal(testScores);
     };
     
     eventListenersInstalled = true;

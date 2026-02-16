@@ -100,6 +100,10 @@
                     <input type="checkbox" id="use-test-deck">
                     <span>Deck de test (15 tuiles)</span>
                 </label>
+                <label class="toggle-option">
+                    <input type="checkbox" id="enable-debug">
+                    <span>Mode debug (boutons test)</span>
+                </label>
             </div>
 
             <div class="config-section extensions-section">
@@ -187,6 +191,9 @@
             <button id="close-final-scores-btn" class="modal-btn confirm">Fermer</button>
         </div>
     </div>
+
+    <!-- Bouton de test debug (caché par défaut) -->
+    <button id="test-modal-btn" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 20px; background: red; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold;">🐛 TEST MODALE</button>
 
     <script type="module" src="home.js"></script>
 </body>
