@@ -814,6 +814,10 @@ async function startGame() {
     
     gameSync.onTileDestroyed = (tileId, playerName) => {
         console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
         showTileDestroyedModal(tileId, playerName, false);
     };
     
@@ -1038,6 +1042,10 @@ async function startGameForInvite() {
     
     gameSync.onTileDestroyed = (tileId, playerName) => {
         console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
         showTileDestroyedModal(tileId, playerName, false);
     };
     
