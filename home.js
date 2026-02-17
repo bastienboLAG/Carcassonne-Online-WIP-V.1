@@ -66,8 +66,6 @@ eventBus.on('tile-drawn', (data) => {
         }
         
         // 📸 Sauvegarder snapshot au début du tour (POUR TOUT LE MONDE)
-        // Même si on n'est pas le joueur actif, on sauvegarde pour pouvoir restaurer les annulations distantes
-        // NE PAS sauvegarder si c'est une annulation (fromUndo: true)
         if (undoManager && !data.fromNetwork && !data.fromUndo) {
             undoManager.saveTurnStart(placedMeeples);
         }
@@ -75,6 +73,18 @@ eventBus.on('tile-drawn', (data) => {
         // Synchroniser si c'est notre tour et pas depuis le réseau ET pas une annulation
         if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && gameSync) {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
+        }
+        
+        // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur actif)
+        if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && tilePlacement) {
+            const placeable = isTilePlaceable(tuileEnMain);
+            if (!placeable) {
+                console.log('⛔ Tuile implaçable détectée:', tuileEnMain.id);
+                const actionText = gameConfig?.unplaceableAction === 'reshuffle' 
+                    ? 'remise dans la pioche' 
+                    : 'détruite';
+                showUnplaceableBadge(tuileEnMain, actionText);
+            }
         }
     }
 });
@@ -554,6 +564,7 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
         showRemainingTiles: document.getElementById('list-remaining').checked,
         testDeck: document.getElementById('use-test-deck').checked,
         enableDebug: document.getElementById('enable-debug').checked,
+        unplaceableAction: document.querySelector('input[name="unplaceable"]:checked')?.value || 'destroy',
         extensions: {
             base: true // Toujours activé pour l'instant
         }
@@ -1420,6 +1431,70 @@ function setupEventListeners() {
     
     eventListenersInstalled = true;
     console.log('✅ Event listeners installés');
+}
+
+/**
+ * Afficher le badge + modale tuile implaçable
+ */
+function showUnplaceableBadge(tile, actionText) {
+    const badge = document.getElementById('unplaceable-badge');
+    const modal = document.getElementById('unplaceable-modal');
+    const modalText = document.getElementById('unplaceable-modal-text');
+    
+    // Mettre à jour le texte selon l'option choisie
+    modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
+    
+    // Afficher le badge et ouvrir la modale
+    badge.style.display = 'block';
+    modal.style.display = 'flex';
+    
+    // Clic sur le badge → rouvre la modale
+    badge.onclick = () => { modal.style.display = 'flex'; };
+    
+    // Bouton "Examiner le plateau" → ferme la modale mais garde le badge
+    document.getElementById('unplaceable-examine-btn').onclick = () => {
+        modal.style.display = 'none';
+    };
+}
+
+/**
+ * Cacher le badge tuile implaçable
+ */
+function hideUnplaceableBadge() {
+    document.getElementById('unplaceable-badge').style.display = 'none';
+    document.getElementById('unplaceable-modal').style.display = 'none';
+}
+
+/**
+ * Vérifie si une tuile peut être posée quelque part sur le plateau
+ * Teste les 4 rotations × toutes les cases libres adjacentes
+ */
+function isTilePlaceable(tile) {
+    const board = tilePlacement?.board;
+    if (!board) return true; // Si pas de board, on laisse passer
+
+    const rotations = [0, 90, 180, 270];
+
+    for (const rotation of rotations) {
+        // Créer une copie de la tuile avec cette rotation
+        const rotatedTile = { ...tile, rotation };
+
+        // Parcourir toutes les tuiles posées
+        for (const coord in board.placedTiles) {
+            const [x, y] = coord.split(',').map(Number);
+            
+            // Vérifier les 4 cases adjacentes
+            const directions = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+            for (const {dx, dy} of directions) {
+                const nx = x + dx, ny = y + dy;
+                if (board.isFree(nx, ny) && board.canPlaceTile(nx, ny, rotatedTile)) {
+                    return true; // Au moins une position valide
+                }
+            }
+        }
+    }
+
+    return false; // Aucune position valide pour aucune rotation
 }
 
 /**

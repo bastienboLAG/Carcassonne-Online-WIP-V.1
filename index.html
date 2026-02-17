@@ -106,6 +106,14 @@
                 </label>
             </div>
 
+            <div class="config-section">
+                <h3>Tuile implaçable</h3>
+                <div class="radio-group">
+                    <label><input type="radio" name="unplaceable" value="destroy" checked> Détruire la tuile</label>
+                    <label><input type="radio" name="unplaceable" value="reshuffle"> Remettre dans la pioche</label>
+                </div>
+            </div>
+
             <div class="config-section extensions-section">
                 <h3>Extensions</h3>
                 <details open>
@@ -194,6 +202,24 @@
 
     <!-- Bouton de test debug (caché par défaut) -->
     <button id="test-modal-btn" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 20px; background: red; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold;">🐛 TEST MODALE</button>
+
+    <!-- Badge tuile implaçable (position fixed, caché par défaut) -->
+    <div id="unplaceable-badge" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #e74c3c; color: white; padding: 10px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); animation: badgePulse 1.5s ease-in-out infinite;">
+        ⚠️ Tuile implaçable — Cliquez pour confirmer
+    </div>
+
+    <!-- Modale tuile implaçable -->
+    <div id="unplaceable-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>⚠️ Tuile implaçable</h2>
+            <p id="unplaceable-modal-text">Cette tuile ne peut être placée sur le plateau.</p>
+            <p>Vous repiocherez une tuile pour continuer votre tour.</p>
+            <div class="modal-buttons">
+                <button id="unplaceable-confirm-btn" class="modal-btn confirm">Confirmer</button>
+                <button id="unplaceable-examine-btn" class="modal-btn cancel">Examiner le plateau</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="home.js"></script>
 </body>
