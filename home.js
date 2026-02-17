@@ -946,7 +946,8 @@ async function startGameForInvite() {
     
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
-    
+    };
+
     gameSync.onMeepleCountUpdate = (playerId, meeples) => {
         console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
         const player = gameState.players.find(p => p.id === playerId);
@@ -954,7 +955,6 @@ async function startGameForInvite() {
             player.meeples = meeples;
             eventBus.emit('meeple-count-updated', { playerId, meeples });
         }
-    };
     };
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
