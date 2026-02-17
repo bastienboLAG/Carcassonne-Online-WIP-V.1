@@ -818,6 +818,11 @@ async function startGame() {
         if (tilePreviewUI) {
             tilePreviewUI.showBackside();
         }
+        // Avancer le deck pour sauter la tuile détruite
+        if (deck) {
+            deck.currentIndex++;
+            console.log('📦 Deck avancé pour tuile détruite, currentIndex:', deck.currentIndex);
+        }
         showTileDestroyedModal(tileId, playerName, false);
     };
     
@@ -1045,6 +1050,11 @@ async function startGameForInvite() {
         // Masquer la tuile détruite
         if (tilePreviewUI) {
             tilePreviewUI.showBackside();
+        }
+        // Avancer le deck pour sauter la tuile détruite
+        if (deck) {
+            deck.currentIndex++;
+            console.log('📦 Deck avancé pour tuile détruite, currentIndex:', deck.currentIndex);
         }
         showTileDestroyedModal(tileId, playerName, false);
     };
