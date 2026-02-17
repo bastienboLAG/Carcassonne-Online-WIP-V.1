@@ -1483,6 +1483,12 @@ function isTilePlaceable(tile) {
     const placedCount = Object.keys(board.placedTiles).length;
     console.log(`🔍 isTilePlaceable: ${placedCount} tuiles posées, test de ${tile.id}`);
 
+    // Pas encore de tuile posée → on laisse passer
+    if (placedCount === 0) {
+        console.log('  ⏭️ Plateau vide, pas de vérification');
+        return true;
+    }
+
     const rotations = [0, 90, 180, 270];
 
     for (const rotation of rotations) {
