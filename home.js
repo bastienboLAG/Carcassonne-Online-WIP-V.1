@@ -776,6 +776,21 @@ async function startGame() {
         console.log('🏁 [SYNC] Fin de partie reçue');
         gameEnded = true;
         finalScoresData = detailedScores;
+        
+        // Mettre à jour les scores dans le gameState local
+        detailedScores.forEach(playerScore => {
+            const player = gameState.players.find(p => p.id === playerScore.id);
+            if (player) {
+                player.score = playerScore.total;
+                player.scoreDetail = {
+                    cities: playerScore.cities,
+                    roads: playerScore.roads,
+                    monasteries: playerScore.monasteries,
+                    fields: playerScore.fields
+                };
+            }
+        });
+        
         eventBus.emit('score-updated'); // Mettre à jour le panneau de droite
         updateTurnDisplay(); // Mettre à jour le bouton
         showFinalScoresModal(detailedScores);
@@ -980,6 +995,21 @@ async function startGameForInvite() {
         console.log('🏁 [SYNC] Fin de partie reçue');
         gameEnded = true;
         finalScoresData = detailedScores;
+        
+        // Mettre à jour les scores dans le gameState local
+        detailedScores.forEach(playerScore => {
+            const player = gameState.players.find(p => p.id === playerScore.id);
+            if (player) {
+                player.score = playerScore.total;
+                player.scoreDetail = {
+                    cities: playerScore.cities,
+                    roads: playerScore.roads,
+                    monasteries: playerScore.monasteries,
+                    fields: playerScore.fields
+                };
+            }
+        });
+        
         eventBus.emit('score-updated'); // Mettre à jour le panneau de droite
         updateTurnDisplay(); // Mettre à jour le bouton
         showFinalScoresModal(detailedScores);
@@ -1123,8 +1153,9 @@ function updateTurnDisplay() {
     // Mettre à jour l'état du bouton "Annuler le coup !"
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
-        undoBtn.disabled = !isMyTurn;
-        if (!isMyTurn) {
+        const undoEnabled = isMyTurn && !gameEnded;
+        undoBtn.disabled = !undoEnabled;
+        if (!undoEnabled) {
             undoBtn.style.opacity = '0.5';
             undoBtn.style.cursor = 'not-allowed';
         } else {
@@ -1176,8 +1207,6 @@ function setupEventListeners() {
     });
     
     document.getElementById('end-turn-btn').onclick = () => {
-        console.log('🖱️ CLICK end-turn-btn', { gameEnded, isMyTurn, tuilePosee });
-        
         // Si la partie est terminée, ouvrir la modale des scores
         if (gameEnded) {
             if (finalScoresData) {
@@ -1366,11 +1395,27 @@ function setupEventListeners() {
     
     // Bouton de test debug (seulement si enableDebug = true)
     document.getElementById('test-modal-btn').onclick = () => {
-        const testScores = [
-            { id: '1', name: 'Joueur 1', color: 'Blue', cities: 32, roads: 12, monasteries: 8, fields: 15, total: 67 },
-            { id: '2', name: 'Joueur 2', color: 'Red', cities: 28, roads: 18, monasteries: 0, fields: 12, total: 58 }
-        ];
-        showFinalScoresModal(testScores);
+        // Si des scores finaux existent, les utiliser
+        if (finalScoresData) {
+            showFinalScoresModal(finalScoresData);
+            return;
+        }
+        // Sinon construire un aperçu avec les scores actuels
+        if (gameState && gameState.players.length > 0) {
+            const currentScores = gameState.players
+                .map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    color: p.color,
+                    cities: p.scoreDetail?.cities || 0,
+                    roads: p.scoreDetail?.roads || 0,
+                    monasteries: p.scoreDetail?.monasteries || 0,
+                    fields: p.scoreDetail?.fields || 0,
+                    total: p.score
+                }))
+                .sort((a, b) => b.total - a.total);
+            showFinalScoresModal(currentScores);
+        }
     };
     
     eventListenersInstalled = true;
