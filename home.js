@@ -75,8 +75,9 @@ eventBus.on('tile-drawn', (data) => {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
         }
         
-        // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur actif)
-        if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && tilePlacement) {
+        // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur qui vient de piocher)
+        // On vérifie via le deck : si fromNetwork=false, c'est nous qui avons pioché
+        if (!data.fromNetwork && !data.fromUndo && tilePlacement) {
             console.log('🔍 Vérification placement tuile:', tuileEnMain.id, '- tilePlacement.plateau:', !!tilePlacement.plateau);
             const placeable = isTilePlaceable(tuileEnMain);
             console.log('🔍 Résultat isTilePlaceable:', placeable);
@@ -88,7 +89,7 @@ eventBus.on('tile-drawn', (data) => {
                 showUnplaceableBadge(tuileEnMain, actionText);
             }
         } else {
-            console.log('🔍 Pas de vérification:', { fromNetwork: data.fromNetwork, fromUndo: data.fromUndo, isMyTurn: turnManager?.getIsMyTurn(), hasTilePlacement: !!tilePlacement });
+            console.log('🔍 Pas de vérification:', { fromNetwork: data.fromNetwork, fromUndo: data.fromUndo });
         }
     }
 });
@@ -814,6 +815,10 @@ async function startGame() {
     
     gameSync.onTileDestroyed = (tileId, playerName) => {
         console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
         showTileDestroyedModal(tileId, playerName, false);
     };
     
@@ -1038,6 +1043,10 @@ async function startGameForInvite() {
     
     gameSync.onTileDestroyed = (tileId, playerName) => {
         console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
         showTileDestroyedModal(tileId, playerName, false);
     };
     
@@ -1531,12 +1540,6 @@ function setRedrawMode(active) {
  * Afficher le badge + modale tuile implaçable
  */
 function showUnplaceableBadge(tile, actionText) {
-    // Sécurité : ne jamais afficher pour le joueur non actif
-    if (!isMyTurn) {
-        console.log('⚠️ showUnplaceableBadge appelé pour joueur non actif, ignoré');
-        return;
-    }
-    
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
     const modalText = document.getElementById('unplaceable-modal-text');
