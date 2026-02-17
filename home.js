@@ -1522,34 +1522,23 @@ function setRedrawMode(active) {
 }
 
 /**
- * Vérifie si une tuile peut être posée quelque part sur le plateau
+ * Afficher le badge + modale tuile implaçable
+ */
 function showUnplaceableBadge(tile, actionText) {
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
     const modalText = document.getElementById('unplaceable-modal-text');
     
-    // Mettre à jour le texte selon l'option choisie
     modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
     
-    // Afficher le badge et ouvrir la modale
     badge.style.display = 'block';
     modal.style.display = 'flex';
     
-    // Clic sur le badge → rouvre la modale
     badge.onclick = () => { modal.style.display = 'flex'; };
     
-    // Bouton "Examiner le plateau" → ferme la modale mais garde le badge
     document.getElementById('unplaceable-examine-btn').onclick = () => {
         modal.style.display = 'none';
     };
-}
-
-/**
- * Cacher le badge tuile implaçable
- */
-function hideUnplaceableBadge() {
-    document.getElementById('unplaceable-badge').style.display = 'none';
-    document.getElementById('unplaceable-modal').style.display = 'none';
 }
 
 /**
