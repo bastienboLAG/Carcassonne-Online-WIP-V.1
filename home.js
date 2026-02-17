@@ -1252,6 +1252,7 @@ function setupEventListeners() {
         if (waitingToRedraw && isMyTurn) {
             setRedrawMode(false);
             document.getElementById('tile-destroyed-modal').style.display = 'none';
+            // drawTile émet tile-drawn qui synchronise automatiquement via syncTileDraw
             turnManager.drawTile();
             return;
         }
@@ -1443,6 +1444,11 @@ function setupEventListeners() {
         // Fermer badge + modale implaçable
         hideUnplaceableBadge();
         
+        // Masquer la tuile en main (afficher le verso)
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
+        
         // Afficher modale info pour TOUS
         showTileDestroyedModal(tileId, playerName, true);
         
@@ -1528,8 +1534,12 @@ function showUnplaceableBadge(tile, actionText) {
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
     const modalText = document.getElementById('unplaceable-modal-text');
+    const confirmBtn = document.getElementById('unplaceable-confirm-btn');
     
     modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
+    
+    // Afficher le bouton Confirmer seulement pour le joueur actif
+    confirmBtn.style.display = isMyTurn ? 'inline-block' : 'none';
     
     badge.style.display = 'block';
     modal.style.display = 'flex';
