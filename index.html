@@ -92,25 +92,26 @@
 
             <div class="config-section">
                 <h3>Options</h3>
-                <label class="toggle-option">
-                    <input type="checkbox" id="list-remaining" checked>
-                    <span>Lister les tuiles restantes</span>
-                </label>
-                <label class="toggle-option">
-                    <input type="checkbox" id="use-test-deck">
-                    <span>Deck de test (15 tuiles)</span>
-                </label>
-                <label class="toggle-option">
-                    <input type="checkbox" id="enable-debug">
-                    <span>Mode debug (boutons test)</span>
-                </label>
-            </div>
-
-            <div class="config-section">
-                <h3>Tuile implaçable</h3>
-                <div class="radio-group">
-                    <label><input type="radio" name="unplaceable" value="destroy" checked> Détruire la tuile</label>
-                    <label><input type="radio" name="unplaceable" value="reshuffle"> Remettre dans la pioche</label>
+                <div class="options-columns">
+                    <div class="options-col">
+                        <label class="toggle-option">
+                            <input type="checkbox" id="list-remaining" checked>
+                            <span>Lister les tuiles restantes</span>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="checkbox" id="use-test-deck">
+                            <span>Deck de test (15 tuiles)</span>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="checkbox" id="enable-debug">
+                            <span>Mode debug (boutons test)</span>
+                        </label>
+                    </div>
+                    <div class="options-col">
+                        <h4>Tuile implaçable</h4>
+                        <label class="radio-inline"><input type="radio" name="unplaceable" value="destroy" checked> Détruire la tuile</label>
+                        <label class="radio-inline"><input type="radio" name="unplaceable" value="reshuffle"> Remettre dans la pioche</label>
+                    </div>
                 </div>
             </div>
 

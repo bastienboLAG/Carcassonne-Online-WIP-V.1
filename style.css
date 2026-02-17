@@ -528,6 +528,49 @@ button:disabled {
     cursor: pointer;
 }
 
+/* Options en 2 colonnes */
+.options-columns {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.options-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.options-col h4 {
+    font-size: 14px;
+    color: #bdc3c7;
+    margin-bottom: 6px;
+    margin-top: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.radio-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
+}
+
+.radio-inline:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.radio-inline input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+}
+
 .config-note {
     font-size: 12px;
     color: #bdc3c7;
