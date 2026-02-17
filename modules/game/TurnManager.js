@@ -198,12 +198,8 @@ export class TurnManager {
     receiveTileDrawn(tileId, rotation) {
         console.log('🎲 [SYNC] Tuile piochée:', tileId);
         
-        // Trouver la tuile
         const tileData = this.deck.tiles.find(t => t.id === tileId);
         if (tileData) {
-            // Avancer le currentIndex pour garder le deck synchronisé
-            this.deck.currentIndex++;
-            
             this.currentTile = { ...tileData, rotation };
             this.tilePlaced = false;
             
