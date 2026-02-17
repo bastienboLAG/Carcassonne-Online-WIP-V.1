@@ -1531,6 +1531,12 @@ function setRedrawMode(active) {
  * Afficher le badge + modale tuile implaçable
  */
 function showUnplaceableBadge(tile, actionText) {
+    // Sécurité : ne jamais afficher pour le joueur non actif
+    if (!isMyTurn) {
+        console.log('⚠️ showUnplaceableBadge appelé pour joueur non actif, ignoré');
+        return;
+    }
+    
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
     const modalText = document.getElementById('unplaceable-modal-text');
