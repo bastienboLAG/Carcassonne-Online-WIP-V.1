@@ -77,7 +77,7 @@ eventBus.on('tile-drawn', (data) => {
         
         // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur actif)
         if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && tilePlacement) {
-            console.log('🔍 Vérification placement tuile:', tuileEnMain.id, '- tilePlacement.board:', !!tilePlacement.board);
+            console.log('🔍 Vérification placement tuile:', tuileEnMain.id, '- tilePlacement.plateau:', !!tilePlacement.plateau);
             const placeable = isTilePlaceable(tuileEnMain);
             console.log('🔍 Résultat isTilePlaceable:', placeable);
             if (!placeable) {
@@ -1474,9 +1474,9 @@ function hideUnplaceableBadge() {
  * Teste les 4 rotations × toutes les cases libres adjacentes
  */
 function isTilePlaceable(tile) {
-    const board = tilePlacement?.board;
+    const board = tilePlacement?.plateau;
     if (!board) {
-        console.log('⚠️ isTilePlaceable: pas de board');
+        console.log('⚠️ isTilePlaceable: pas de plateau');
         return true;
     }
 
