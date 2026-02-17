@@ -770,6 +770,11 @@ button:disabled {
 }
 
 /* Animations pour highlight de tuile */
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); }
+    50%       { box-shadow: 0 4px 25px rgba(231, 76, 60, 0.9); }
+}
+
 @keyframes borderPulse {
     0%, 100% { 
         border-color: gold;

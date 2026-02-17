@@ -76,6 +76,20 @@ eventBus.on('tile-drawn', (data) => {
         if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && gameSync) {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
         }
+        
+        // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur qui vient de piocher)
+        if (!data.fromNetwork && !data.fromUndo && tilePlacement) {
+            console.log('🔍 Vérification placement tuile:', tuileEnMain.id, '- tilePlacement.plateau:', !!tilePlacement.plateau);
+            const placeable = isTilePlaceable(tuileEnMain);
+            console.log('🔍 Résultat isTilePlaceable:', placeable);
+            if (!placeable) {
+                console.log('⛔ Tuile implaçable détectée:', tuileEnMain.id);
+                const actionText = gameConfig?.unplaceableAction === 'reshuffle' 
+                    ? 'remise dans la pioche' 
+                    : 'détruite';
+                showUnplaceableBadge(tuileEnMain, actionText);
+            }
+        }
     }
 });
 eventBus.on('turn-changed', (data) => {
@@ -554,6 +568,7 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
         showRemainingTiles: document.getElementById('list-remaining').checked,
         testDeck: document.getElementById('use-test-deck').checked,
         enableDebug: document.getElementById('enable-debug').checked,
+        unplaceableAction: document.querySelector('input[name="unplaceable"]:checked')?.value || 'destroy',
         extensions: {
             base: true // Toujours activé pour l'instant
         }
@@ -1420,6 +1435,78 @@ function setupEventListeners() {
     
     eventListenersInstalled = true;
     console.log('✅ Event listeners installés');
+}
+
+/**
+ * Vérifie si une tuile peut être posée quelque part sur le plateau
+ */
+function isTilePlaceable(tile) {
+    const board = tilePlacement?.plateau;
+    if (!board) {
+        console.log('⚠️ isTilePlaceable: pas de plateau');
+        return true;
+    }
+
+    const placedCount = Object.keys(board.placedTiles).length;
+    console.log(`🔍 isTilePlaceable: ${placedCount} tuiles posées, test de ${tile.id}`);
+
+    // Pas encore de tuile posée → on laisse passer
+    if (placedCount === 0) {
+        console.log('  ⏭️ Plateau vide, pas de vérification');
+        return true;
+    }
+
+    const rotations = [0, 90, 180, 270];
+    const originalRotation = tile.rotation;
+
+    for (const rotation of rotations) {
+        tile.rotation = rotation;
+
+        for (const coord in board.placedTiles) {
+            const [x, y] = coord.split(',').map(Number);
+            const directions = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+            for (const {dx, dy} of directions) {
+                const nx = x + dx, ny = y + dy;
+                if (board.isFree(nx, ny) && board.canPlaceTile(nx, ny, tile)) {
+                    tile.rotation = originalRotation;
+                    console.log(`  ✅ Placement possible à (${nx},${ny}) rotation ${rotation}°`);
+                    return true;
+                }
+            }
+        }
+    }
+
+    tile.rotation = originalRotation;
+    console.log('  ❌ Aucune position valide pour aucune rotation');
+    return false;
+}
+
+/**
+ * Afficher le badge + modale tuile implaçable
+ */
+function showUnplaceableBadge(tile, actionText) {
+    const badge = document.getElementById('unplaceable-badge');
+    const modal = document.getElementById('unplaceable-modal');
+    const modalText = document.getElementById('unplaceable-modal-text');
+    
+    modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
+    
+    badge.style.display = 'block';
+    modal.style.display = 'flex';
+    
+    badge.onclick = () => { modal.style.display = 'flex'; };
+    
+    document.getElementById('unplaceable-examine-btn').onclick = () => {
+        modal.style.display = 'none';
+    };
+}
+
+/**
+ * Cacher le badge tuile implaçable
+ */
+function hideUnplaceableBadge() {
+    document.getElementById('unplaceable-badge').style.display = 'none';
+    document.getElementById('unplaceable-modal').style.display = 'none';
 }
 
 /**
