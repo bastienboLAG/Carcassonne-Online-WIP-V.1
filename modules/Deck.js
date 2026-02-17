@@ -6,9 +6,9 @@ export class Deck {
     }
 
     async loadAllTiles(testMode = false) {
-        // ✅ Deck de test avec seulement 15 tuiles
+        // ✅ Deck de test : tuile 24 en 1ère, tuile 03 en 2ème, puis le reste
         const tileIds = testMode 
-            ? ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15']
+            ? ['24', '03', '01', '02', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14']
             : Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0'));
         
         const allTileData = [];
@@ -47,14 +47,19 @@ export class Deck {
             }
         }
 
-        // Mélanger la pioche
-        this.shuffle();
-        
-        // Forcer la tuile base-04 en première position
-        const index04 = this.tiles.findIndex(t => t.id === "base-04");
-        if (index04 !== -1) {
-            const tile04 = this.tiles.splice(index04, 1)[0];
-            this.tiles.unshift(tile04);
+        if (testMode) {
+            // ✅ En mode test : pas de mélange, on garde l'ordre exact
+            console.log('🧪 Mode test : ordre des tuiles fixé (24 → 03 → reste)');
+        } else {
+            // Mélanger la pioche
+            this.shuffle();
+            
+            // Forcer la tuile base-04 en première position
+            const index04 = this.tiles.findIndex(t => t.id === "base-04");
+            if (index04 !== -1) {
+                const tile04 = this.tiles.splice(index04, 1)[0];
+                this.tiles.unshift(tile04);
+            }
         }
         
         console.log(`📦 Deck chargé: ${this.tiles.length} tuiles (total: ${this.totalTiles})`);
