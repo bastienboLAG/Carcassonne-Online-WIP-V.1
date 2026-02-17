@@ -1490,16 +1490,19 @@ function isTilePlaceable(tile) {
     }
 
     const rotations = [0, 90, 180, 270];
+    const originalRotation = tile.rotation;
 
     for (const rotation of rotations) {
-        const rotatedTile = { ...tile, rotation };
+        // Changer la rotation temporairement sur l'instance existante
+        tile.rotation = rotation;
 
         for (const coord in board.placedTiles) {
             const [x, y] = coord.split(',').map(Number);
             const directions = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
             for (const {dx, dy} of directions) {
                 const nx = x + dx, ny = y + dy;
-                if (board.isFree(nx, ny) && board.canPlaceTile(nx, ny, rotatedTile)) {
+                if (board.isFree(nx, ny) && board.canPlaceTile(nx, ny, tile)) {
+                    tile.rotation = originalRotation; // Restaurer
                     console.log(`  ✅ Placement possible à (${nx},${ny}) rotation ${rotation}°`);
                     return true;
                 }
@@ -1507,6 +1510,7 @@ function isTilePlaceable(tile) {
         }
     }
 
+    tile.rotation = originalRotation; // Restaurer
     console.log('  ❌ Aucune position valide pour aucune rotation');
     return false;
 }
