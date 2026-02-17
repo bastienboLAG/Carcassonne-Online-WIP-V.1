@@ -1176,6 +1176,8 @@ function setupEventListeners() {
     });
     
     document.getElementById('end-turn-btn').onclick = () => {
+        console.log('🖱️ CLICK end-turn-btn', { gameEnded, isMyTurn, tuilePosee });
+        
         // Si la partie est terminée, ouvrir la modale des scores
         if (gameEnded) {
             if (finalScoresData) {
