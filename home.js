@@ -66,6 +66,8 @@ eventBus.on('tile-drawn', (data) => {
         }
         
         // 📸 Sauvegarder snapshot au début du tour (POUR TOUT LE MONDE)
+        // Même si on n'est pas le joueur actif, on sauvegarde pour pouvoir restaurer les annulations distantes
+        // NE PAS sauvegarder si c'est une annulation (fromUndo: true)
         if (undoManager && !data.fromNetwork && !data.fromUndo) {
             undoManager.saveTurnStart(placedMeeples);
         }
@@ -73,22 +75,6 @@ eventBus.on('tile-drawn', (data) => {
         // Synchroniser si c'est notre tour et pas depuis le réseau ET pas une annulation
         if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && gameSync) {
             gameSync.syncTileDraw(data.tileData.id, tuileEnMain.rotation);
-        }
-        
-        // ✅ Vérifier si la tuile est plaçable (seulement pour le joueur actif)
-        if (!data.fromNetwork && !data.fromUndo && turnManager && turnManager.getIsMyTurn() && tilePlacement) {
-            console.log('🔍 Vérification placement tuile:', tuileEnMain.id, '- tilePlacement.plateau:', !!tilePlacement.plateau);
-            const placeable = isTilePlaceable(tuileEnMain);
-            console.log('🔍 Résultat isTilePlaceable:', placeable);
-            if (!placeable) {
-                console.log('⛔ Tuile implaçable détectée:', tuileEnMain.id);
-                const actionText = gameConfig?.unplaceableAction === 'reshuffle' 
-                    ? 'remise dans la pioche' 
-                    : 'détruite';
-                showUnplaceableBadge(tuileEnMain, actionText);
-            }
-        } else {
-            console.log('🔍 Pas de vérification:', { fromNetwork: data.fromNetwork, fromUndo: data.fromUndo, isMyTurn: turnManager?.getIsMyTurn(), hasTilePlacement: !!tilePlacement });
         }
     }
 });
@@ -161,7 +147,6 @@ let meepleDisplayUI = null;
 let isMyTurn = false;
 let gameEnded = false; // Indique si la partie est terminée
 let finalScoresData = null; // Stocke les scores détaillés
-let waitingToRedraw = false; // Indique si le joueur doit repiocher
 
 // ✅ NOUVEAU : Variables pour les meeples
 let lastPlacedTile = null; // Dernière tuile posée {x, y}
@@ -569,7 +554,6 @@ document.getElementById('start-game-btn').addEventListener('click', async () => 
         showRemainingTiles: document.getElementById('list-remaining').checked,
         testDeck: document.getElementById('use-test-deck').checked,
         enableDebug: document.getElementById('enable-debug').checked,
-        unplaceableAction: document.querySelector('input[name="unplaceable"]:checked')?.value || 'destroy',
         extensions: {
             base: true // Toujours activé pour l'instant
         }
@@ -812,20 +796,6 @@ async function startGame() {
         showFinalScoresModal(detailedScores);
     };
     
-    gameSync.onTileDestroyed = (tileId, playerName) => {
-        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
-        // Masquer la tuile détruite
-        if (tilePreviewUI) {
-            tilePreviewUI.showBackside();
-        }
-        // Avancer le deck pour sauter la tuile détruite
-        if (deck) {
-            deck.currentIndex++;
-            console.log('📦 Deck avancé pour tuile détruite, currentIndex:', deck.currentIndex);
-        }
-        showTileDestroyedModal(tileId, playerName, false);
-    };
-    
     // Setup de l'interface
     console.log('🔧 Setup des event listeners...');
     setupEventListeners();
@@ -915,9 +885,7 @@ async function startGameForInvite() {
         deck.currentIndex = deckData.currentIndex;
         deck.totalTiles = deckData.totalTiles;
         gameState.deserialize(gameStateData);
-        // Avancer le currentIndex pour synchroniser avec l'hôte qui a déjà pioché
-        deck.currentIndex++;
-        console.log('📦 Deck synchronisé, currentIndex:', deck.currentIndex);
+        turnManager.drawTile();
         eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         updateTurnDisplay();
         
@@ -957,8 +925,7 @@ async function startGameForInvite() {
     
     gameSync.onTileDrawn = (tileId, rotation) => {
         turnManager.receiveTileDrawn(tileId, rotation);
-    };
-
+    
     gameSync.onMeepleCountUpdate = (playerId, meeples) => {
         console.log('🎭 [SYNC] Mise à jour compteur reçue:', playerId, meeples);
         const player = gameState.players.find(p => p.id === playerId);
@@ -966,6 +933,7 @@ async function startGameForInvite() {
             player.meeples = meeples;
             eventBus.emit('meeple-count-updated', { playerId, meeples });
         }
+    };
     };
     gameSync.onMeeplePlaced = (x, y, position, meepleType, color, playerId) => {
         console.log('🎭 [SYNC] Meeple placé par un autre joueur');
@@ -1045,20 +1013,6 @@ async function startGameForInvite() {
         eventBus.emit('score-updated'); // Mettre à jour le panneau de droite
         updateTurnDisplay(); // Mettre à jour le bouton
         showFinalScoresModal(detailedScores);
-    };
-    
-    gameSync.onTileDestroyed = (tileId, playerName) => {
-        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
-        // Masquer la tuile détruite
-        if (tilePreviewUI) {
-            tilePreviewUI.showBackside();
-        }
-        // Avancer le deck pour sauter la tuile détruite
-        if (deck) {
-            deck.currentIndex++;
-            console.log('📦 Deck avancé pour tuile détruite, currentIndex:', deck.currentIndex);
-        }
-        showTileDestroyedModal(tileId, playerName, false);
     };
     
     // Enregistrer et activer les règles de base avec la configuration
@@ -1180,13 +1134,6 @@ function updateTurnDisplay() {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
             endTurnBtn.classList.add('final-score-btn');
-        } else if (waitingToRedraw && isMyTurn) {
-            // Mode repioche : bouton devient "🎲 Repiocher"
-            endTurnBtn.textContent = '🎲 Repiocher';
-            endTurnBtn.disabled = false;
-            endTurnBtn.style.opacity = '1';
-            endTurnBtn.style.cursor = 'pointer';
-            endTurnBtn.classList.remove('final-score-btn');
         } else {
             // Partie en cours : comportement normal
             endTurnBtn.textContent = 'Terminer mon tour';
@@ -1265,15 +1212,6 @@ function setupEventListeners() {
             if (finalScoresData) {
                 showFinalScoresModal(finalScoresData);
             }
-            return;
-        }
-        
-        // Mode repioche après destruction d'une tuile implaçable
-        if (waitingToRedraw && isMyTurn) {
-            setRedrawMode(false);
-            document.getElementById('tile-destroyed-modal').style.display = 'none';
-            // drawTile émet tile-drawn qui synchronise automatiquement via syncTileDraw
-            turnManager.drawTile();
             return;
         }
         
@@ -1455,37 +1393,6 @@ function setupEventListeners() {
         document.getElementById('final-scores-modal').style.display = 'none';
     };
     
-    // Bouton "Confirmer" de la modale implaçable → détruire la tuile
-    document.getElementById('unplaceable-confirm-btn').onclick = () => {
-        const currentPlayer = gameState?.getCurrentPlayer();
-        const tileId = tuileEnMain?.id || '?';
-        const playerName = currentPlayer?.name || '?';
-        
-        // Fermer badge + modale implaçable
-        hideUnplaceableBadge();
-        
-        // Masquer la tuile en main (afficher le verso)
-        if (tilePreviewUI) {
-            tilePreviewUI.showBackside();
-        }
-        
-        // Afficher modale info pour TOUS
-        showTileDestroyedModal(tileId, playerName, true);
-        
-        // Synchroniser la destruction pour les autres joueurs
-        if (gameSync) {
-            gameSync.syncTileDestroyed(tileId, playerName);
-        }
-        
-        // Passer en mode repioche
-        setRedrawMode(true);
-    };
-    
-    // Bouton "OK" de la modale info destruction
-    document.getElementById('tile-destroyed-ok-btn').onclick = () => {
-        document.getElementById('tile-destroyed-modal').style.display = 'none';
-    };
-    
     // Bouton de test debug (seulement si enableDebug = true)
     document.getElementById('test-modal-btn').onclick = () => {
         // Si des scores finaux existent, les utiliser
@@ -1513,110 +1420,6 @@ function setupEventListeners() {
     
     eventListenersInstalled = true;
     console.log('✅ Event listeners installés');
-}
-
-/**
- * Afficher la modale info destruction (pour tous les joueurs)
- */
-function showTileDestroyedModal(tileId, playerName, isActivePlayer) {
-    const modal = document.getElementById('tile-destroyed-modal');
-    const text = document.getElementById('tile-destroyed-text');
-    
-    if (isActivePlayer) {
-        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur "Repiocher" pour continuer.`;
-    } else {
-        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. ${playerName} va repiocher une nouvelle tuile.`;
-    }
-    
-    modal.style.display = 'flex';
-}
-
-/**
- * Cacher le badge tuile implaçable
- */
-function hideUnplaceableBadge() {
-    document.getElementById('unplaceable-badge').style.display = 'none';
-    document.getElementById('unplaceable-modal').style.display = 'none';
-}
-
-/**
- * Activer le mode "Repiocher" sur le bouton Terminer mon tour
- */
-function setRedrawMode(active) {
-    waitingToRedraw = active;
-    updateTurnDisplay();
-}
-
-/**
- * Afficher le badge + modale tuile implaçable
- */
-function showUnplaceableBadge(tile, actionText) {
-    // Sécurité : ne jamais afficher pour le joueur non actif
-    if (!isMyTurn) {
-        console.log('⚠️ showUnplaceableBadge appelé pour joueur non actif, ignoré');
-        return;
-    }
-    
-    const badge = document.getElementById('unplaceable-badge');
-    const modal = document.getElementById('unplaceable-modal');
-    const modalText = document.getElementById('unplaceable-modal-text');
-    
-    modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
-    
-    badge.style.display = 'block';
-    modal.style.display = 'flex';
-    
-    badge.onclick = () => { modal.style.display = 'flex'; };
-    
-    document.getElementById('unplaceable-examine-btn').onclick = () => {
-        modal.style.display = 'none';
-    };
-}
-
-/**
- * Vérifie si une tuile peut être posée quelque part sur le plateau
- * Teste les 4 rotations × toutes les cases libres adjacentes
- */
-function isTilePlaceable(tile) {
-    const board = tilePlacement?.plateau;
-    if (!board) {
-        console.log('⚠️ isTilePlaceable: pas de plateau');
-        return true;
-    }
-
-    const placedCount = Object.keys(board.placedTiles).length;
-    console.log(`🔍 isTilePlaceable: ${placedCount} tuiles posées, test de ${tile.id}`);
-
-    // Pas encore de tuile posée → on laisse passer
-    if (placedCount === 0) {
-        console.log('  ⏭️ Plateau vide, pas de vérification');
-        return true;
-    }
-
-    const rotations = [0, 90, 180, 270];
-    const originalRotation = tile.rotation;
-
-    for (const rotation of rotations) {
-        // Changer la rotation temporairement sur l'instance existante
-        tile.rotation = rotation;
-
-        for (const coord in board.placedTiles) {
-            const [x, y] = coord.split(',').map(Number);
-            const directions = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
-            for (const {dx, dy} of directions) {
-                const nx = x + dx, ny = y + dy;
-                if (board.isFree(nx, ny) && board.canPlaceTile(nx, ny, tile)) {
-                    tile.rotation = originalRotation; // Restaurer
-                    console.log(`  ✅ Placement possible à (${nx},${ny}) rotation ${rotation}°`);
-                    return true;
-                }
-            }
-        }
-    }
-
-    tile.rotation = originalRotation; // Restaurer
-    console.log('  ❌ Aucune position valide pour aucune rotation');
-    return false;
 }
 
 /**
@@ -1759,7 +1562,6 @@ function returnToLobby() {
     isMyTurn = false;
     gameEnded = false;
     finalScoresData = null;
-    waitingToRedraw = false;
     
     // Fermer la modale des scores si ouverte
     const modal = document.getElementById('final-scores-modal');
