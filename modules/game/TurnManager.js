@@ -180,16 +180,22 @@ export class TurnManager {
         // Mettre à jour l'état
         this.updateTurnState();
         
-        // Émettre turn-changed pour que TOUS sachent qui joue AVANT la pioche
+        // Piocher si c'est notre tour
+        if (this.isMyTurn) {
+            this.drawTile();
+        }
+        
+        // Émettre turn-changed pour que TOUS les joueurs rafraîchissent (y compris inactifs)
         this.eventBus.emit('turn-changed', {
             isMyTurn: this.isMyTurn,
             currentPlayer: this.getCurrentPlayer()
         });
         
-        // Piocher si c'est notre tour (APRÈS turn-changed)
-        if (this.isMyTurn) {
-            this.drawTile();
-        }
+        // Émettre événement
+        this.eventBus.emit('turn-changed', {
+            isMyTurn: this.isMyTurn,
+            currentPlayer: this.getCurrentPlayer()
+        });
     }
 
     /**
