@@ -204,7 +204,9 @@ export class TurnManager {
     receiveTileDrawn(tileId, rotation) {
         console.log('🎲 [SYNC] Tuile piochée:', tileId);
         
-        const tileData = this.deck.tiles.find(t => t.id === tileId);
+        // Piocher localement pour synchroniser l'index
+        const tileData = this.deck.draw();
+        
         if (tileData) {
             this.currentTile = { ...tileData, rotation };
             this.tilePlaced = false;
