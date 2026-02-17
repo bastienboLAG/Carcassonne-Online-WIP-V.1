@@ -1104,22 +1104,10 @@ function updateTurnDisplay() {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
             endTurnBtn.classList.add('final-score-btn');
-            
-            // Remplacer l'onclick pour ouvrir la modale
-            endTurnBtn.onclick = () => {
-                if (finalScoresData) {
-                    showFinalScoresModal(finalScoresData);
-                }
-            };
         } else {
-            // Partie en cours : comportement normal (ne pas toucher à onclick)
+            // Partie en cours : comportement normal
             endTurnBtn.textContent = 'Terminer mon tour';
             endTurnBtn.classList.remove('final-score-btn');
-            
-            // Réinitialiser onclick seulement si on revient d'un état gameEnded
-            if (endTurnBtn.onclick) {
-                endTurnBtn.onclick = null;
-            }
             
             endTurnBtn.disabled = !isMyTurn;
             if (!isMyTurn) {
@@ -1188,6 +1176,15 @@ function setupEventListeners() {
     });
     
     document.getElementById('end-turn-btn').onclick = () => {
+        // Si la partie est terminée, ouvrir la modale des scores
+        if (gameEnded) {
+            if (finalScoresData) {
+                showFinalScoresModal(finalScoresData);
+            }
+            return;
+        }
+        
+        // Sinon, logique normale de fin de tour
         if (!isMyTurn && gameSync) {
             alert('Ce n\'est pas votre tour !');
             return;
