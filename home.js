@@ -161,6 +161,7 @@ let meepleDisplayUI = null;
 let isMyTurn = false;
 let gameEnded = false; // Indique si la partie est terminée
 let finalScoresData = null; // Stocke les scores détaillés
+let waitingToRedraw = false; // Indique si le joueur doit repiocher
 
 // ✅ NOUVEAU : Variables pour les meeples
 let lastPlacedTile = null; // Dernière tuile posée {x, y}
@@ -811,6 +812,11 @@ async function startGame() {
         showFinalScoresModal(detailedScores);
     };
     
+    gameSync.onTileDestroyed = (tileId, playerName) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        showTileDestroyedModal(tileId, playerName, false);
+    };
+    
     // Setup de l'interface
     console.log('🔧 Setup des event listeners...');
     setupEventListeners();
@@ -1030,6 +1036,11 @@ async function startGameForInvite() {
         showFinalScoresModal(detailedScores);
     };
     
+    gameSync.onTileDestroyed = (tileId, playerName) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        showTileDestroyedModal(tileId, playerName, false);
+    };
+    
     // Enregistrer et activer les règles de base avec la configuration
     ruleRegistry.register('base', BaseRules, gameConfig);
     ruleRegistry.enable('base');
@@ -1149,6 +1160,13 @@ function updateTurnDisplay() {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
             endTurnBtn.classList.add('final-score-btn');
+        } else if (waitingToRedraw && isMyTurn) {
+            // Mode repioche : bouton devient "🎲 Repiocher"
+            endTurnBtn.textContent = '🎲 Repiocher';
+            endTurnBtn.disabled = false;
+            endTurnBtn.style.opacity = '1';
+            endTurnBtn.style.cursor = 'pointer';
+            endTurnBtn.classList.remove('final-score-btn');
         } else {
             // Partie en cours : comportement normal
             endTurnBtn.textContent = 'Terminer mon tour';
@@ -1227,6 +1245,14 @@ function setupEventListeners() {
             if (finalScoresData) {
                 showFinalScoresModal(finalScoresData);
             }
+            return;
+        }
+        
+        // Mode repioche après destruction d'une tuile implaçable
+        if (waitingToRedraw && isMyTurn) {
+            setRedrawMode(false);
+            document.getElementById('tile-destroyed-modal').style.display = 'none';
+            turnManager.drawTile();
             return;
         }
         
@@ -1408,6 +1434,32 @@ function setupEventListeners() {
         document.getElementById('final-scores-modal').style.display = 'none';
     };
     
+    // Bouton "Confirmer" de la modale implaçable → détruire la tuile
+    document.getElementById('unplaceable-confirm-btn').onclick = () => {
+        const currentPlayer = gameState?.getCurrentPlayer();
+        const tileId = tuileEnMain?.id || '?';
+        const playerName = currentPlayer?.name || '?';
+        
+        // Fermer badge + modale implaçable
+        hideUnplaceableBadge();
+        
+        // Afficher modale info pour TOUS
+        showTileDestroyedModal(tileId, playerName, true);
+        
+        // Synchroniser la destruction pour les autres joueurs
+        if (gameSync) {
+            gameSync.syncTileDestroyed(tileId, playerName);
+        }
+        
+        // Passer en mode repioche
+        setRedrawMode(true);
+    };
+    
+    // Bouton "OK" de la modale info destruction
+    document.getElementById('tile-destroyed-ok-btn').onclick = () => {
+        document.getElementById('tile-destroyed-modal').style.display = 'none';
+    };
+    
     // Bouton de test debug (seulement si enableDebug = true)
     document.getElementById('test-modal-btn').onclick = () => {
         // Si des scores finaux existent, les utiliser
@@ -1438,8 +1490,39 @@ function setupEventListeners() {
 }
 
 /**
- * Afficher le badge + modale tuile implaçable
+ * Afficher la modale info destruction (pour tous les joueurs)
  */
+function showTileDestroyedModal(tileId, playerName, isActivePlayer) {
+    const modal = document.getElementById('tile-destroyed-modal');
+    const text = document.getElementById('tile-destroyed-text');
+    
+    if (isActivePlayer) {
+        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur "Repiocher" pour continuer.`;
+    } else {
+        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. ${playerName} va repiocher une nouvelle tuile.`;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+/**
+ * Cacher le badge tuile implaçable
+ */
+function hideUnplaceableBadge() {
+    document.getElementById('unplaceable-badge').style.display = 'none';
+    document.getElementById('unplaceable-modal').style.display = 'none';
+}
+
+/**
+ * Activer le mode "Repiocher" sur le bouton Terminer mon tour
+ */
+function setRedrawMode(active) {
+    waitingToRedraw = active;
+    updateTurnDisplay();
+}
+
+/**
+ * Vérifie si une tuile peut être posée quelque part sur le plateau
 function showUnplaceableBadge(tile, actionText) {
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
@@ -1655,6 +1738,7 @@ function returnToLobby() {
     isMyTurn = false;
     gameEnded = false;
     finalScoresData = null;
+    waitingToRedraw = false;
     
     // Fermer la modale des scores si ouverte
     const modal = document.getElementById('final-scores-modal');
