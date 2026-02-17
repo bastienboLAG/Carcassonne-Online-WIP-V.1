@@ -1534,12 +1534,8 @@ function showUnplaceableBadge(tile, actionText) {
     const badge = document.getElementById('unplaceable-badge');
     const modal = document.getElementById('unplaceable-modal');
     const modalText = document.getElementById('unplaceable-modal-text');
-    const confirmBtn = document.getElementById('unplaceable-confirm-btn');
     
     modalText.textContent = `Cette tuile ne peut être placée nulle part sur le plateau. Elle va être ${actionText}.`;
-    
-    // Afficher le bouton Confirmer seulement pour le joueur actif
-    confirmBtn.style.display = isMyTurn ? 'inline-block' : 'none';
     
     badge.style.display = 'block';
     modal.style.display = 'flex';
