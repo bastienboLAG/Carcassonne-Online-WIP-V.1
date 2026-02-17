@@ -25,7 +25,7 @@
       "type": "road",
       "edges": ["east", "west"],
       "features": [],
-      "meeplePosition": "13"
+      "meeplePosition": "14"
     },
     {
       "id": 4,
