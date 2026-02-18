@@ -41,11 +41,8 @@ export class SlotsUI {
     onTileDrawn(data) {
         console.log('🎴 onTileDrawn appelé avec:', data);
         
-        // Stocker la tuile pour pouvoir afficher les slots même si on n'est pas le joueur actif
-        if (data.tileData) {
-            this.currentTile = new Tile(data.tileData);
-            this.currentTile.rotation = data.tileData.rotation || 0;
-            console.log('  → currentTile mis à jour:', this.currentTile.id, 'rotation:', this.currentTile.rotation);
+        // La tuile est déjà gérée dans home.js (tuileEnMain)
+        // Pas besoin de la dupliquer ici
         }
         
         // Rafraîchir les slots pour TOUT LE MONDE (joueur actif et inactif)
@@ -63,8 +60,7 @@ export class SlotsUI {
      */
     onTilePlaced(data) {
         this.firstTilePlaced = true;
-        // Réinitialiser la tuile courante après la pose
-        this.currentTile = null;
+        // La tuile est déjà mise à null dans home.js (tuileEnMain = null)
         // Rafraîchir immédiatement pour masquer les slots
         this.refresh();
     }
@@ -73,10 +69,7 @@ export class SlotsUI {
      * Quand une tuile est tournée
      */
     onTileRotated(data) {
-        // Mettre à jour la rotation de currentTile
-        if (this.currentTile && data.rotation !== undefined) {
-            this.currentTile.rotation = data.rotation;
-        }
+        // La rotation est déjà gérée dans home.js (tuileEnMain.rotation)
         // Rafraîchir les slots car les possibilités changent
         this.refresh();
     }
@@ -170,9 +163,8 @@ export class SlotsUI {
         }
         
         // Vérifier qu'il y a une tuile en main
-        const tile = this.currentTile || this.getTileEnMain();
-        console.log('  currentTile:', this.currentTile?.id || 'null');
-        console.log('  getTileEnMain():', this.getTileEnMain()?.id || 'null');
+        const tile = this.getTileEnMain();
+        console.log('  getTileEnMain():', tile?.id || 'null');
         console.log('  → tile finale:', tile?.id || 'null');
         
         if (!tile) {
