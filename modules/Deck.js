@@ -48,8 +48,14 @@ export class Deck {
         }
 
         if (testMode) {
-            // ✅ En mode test : pas de mélange, on garde l'ordre exact
-            console.log('🧪 Mode test : ordre des tuiles fixé (24 → 03 → reste)');
+            // ✅ En mode test : pas de mélange, ordre fixé (24 → 03 → 02 → 01 → ...)
+            // Inverser base-01 et base-02 pour les tests de repioche
+            const idx01 = this.tiles.findIndex(t => t.id === 'base-01');
+            const idx02 = this.tiles.findIndex(t => t.id === 'base-02');
+            if (idx01 !== -1 && idx02 !== -1) {
+                [this.tiles[idx01], this.tiles[idx02]] = [this.tiles[idx02], this.tiles[idx01]];
+            }
+            console.log('🧪 Mode test : ordre des tuiles fixé (24 → 03 → 02 → 01 → reste)');
         } else {
             // Mélanger la pioche
             this.shuffle();
