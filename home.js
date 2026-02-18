@@ -150,6 +150,7 @@ let zoneMerger = null;
 let scoring = null;
 let tuileEnMain = null;
 let tuilePosee = false;
+let waitingToRedraw = false; // Mode repioche après destruction
 let zoomLevel = 1;
 let firstTilePlaced = false;
 let scorePanelUI = null;
@@ -811,6 +812,15 @@ async function startGame() {
         showFinalScoresModal(detailedScores);
     };
     
+    gameSync.onTileDestroyed = (tileId, playerName) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
+        showTileDestroyedModal(tileId, playerName, false);
+    };
+    
     // Setup de l'interface
     console.log('🔧 Setup des event listeners...');
     setupEventListeners();
@@ -1030,6 +1040,15 @@ async function startGameForInvite() {
         showFinalScoresModal(detailedScores);
     };
     
+    gameSync.onTileDestroyed = (tileId, playerName) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+        // Masquer la tuile détruite
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
+        showTileDestroyedModal(tileId, playerName, false);
+    };
+    
     // Enregistrer et activer les règles de base avec la configuration
     ruleRegistry.register('base', BaseRules, gameConfig);
     ruleRegistry.enable('base');
@@ -1149,6 +1168,13 @@ function updateTurnDisplay() {
             endTurnBtn.style.opacity = '1';
             endTurnBtn.style.cursor = 'pointer';
             endTurnBtn.classList.add('final-score-btn');
+        } else if (waitingToRedraw && isMyTurn) {
+            // Mode repioche : bouton devient "Repiocher"
+            endTurnBtn.textContent = '🎲 Repiocher';
+            endTurnBtn.disabled = false;
+            endTurnBtn.style.opacity = '1';
+            endTurnBtn.style.cursor = 'pointer';
+            endTurnBtn.classList.remove('final-score-btn');
         } else {
             // Partie en cours : comportement normal
             endTurnBtn.textContent = 'Terminer mon tour';
@@ -1227,6 +1253,14 @@ function setupEventListeners() {
             if (finalScoresData) {
                 showFinalScoresModal(finalScoresData);
             }
+            return;
+        }
+        
+        // Si en mode repioche, piocher une nouvelle tuile
+        if (waitingToRedraw && isMyTurn) {
+            document.getElementById('tile-destroyed-modal').style.display = 'none';
+            turnManager.drawTile();
+            setRedrawMode(false);
             return;
         }
         
@@ -1408,6 +1442,42 @@ function setupEventListeners() {
         document.getElementById('final-scores-modal').style.display = 'none';
     };
     
+    // Bouton "Confirmer" de la modale implaçable → détruire la tuile
+    document.getElementById('unplaceable-confirm-btn').onclick = () => {
+        const currentPlayer = gameState?.getCurrentPlayer();
+        const tileId = tuileEnMain?.id || '?';
+        const playerName = currentPlayer?.name || '?';
+        
+        // Fermer badge + modale implaçable
+        hideUnplaceableBadge();
+        
+        // Masquer la tuile en main (afficher le verso)
+        if (tilePreviewUI) {
+            tilePreviewUI.showBackside();
+        }
+        
+        // Afficher modale info pour TOUS
+        showTileDestroyedModal(tileId, playerName, true);
+        
+        // Synchroniser la destruction pour les autres joueurs
+        if (gameSync) {
+            gameSync.syncTileDestroyed(tileId, playerName);
+        }
+        
+        // Passer en mode repioche
+        setRedrawMode(true);
+    };
+    
+    // Bouton "Examiner le plateau" de la modale implaçable
+    document.getElementById('unplaceable-examine-btn').onclick = () => {
+        document.getElementById('unplaceable-modal').style.display = 'none';
+    };
+    
+    // Bouton "OK" de la modale info destruction
+    document.getElementById('tile-destroyed-ok-btn').onclick = () => {
+        document.getElementById('tile-destroyed-modal').style.display = 'none';
+    };
+    
     // Bouton de test debug (seulement si enableDebug = true)
     document.getElementById('test-modal-btn').onclick = () => {
         // Si des scores finaux existent, les utiliser
@@ -1507,6 +1577,30 @@ function showUnplaceableBadge(tile, actionText) {
 function hideUnplaceableBadge() {
     document.getElementById('unplaceable-badge').style.display = 'none';
     document.getElementById('unplaceable-modal').style.display = 'none';
+}
+
+/**
+ * Afficher la modale info destruction
+ */
+function showTileDestroyedModal(tileId, playerName, isActivePlayer) {
+    const modal = document.getElementById('tile-destroyed-modal');
+    const text = document.getElementById('tile-destroyed-text');
+    
+    if (isActivePlayer) {
+        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur Repiocher pour continuer.`;
+    } else {
+        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. ${playerName} va repiocher.`;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+/**
+ * Activer/désactiver le mode repioche
+ */
+function setRedrawMode(active) {
+    waitingToRedraw = active;
+    updateTurnDisplay();
 }
 
 /**
@@ -1620,6 +1714,7 @@ function returnToLobby() {
     tilePlacement = null;
     meeplePlacement = null;
     turnManager = null;
+    waitingToRedraw = false;
     
     // Désactiver les règles
     if (ruleRegistry) {

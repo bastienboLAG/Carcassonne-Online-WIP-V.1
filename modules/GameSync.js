@@ -19,6 +19,7 @@ export class GameSync {
         this.onScoreUpdate = null;
         this.onTurnUndo = null;
         this.onGameEnded = null;
+        this.onTileDestroyed = null;
     }
 
     /**
@@ -46,7 +47,7 @@ export class GameSync {
         const gameMessages = [
             'game-start', 'tile-rotated', 'tile-placed', 'turn-ended',
             'tile-drawn', 'meeple-placed', 'meeple-count-update', 'score-update',
-            'turn-undo', 'game-ended'
+            'turn-undo', 'game-ended', 'tile-destroyed'
             // NOTE: 'return-to-lobby', 'player-order-update' et 'game-starting' 
             //       sont gérés par le lobby handler
         ];
@@ -176,6 +177,19 @@ export class GameSync {
     }
 
     /**
+     * Synchroniser la destruction d'une tuile
+     */
+    syncTileDestroyed(tileId, playerName) {
+        console.log('🗑️ Sync tile destroyed:', tileId);
+        this.multiplayer.broadcast({
+            type: 'tile-destroyed',
+            tileId: tileId,
+            playerName: playerName,
+            playerId: this.multiplayer.playerId
+        });
+    }
+
+    /**
      * Synchroniser la fin de partie
      */
     syncGameEnded(detailedScores) {
@@ -262,6 +276,13 @@ export class GameSync {
                 if (this.onGameEnded && data.playerId !== this.multiplayer.playerId) {
                     console.log('🏁 [SYNC] Fin de partie reçue');
                     this.onGameEnded(data.scores);
+                }
+                break;
+            
+            case 'tile-destroyed':
+                if (this.onTileDestroyed && data.playerId !== this.multiplayer.playerId) {
+                    console.log('🗑️ [SYNC] Tuile détruite reçue:', data.tileId);
+                    this.onTileDestroyed(data.tileId, data.playerName);
                 }
                 break;
         }
