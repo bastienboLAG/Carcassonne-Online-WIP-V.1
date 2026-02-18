@@ -63,7 +63,9 @@ export class SlotsUI {
      */
     onTilePlaced(data) {
         this.firstTilePlaced = true;
-        // Rafraîchir immédiatement pour masquer les slots (tuileEnMain est maintenant null)
+        // Réinitialiser la tuile courante après la pose
+        this.currentTile = null;
+        // Rafraîchir immédiatement pour masquer les slots
         this.refresh();
     }
     
