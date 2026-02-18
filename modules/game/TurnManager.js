@@ -68,7 +68,9 @@ export class TurnManager {
      */
     drawTile() {
         console.log('🎲 Pioche d\'une nouvelle tuile...');
+        console.log('📦 Index AVANT draw():', this.deck.currentIndex);
         const tileData = this.deck.draw();
+        console.log('📦 Index APRÈS draw():', this.deck.currentIndex);
         
         if (!tileData) {
             console.log('⚠️ Pioche vide !');
@@ -203,9 +205,11 @@ export class TurnManager {
      */
     receiveTileDrawn(tileId, rotation) {
         console.log('🎲 [SYNC] Tuile piochée:', tileId);
+        console.log('📦 [SYNC] Index AVANT draw():', this.deck.currentIndex);
         
         // Piocher localement pour synchroniser l'index
         const tileData = this.deck.draw();
+        console.log('📦 [SYNC] Index APRÈS draw():', this.deck.currentIndex);
         
         if (tileData) {
             this.currentTile = { ...tileData, rotation };
