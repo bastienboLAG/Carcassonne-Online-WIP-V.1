@@ -1674,6 +1674,10 @@ function returnToLobby() {
     // Masquer le bouton retour lobby
     document.getElementById('back-to-lobby-btn').style.display = 'none';
     
+    // Cacher badge et modales implaçables
+    hideUnplaceableBadge();
+    document.getElementById('tile-destroyed-modal').style.display = 'none';
+    
     // ✅ CLEANUP COMPLET DES MODULES via leurs méthodes destroy()
     console.log('🧹 Nettoyage des modules...');
     
