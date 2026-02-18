@@ -1357,8 +1357,8 @@ function setupEventListeners() {
             undoManager.reset();
         }
         
-        // Piocher la nouvelle tuile localement
-        turnManager.drawTile();
+        // Le nouveau joueur actif piochera dans receiveTurnEnded()
+        // L'ancien joueur actif recevra tile-drawn via le réseau et fera draw() dans receiveTileDrawn()
         
         // Mettre à jour l'affichage du tour
         if (gameState) {
