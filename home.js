@@ -901,9 +901,6 @@ async function startGameForInvite() {
         deck.totalTiles = deckData.totalTiles;
         console.log('📦 [INVITÉ] Index reçu de l\'hôte:', deck.currentIndex);
         gameState.deserialize(gameStateData);
-        // Avancer l'index pour synchroniser (l'hôte a déjà pioché)
-        deck.currentIndex++;
-        console.log('📦 [INVITÉ] Index APRÈS synchronisation:', deck.currentIndex);
         eventBus.emit('deck-updated', { remaining: deck.remaining(), total: deck.total() });
         updateTurnDisplay();
         
