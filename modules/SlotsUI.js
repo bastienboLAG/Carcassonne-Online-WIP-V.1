@@ -43,7 +43,7 @@ export class SlotsUI {
         
         // La tuile est déjà gérée dans home.js (tuileEnMain)
         // Pas besoin de la dupliquer ici
-        }
+
         
         // Rafraîchir les slots pour TOUT LE MONDE (joueur actif et inactif)
         console.log('  → Vérification refresh: firstTilePlaced =', this.firstTilePlaced);
