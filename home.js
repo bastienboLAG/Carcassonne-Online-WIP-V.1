@@ -812,13 +812,21 @@ async function startGame() {
         showFinalScoresModal(detailedScores);
     };
     
-    gameSync.onTileDestroyed = (tileId, playerName) => {
-        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+    gameSync.onTileDestroyed = (tileId, playerName, action) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName, 'action:', action);
         // Masquer la tuile détruite
         if (tilePreviewUI) {
             tilePreviewUI.showBackside();
         }
-        showTileDestroyedModal(tileId, playerName, false);
+        showTileDestroyedModal(tileId, playerName, false, action);
+    };
+    
+    gameSync.onDeckReshuffled = (tiles, currentIndex) => {
+        console.log('🔀 [SYNC] Réception deck remélangé, currentIndex:', currentIndex);
+        // Remplacer le deck local
+        deck.tiles = tiles;
+        deck.currentIndex = currentIndex;
+        console.log('📦 Deck mis à jour:', deck.tiles.length, 'tuiles');
     };
     
     // Setup de l'interface
@@ -1040,13 +1048,21 @@ async function startGameForInvite() {
         showFinalScoresModal(detailedScores);
     };
     
-    gameSync.onTileDestroyed = (tileId, playerName) => {
-        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName);
+    gameSync.onTileDestroyed = (tileId, playerName, action) => {
+        console.log('🗑️ [SYNC] Tuile détruite:', tileId, 'par', playerName, 'action:', action);
         // Masquer la tuile détruite
         if (tilePreviewUI) {
             tilePreviewUI.showBackside();
         }
-        showTileDestroyedModal(tileId, playerName, false);
+        showTileDestroyedModal(tileId, playerName, false, action);
+    };
+    
+    gameSync.onDeckReshuffled = (tiles, currentIndex) => {
+        console.log('🔀 [SYNC] Réception deck remélangé, currentIndex:', currentIndex);
+        // Remplacer le deck local
+        deck.tiles = tiles;
+        deck.currentIndex = currentIndex;
+        console.log('📦 Deck mis à jour:', deck.tiles.length, 'tuiles');
     };
     
     // Enregistrer et activer les règles de base avec la configuration
@@ -1442,11 +1458,12 @@ function setupEventListeners() {
         document.getElementById('final-scores-modal').style.display = 'none';
     };
     
-    // Bouton "Confirmer" de la modale implaçable → détruire la tuile
+    // Bouton "Confirmer" de la modale implaçable → détruire ou remettre dans la pioche
     document.getElementById('unplaceable-confirm-btn').onclick = () => {
         const currentPlayer = gameState?.getCurrentPlayer();
         const tileId = tuileEnMain?.id || '?';
         const playerName = currentPlayer?.name || '?';
+        const action = gameConfig?.unplaceableAction || 'destroy';
         
         // Fermer badge + modale implaçable
         hideUnplaceableBadge();
@@ -1456,12 +1473,41 @@ function setupEventListeners() {
             tilePreviewUI.showBackside();
         }
         
-        // Afficher modale info pour TOUS
-        showTileDestroyedModal(tileId, playerName, true);
+        // Si mode reshuffle : remettre la tuile dans le deck et mélanger
+        if (action === 'reshuffle' && deck && tuileEnMain) {
+            console.log('🔀 Remise de la tuile dans la pioche + mélange');
+            
+            // Récupérer les données brutes de la tuile
+            const tileData = {
+                id: tuileEnMain.id,
+                zones: tuileEnMain.zones,
+                imagePath: tuileEnMain.imagePath
+            };
+            
+            // Ajouter la tuile aux tuiles restantes (après currentIndex)
+            deck.tiles.splice(deck.currentIndex, 0, tileData);
+            
+            // Mélanger les tuiles restantes (de currentIndex à la fin)
+            const remaining = deck.tiles.slice(deck.currentIndex);
+            for (let i = remaining.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+            }
+            // Replacer les tuiles mélangées
+            deck.tiles.splice(deck.currentIndex, remaining.length, ...remaining);
+            
+            // Synchroniser le nouveau deck
+            if (gameSync) {
+                gameSync.syncDeckReshuffle(deck.tiles, deck.currentIndex);
+            }
+        }
         
-        // Synchroniser la destruction pour les autres joueurs
+        // Afficher modale info pour TOUS
+        showTileDestroyedModal(tileId, playerName, true, action);
+        
+        // Synchroniser pour les autres joueurs
         if (gameSync) {
-            gameSync.syncTileDestroyed(tileId, playerName);
+            gameSync.syncTileDestroyed(tileId, playerName, action);
         }
         
         // Passer en mode repioche
@@ -1580,16 +1626,24 @@ function hideUnplaceableBadge() {
 }
 
 /**
- * Afficher la modale info destruction
+ * Afficher la modale info destruction/remélange
  */
-function showTileDestroyedModal(tileId, playerName, isActivePlayer) {
+function showTileDestroyedModal(tileId, playerName, isActivePlayer, action) {
     const modal = document.getElementById('tile-destroyed-modal');
     const text = document.getElementById('tile-destroyed-text');
     
-    if (isActivePlayer) {
-        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur Repiocher pour continuer.`;
+    if (action === 'reshuffle') {
+        if (isActivePlayer) {
+            text.textContent = `La tuile ${tileId} était impossible à placer, elle a été remise dans la pioche. Cliquez sur Repiocher pour continuer.`;
+        } else {
+            text.textContent = `La tuile ${tileId} était impossible à placer, elle a été remise dans la pioche. ${playerName} va repiocher.`;
+        }
     } else {
-        text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. ${playerName} va repiocher.`;
+        if (isActivePlayer) {
+            text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur Repiocher pour continuer.`;
+        } else {
+            text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. ${playerName} va repiocher.`;
+        }
     }
     
     modal.style.display = 'flex';
