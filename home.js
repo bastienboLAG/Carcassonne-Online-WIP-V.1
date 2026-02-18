@@ -1631,14 +1631,17 @@ function hideUnplaceableBadge() {
 function showTileDestroyedModal(tileId, playerName, isActivePlayer, action) {
     const modal = document.getElementById('tile-destroyed-modal');
     const text = document.getElementById('tile-destroyed-text');
+    const title = modal.querySelector('h2');
     
     if (action === 'reshuffle') {
+        title.textContent = '🎲 Tuile remélangée';
         if (isActivePlayer) {
             text.textContent = `La tuile ${tileId} était impossible à placer, elle a été remise dans la pioche. Cliquez sur Repiocher pour continuer.`;
         } else {
             text.textContent = `La tuile ${tileId} était impossible à placer, elle a été remise dans la pioche. ${playerName} va repiocher.`;
         }
     } else {
+        title.textContent = '🗑️ Tuile détruite';
         if (isActivePlayer) {
             text.textContent = `La tuile ${tileId} était impossible à placer, elle a été détruite. Cliquez sur Repiocher pour continuer.`;
         } else {
@@ -1910,6 +1913,7 @@ function poserTuileSync(x, y, tile) {
         firstTilePlaced = true;
     }
     tuilePosee = true; // Important: empêcher double placement
+    tuileEnMain = null; // Réinitialiser la tuile en main après la pose
     lastPlacedTile = { x, y }; // Pour le bouton highlight
     
     // 📸 Sauvegarder snapshot après pose de tuile (pour pouvoir restaurer les annulations distantes)
